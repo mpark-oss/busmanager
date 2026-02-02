@@ -63,7 +63,7 @@
 
           <v-row dense>
             <v-col v-for="(bus, bIdx) in localBuses" :key="bus.localId" cols="12" sm="6" xl="4">
-              <v-card border elevation="1" class="rounded-xl overflow-hidden mx-auto bus-card" max-width="450">
+              <v-card border elevation="1" class="rounded-xl overflow-hidden bus-card" max-width="450">
                 <v-toolbar color="primary" density="compact" flat>
                   <v-icon icon="mdi-bus-side" class="ms-3" size="small"></v-icon>
                   <v-toolbar-title class="text-body-2 font-weight-bold">신규 편성 중</v-toolbar-title>
@@ -111,137 +111,78 @@
 </template>
 
 <script setup>
-
-import { ref } from 'vue';
-
+import { ref, onMounted } from 'vue';
+import draggable from 'vuedraggable';
 import axios from 'axios';
-
 import { db } from '../firebase';
+import { collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc } from "firebase/firestore";
 
-import { collection, addDoc } from "firebase/firestore";
-
-
+// Vercel 환경 변수에서 키를 가져오되, 없을 경우 대비
+const API_KEY = import.meta.env.VITE_LOSTARK_API_KEY || "";
 
 const searchName = ref('');
-
-const characterInfo = ref(null);
-
+const charList = ref([]);
+const localBuses = ref([]);
 const isLoading = ref(false);
 
-
-
-// Vercel 환경 변수에서 키를 가져옵니다.
-
-const API_KEY = import.meta.env.VITE_LOSTARK_API_KEY;
-
-
+onMounted(() => {
+  const q = query(collection(db, "characters"), orderBy("createdAt", "desc"));
+  onSnapshot(q, (snapshot) => {
+    charList.value = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  });
+});
 
 const fetchCharacter = async () => {
-
   if (!searchName.value) return;
-
   isLoading.value = true;
-
-  characterInfo.value = null;
-
-
-
   try {
-
-    const cleanKey = API_KEY ? API_KEY.trim() : "";
-
-    
-
-    // [수정 핵심] 프록시를 제거하고 직접 호출합니다. 
-
-    // 로스트아크 API는 브라우저 직접 호출 시 CORS 에러가 날 수 있으므로 
-
-    // 만약 에러가 지속되면 Vercel의 Serverless Function 기능을 써야 하지만, 
-
-    // 일단 가장 표준적인 직접 호출 방식으로 교정합니다.
-
+    const cleanKey = API_KEY.trim();
+    // [CORS 해결] 가장 에러가 적은 직접 호출 방식 채택 (헤더 최소화)
     const url = `https://developer-lostark.game.onstove.com/armories/characters/${encodeURIComponent(searchName.value)}/profiles`;
-
     
-
     const response = await axios.get(url, {
-
-      headers: { 
-
+      headers: {
         'accept': 'application/json',
-
-        'authorization': `bearer ${cleanKey}` 
-
+        'authorization': `bearer ${cleanKey}`
       }
-
     });
 
-
-
-    if (response.data) {
-
-      characterInfo.value = {
-
-        name: response.data.CharacterName,
-
-        job: response.data.CharacterClassName,
-
-        level: response.data.ItemAvgLevel,
-
-        img: response.data.CharacterImage
-
-      };
-
-    } else {
-
-      alert("캐릭터를 찾을 수 없습니다.");
-
-    }
-
-  } catch (error) {
-
-    console.error("API Error:", error);
-
-    alert("캐릭터 검색 중 오류가 발생했습니다. API 키나 네트워크 상태를 확인해주세요.");
-
-  } finally {
-
-    isLoading.value = false;
-
-  }
-
-};
-
-
-
-const addToBus = async () => {
-
-  if (!characterInfo.value) return;
-
-  try {
-
-    await addDoc(collection(db, "characters"), {
-
-      ...characterInfo.value,
-
-      createdAt: new Date()
-
-    });
-
-    alert("버스 기사 명단에 등록되었습니다!");
-
-    characterInfo.value = null;
-
-    searchName.value = '';
-
+    const data = response.data;
+    if (data && data.CharacterName) {
+      await addDoc(collection(db, "characters"), {
+        name: data.CharacterName,
+        level: data.ItemAvgLevel, 
+        job: data.CharacterClassName,
+        img: data.CharacterImage, // 사진 데이터 추가 저장
+        createdAt: new Date()
+      });
+      searchName.value = '';
+    } else { alert("정보를 찾을 수 없습니다."); }
   } catch (e) {
-
-    alert("등록 실패: " + e.message);
-
-  }
-
+    console.error("API Error:", e);
+    alert("캐릭터 검색 실패! API 키와 네트워크 상태를 확인해주세요.");
+  } finally { isLoading.value = false; }
 };
 
+const deleteChar = async (id) => { if(confirm("삭제하시겠습니까?")) await deleteDoc(doc(db, "characters", id)); };
+const addBusSlot = () => { localBuses.value.push({ localId: Date.now(), raid: '2막', difficulty: '노말', members: [], dateTime: '' }); };
+const cloneCharacter = (char) => ({ ...char, id: Date.now() + Math.random() });
+
+const confirmAndUpload = async (bus, index) => {
+  if (!bus.dateTime) return alert('시간 선택!');
+  if (bus.members.length === 0) return alert('기사 없음!');
+  try {
+    await addDoc(collection(db, "schedules"), {
+      raid: bus.raid, 
+      difficulty: bus.difficulty, 
+      members: JSON.parse(JSON.stringify(bus.members)), 
+      dateTime: bus.dateTime, 
+      createdAt: new Date()
+    });
+    localBuses.value.splice(index, 1);
+    alert('등록 완료!');
+  } catch (e) { alert(e.message); }
+};
 </script>
 
 <style scoped>

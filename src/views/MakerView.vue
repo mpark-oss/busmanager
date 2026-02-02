@@ -31,12 +31,17 @@
             >
               <template #item="{ element }">
                 <v-card class="mb-2 pa-2 cursor-move rounded-md" variant="tonal" color="primary" border>
-                  <div class="d-flex align-center gap-2">
-                    <v-avatar size="40" border class="me-2 bg-white">
-                      <v-img :src="element.img || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'"></v-img>
+                  <div class="d-flex align-center">
+                    <v-avatar size="40" class="me-2 bg-white" border>
+                      <v-img :src="element.img || ''" cover>
+                        <template v-slot:placeholder>
+                          <v-icon size="small">mdi-account</v-icon>
+                        </template>
+                      </v-img>
                     </v-avatar>
-                    <div class="flex-grow-1 overflow-hidden">
-                      <div class="font-weight-bold text-truncate" style="font-size: 0.85rem;">{{ element.name }}</div>
+                    
+                    <div style="font-size: 0.85rem" class="flex-grow-1 overflow-hidden">
+                      <div class="font-weight-bold text-truncate">{{ element.name }}</div>
                       <div class="text-caption text-truncate" style="font-size: 0.7rem;">
                         {{ element.job }} | {{ element.level }}
                       </div>
@@ -89,7 +94,7 @@
                           <v-avatar start v-if="element.img">
                             <v-img :src="element.img"></v-img>
                           </v-avatar>
-                          {{ element.name }} ({{ element.level }})
+                          {{ element.name }}
                         </v-chip>
                       </template>
                     </draggable>
@@ -117,10 +122,11 @@ import axios from 'axios';
 import { db } from '../firebase';
 import { collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc } from "firebase/firestore";
 
-// Vercel 환경 변수 연동
-const API_KEY = import.meta.env.VITE_LOSTARK_API_KEY; 
-// Allorigins는 Authorization 헤더를 포함할 경우 별도의 처리가 필요할 수 있어 직접 호출 또는 전용 프록시 사용 권장
-const PROXY_URL = "https://api.allorigins.win/raw?url=";
+// Vercel 환경 변수 로드
+const API_KEY = import.meta.env.VITE_LOSTARK_API_KEY;
+// 헤더를 더 잘 허용하는 프록시로 변경하거나 직접 시도
+// MakerView.vue 파일 상단 수정
+const PROXY_URL = "https://cors-anywhere-theta-rouge.vercel.app/";
 
 const searchName = ref('');
 const charList = ref([]);
@@ -139,15 +145,14 @@ const fetchCharacter = async () => {
   isLoading.value = true;
   try {
     const cleanKey = API_KEY ? API_KEY.trim() : "";
-    // [이미지 포함] 프로필 API 호출
+    // [이미지 포함] 프로필 API 경로
     const targetUrl = `https://developer-lostark.game.onstove.com/armories/characters/${encodeURIComponent(searchName.value)}/profiles`;
-    const finalUrl = `${PROXY_URL}${encodeURIComponent(targetUrl)}`;
     
-    const response = await axios.get(finalUrl, { 
+    // 만약 계속 403/CORS가 뜨면 PROXY_URL을 아까 만드신 본인 전용 프록시로 교체하세요.
+    const response = await axios.get(PROXY_URL + targetUrl, { 
       headers: { 
-        // Allorigins 사용 시 Authorization 헤더를 싣는 것이 제한적일 수 있음
-        'accept': 'application/json', 
-        'authorization': `bearer ${cleanKey}` 
+        'accept': 'application/json',
+        'authorization': `bearer ${cleanKey}`
       } 
     });
     
@@ -158,15 +163,19 @@ const fetchCharacter = async () => {
         level: data.ItemAvgLevel, 
         job: data.CharacterClassName,
         combatPower: data.CombatPower || "0",
-        img: data.CharacterImage, // 캐릭터 사진 저장
+        img: data.CharacterImage, // 사진 데이터 저장
         createdAt: new Date()
       });
       searchName.value = '';
-    } else { alert("정보를 찾을 수 없습니다."); }
-  } catch (e) { 
+    } else {
+      alert("캐릭터 정보를 찾을 수 없습니다.");
+    }
+  } catch (e) {
     console.error(e);
-    alert("검색 실패! API 키나 프록시 상태를 확인해주세요."); 
-  } finally { isLoading.value = false; }
+    alert("네트워크 에러! 프록시 서버의 '데모 허용' 버튼을 눌렀는지 확인하거나 전용 프록시 주소를 사용해 보세요.");
+  } finally {
+    isLoading.value = false;
+  }
 };
 
 const deleteChar = async (id) => { if(confirm("삭제하시겠습니까?")) await deleteDoc(doc(db, "characters", id)); };
@@ -175,7 +184,7 @@ const cloneCharacter = (char) => ({ ...char, id: Date.now() + Math.random() });
 
 const confirmAndUpload = async (bus, index) => {
   if (!bus.dateTime) return alert('출발 시간을 선택해주세요!');
-  if (bus.members.length === 0) return alert('기사를 1명 이상 등록해주세요!');
+  if (bus.members.length === 0) return alert('기사를 등록해주세요!');
   try {
     await addDoc(collection(db, "schedules"), {
       raid: bus.raid, 
@@ -185,7 +194,7 @@ const confirmAndUpload = async (bus, index) => {
       createdAt: new Date()
     });
     localBuses.value.splice(index, 1);
-    alert('운행표가 등록되었습니다!');
+    alert('운행표 등록 완료!');
   } catch (e) { alert(e.message); }
 };
 </script>

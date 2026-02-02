@@ -115,6 +115,7 @@ import { db } from '../firebase';
 import { collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc } from "firebase/firestore";
 
 const API_KEY = import.meta.env.VITE_LOSTARK_API_KEY;; 
+// MakerView.vue 파일 상단 수정
 const PROXY_URL = "https://cors-anywhere-theta-rouge.vercel.app/";
 
 const searchName = ref('');

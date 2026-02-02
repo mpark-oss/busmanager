@@ -38,7 +38,10 @@
                     <div class="flex-grow-1 overflow-hidden">
                       <div class="font-weight-bold text-truncate" style="font-size: 0.85rem;">{{ element.name }}</div>
                       <div class="text-caption text-truncate" style="font-size: 0.7rem;">
-                        {{ element.job }} | {{ element.level }} [{{element.power}}]
+                        {{ element.job }} | Lv.{{ element.level }}
+                        <div class="text-caption text-primary" style="font-size: 0.65rem; font-weight: bold;">
+                        전투력: {{ element.power }}
+                        </div>
                       </div>
                     </div>
                     <v-btn icon="mdi-close" size="18" variant="text" color="grey" @click="deleteChar(element.id)"></v-btn>
@@ -89,7 +92,7 @@
                           <v-avatar start v-if="element.img">
                             <v-img :src="element.img"></v-img>
                           </v-avatar>
-                           {{element.job}} | {{ element.name }} [{{element.power}}]
+                           {{element.job}} | {{ element.name }} Lv.{{ element.level }}
                         </v-chip>
                       </template>
                     </draggable>

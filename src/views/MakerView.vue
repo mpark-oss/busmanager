@@ -148,6 +148,7 @@ const fetchCharacter = async () => {
     });
 
     const data = response.data;
+    console.log(data);
     if (data && data.CharacterName) {
       await addDoc(collection(db, "characters"), {
         name: data.CharacterName,

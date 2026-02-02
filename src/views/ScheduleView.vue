@@ -60,7 +60,7 @@
                     </div>
                     <div class="d-flex align-center text-blue-darken-2 font-weight-bold mt-1">
                       <v-icon size="10" color="blue-darken-2" class="me-1">mdi-lightning-bolt</v-icon>
-                      전투력: {{ member.combatPower }}
+                      전투력: {{ member.power }}
                     </div>
                   </div>
                 </v-card>

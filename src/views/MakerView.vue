@@ -92,7 +92,7 @@
                           <v-avatar start v-if="element.img">
                             <v-img :src="element.img"></v-img>
                           </v-avatar>
-                           {{element.job}} | {{ element.name }} Lv.{{ element.level }}
+                           {{element.job}} | {{ element.name }} | Lv.{{ element.level }}
                         </v-chip>
                       </template>
                     </draggable>

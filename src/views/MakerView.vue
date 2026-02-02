@@ -115,7 +115,7 @@ import { db } from '../firebase';
 import { collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc } from "firebase/firestore";
 
 const API_KEY = import.meta.env.VITE_LOSTARK_API_KEY;; 
-const PROXY_URL = "const PROXY_URL = "https://my-cors.vercel.app/";
+const PROXY_URL = "https://my-cors.vercel.app/"; // 내 전용 프록시 주소
 
 const searchName = ref('');
 const charList = ref([]);

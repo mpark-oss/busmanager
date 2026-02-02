@@ -38,7 +38,7 @@
                     <div class="flex-grow-1 overflow-hidden">
                       <div class="font-weight-bold text-truncate" style="font-size: 0.85rem;">{{ element.name }}</div>
                       <div class="text-caption text-truncate" style="font-size: 0.7rem;">
-                        {{ element.job }} | {{ element.level }}
+                        {{ element.job }} | {{ element.level }} [{{element.power}}]
                       </div>
                     </div>
                     <v-btn icon="mdi-close" size="18" variant="text" color="grey" @click="deleteChar(element.id)"></v-btn>
@@ -89,7 +89,7 @@
                           <v-avatar start v-if="element.img">
                             <v-img :src="element.img"></v-img>
                           </v-avatar>
-                          {{ element.name }}
+                           {{element.job}} | {{ element.name }} [{{element.power}}]
                         </v-chip>
                       </template>
                     </draggable>
@@ -155,6 +155,7 @@ const fetchCharacter = async () => {
         level: data.ItemAvgLevel, 
         job: data.CharacterClassName,
         img: data.CharacterImage, // 사진 데이터 추가 저장
+        power: data.CombatPower,
         createdAt: new Date()
       });
       searchName.value = '';

@@ -111,75 +111,137 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import draggable from 'vuedraggable';
+
+import { ref } from 'vue';
+
 import axios from 'axios';
+
 import { db } from '../firebase';
-import { collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc } from "firebase/firestore";
+
+import { collection, addDoc } from "firebase/firestore";
+
+
+
+const searchName = ref('');
+
+const characterInfo = ref(null);
+
+const isLoading = ref(false);
+
+
+
+// Vercel 환경 변수에서 키를 가져옵니다.
 
 const API_KEY = import.meta.env.VITE_LOSTARK_API_KEY;
 
-const searchName = ref('');
-const charList = ref([]);
-const localBuses = ref([]);
-const isLoading = ref(false);
 
-onMounted(() => {
-  const q = query(collection(db, "characters"), orderBy("createdAt", "desc"));
-  onSnapshot(q, (snapshot) => {
-    charList.value = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  });
-});
 
 const fetchCharacter = async () => {
+
   if (!searchName.value) return;
+
   isLoading.value = true;
+
+  characterInfo.value = null;
+
+
+
   try {
+
     const cleanKey = API_KEY ? API_KEY.trim() : "";
-    const targetUrl = `https://developer-lostark.game.onstove.com/armories/characters/${encodeURIComponent(searchName.value)}/profiles`;
+
     
-    // [CORS 해결] Allorigins의 JSON 허용 방식 사용
-    const finalUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+
+    // [수정 핵심] 프록시를 제거하고 직접 호출합니다. 
+
+    // 로스트아크 API는 브라우저 직접 호출 시 CORS 에러가 날 수 있으므로 
+
+    // 만약 에러가 지속되면 Vercel의 Serverless Function 기능을 써야 하지만, 
+
+    // 일단 가장 표준적인 직접 호출 방식으로 교정합니다.
+
+    const url = `https://developer-lostark.game.onstove.com/armories/characters/${encodeURIComponent(searchName.value)}/profiles`;
+
     
-    const response = await axios.get(finalUrl);
-    // Allorigins 응답은 .contents 안에 문자열로 들어오므로 파싱
-    const data = JSON.parse(response.data.contents);
 
-    if (data && data.CharacterName) {
-      await addDoc(collection(db, "characters"), {
-        name: data.CharacterName,
-        level: data.ItemAvgLevel, 
-        job: data.CharacterClassName,
-        img: data.CharacterImage, // 사진 저장
-        createdAt: new Date()
-      });
-      searchName.value = '';
-    } else { alert("정보를 찾을 수 없습니다."); }
-  } catch (e) { 
-    console.error(e);
-    alert("검색 실패! API 키를 확인해주세요."); 
-  } finally { isLoading.value = false; }
-};
+    const response = await axios.get(url, {
 
-const deleteChar = async (id) => { if(confirm("삭제하시겠습니까?")) await deleteDoc(doc(db, "characters", id)); };
-const addBusSlot = () => { localBuses.value.push({ localId: Date.now(), raid: '2막', difficulty: '노말', members: [], dateTime: '' }); };
-const cloneCharacter = (char) => ({ ...char, id: Date.now() + Math.random() });
+      headers: { 
 
-const confirmAndUpload = async (bus, index) => {
-  if (!bus.dateTime) return alert('출발 시간을 선택해주세요!');
-  if (bus.members.length === 0) return alert('기사를 등록해주세요!');
-  try {
-    await addDoc(collection(db, "schedules"), {
-      raid: bus.raid, 
-      difficulty: bus.difficulty, 
-      members: JSON.parse(JSON.stringify(bus.members)), 
-      dateTime: bus.dateTime, 
-      createdAt: new Date()
+        'accept': 'application/json',
+
+        'authorization': `bearer ${cleanKey}` 
+
+      }
+
     });
-    localBuses.value.splice(index, 1);
-    alert('운행표 등록 완료!');
-  } catch (e) { alert(e.message); }
+
+
+
+    if (response.data) {
+
+      characterInfo.value = {
+
+        name: response.data.CharacterName,
+
+        job: response.data.CharacterClassName,
+
+        level: response.data.ItemAvgLevel,
+
+        img: response.data.CharacterImage
+
+      };
+
+    } else {
+
+      alert("캐릭터를 찾을 수 없습니다.");
+
+    }
+
+  } catch (error) {
+
+    console.error("API Error:", error);
+
+    alert("캐릭터 검색 중 오류가 발생했습니다. API 키나 네트워크 상태를 확인해주세요.");
+
+  } finally {
+
+    isLoading.value = false;
+
+  }
+
 };
+
+
+
+const addToBus = async () => {
+
+  if (!characterInfo.value) return;
+
+  try {
+
+    await addDoc(collection(db, "characters"), {
+
+      ...characterInfo.value,
+
+      createdAt: new Date()
+
+    });
+
+    alert("버스 기사 명단에 등록되었습니다!");
+
+    characterInfo.value = null;
+
+    searchName.value = '';
+
+  } catch (e) {
+
+    alert("등록 실패: " + e.message);
+
+  }
+
+};
+
 </script>
 
 <style scoped>

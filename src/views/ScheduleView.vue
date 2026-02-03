@@ -23,7 +23,7 @@
                     </v-avatar>
                     <div class="flex-grow-1 overflow-hidden">
                       <div class="font-weight-bold text-truncate text-high-emphasis" style="font-size: 0.8rem;">
-                        {{ element.name }}
+                        {{ element.job }} | {{ element.name }}
                       </div>
                       <div class="text-caption text-truncate text-medium-emphasis" style="font-size: 0.65rem;">
                         Lv.{{ element.level }}

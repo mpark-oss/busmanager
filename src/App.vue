@@ -8,9 +8,10 @@
       
       <v-spacer></v-spacer>
 
-      <v-btn to="/" prepend-icon="mdi-bus-plus">버스 만들기</v-btn>
+      <v-btn to="/" prepend-icon="mdi-bus">버스 만들기</v-btn>
       <v-btn to="/schedule" prepend-icon="mdi-calendar-check">운행표 확인</v-btn>
-      <v-btn to="/board" prepend-icon="mdi-clipboard-text-outline">자유게시판</v-btn>
+      <v-btn to="/board" prepend-icon="mdi-clipboard-text-outline">쌀산기</v-btn>
+      <v-btn to="/guestbook" prepend-icon="mdi-message-draw">방명록</v-btn>
     </v-app-bar>
 
     <v-main class="bg-grey-lighten-4">

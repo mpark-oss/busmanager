@@ -31,13 +31,18 @@
             >
               <template #item="{ element }">
                 <v-card class="mb-2 pa-2 cursor-move rounded-md" variant="tonal" color="primary" border>
-                  <div class="d-flex justify-space-between align-center">
-                    <div style="font-size: 0.85rem">
-                      <div class="font-weight-bold text-truncate" style="max-width: 100px;">{{ element.name }}</div>
-                      <div class="text-caption" style="font-size: 0.7rem;">
+                  <div class="d-flex align-center gap-2">
+                    <v-avatar size="36" class="bg-white" border>
+                      <v-img :src="element.img || ''" cover></v-img>
+                    </v-avatar>
+
+                    <div class="flex-grow-1 overflow-hidden">
+                      <div class="font-weight-bold text-truncate" style="font-size: 0.85rem;">{{ element.name }}</div>
+                      <div class="text-caption text-truncate" style="font-size: 0.7rem;">
                         {{ element.job }} | Lv.{{ element.level }}
                       </div>
-                      <div class="text-caption text-primary" style="font-size: 0.65rem; font-weight: bold;">
+                      <div class="text-caption text-primary font-weight-bold" style="font-size: 0.65rem;">
+                        <v-icon size="14" color="orange" class="me-1">mdi-sword-cross</v-icon>
                         전투력: {{ element.combatPower }}
                       </div>
                     </div>
@@ -86,7 +91,12 @@
                     <draggable v-model="bus.members" group="pilots" item-key="id" class="d-flex flex-wrap" style="min-height: 50px">
                       <template #item="{ element, index }">
                         <v-chip closable size="small" class="ma-1 font-weight-bold" color="primary" label @click:close="bus.members.splice(index, 1)">
-                          [{{ element.job }}] {{ element.name }} ({{ element.level }} / {{ element.combatPower }})
+                          <v-avatar start v-if="element.img">
+                            <v-img :src="element.img"></v-img>
+                          </v-avatar>
+                          <span class="me-1">{{ element.job }} | {{ element.name }} / {{ element.level}} </span>
+                          <v-icon size="x-small" color="amber-lighten-2" class="me-1">mdi-sword-cross</v-icon>
+                          <span style="font-size: 0.75rem;">{{ element.combatPower }}</span>
                         </v-chip>
                       </template>
                     </draggable>
@@ -114,9 +124,8 @@ import axios from 'axios';
 import { db } from '../firebase';
 import { collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc } from "firebase/firestore";
 
-const API_KEY = import.meta.env.VITE_LOSTARK_API_KEY;; 
-// MakerView.vue 파일 상단 수정
-const PROXY_URL = "https://api.allorigins.win/raw?url=";
+// Vercel 환경 변수에서 키를 가져오되, 없을 경우 대비
+const API_KEY = import.meta.env.VITE_LOSTARK_API_KEY || "";
 
 const searchName = ref('');
 const charList = ref([]);
@@ -135,38 +144,59 @@ const fetchCharacter = async () => {
   isLoading.value = true;
   try {
     const cleanKey = API_KEY.trim();
-    const url = `${PROXY_URL}https://developer-lostark.game.onstove.com/armories/characters/${encodeURIComponent(searchName.value)}/profiles`;
-    const response = await axios.get(url, { headers: { 'accept': 'application/json', 'authorization': `bearer ${cleanKey}` } });
+    // [CORS 해결] 로컬과 서버에서 검증된 직접 호출 방식 채택
+    const url = `https://developer-lostark.game.onstove.com/armories/characters/${encodeURIComponent(searchName.value)}/profiles`;
     
+    const response = await axios.get(url, {
+      headers: {
+        'accept': 'application/json',
+        'authorization': `bearer ${cleanKey}`
+      }
+    });
+
     const data = response.data;
+    console.log(data)
     if (data && data.CharacterName) {
+      // 전투력 스탯 추출
+      //const combatStat = data.Stats?.find(s => s.Type === "전투력")?.Value || "0";
+
       await addDoc(collection(db, "characters"), {
         name: data.CharacterName,
         level: data.ItemAvgLevel, 
         job: data.CharacterClassName,
-        combatPower: data.CombatPower, // [추가] 전투력 데이터 저장
+        img: data.CharacterImage, // 사진 데이터 저장
+        combatPower: data.CombatPower, // 전투력 데이터 저장
         createdAt: new Date()
       });
       searchName.value = '';
     } else { alert("정보를 찾을 수 없습니다."); }
-  } catch (e) { alert("에러: " + e.message); } finally { isLoading.value = false; }
+  } catch (e) {
+    console.error("API Error:", e);
+    alert("캐릭터 검색 실패! API 키와 네트워크 상태를 확인해주세요.");
+  } finally { isLoading.value = false; }
 };
 
-const deleteChar = async (id) => { if(confirm("삭제?")) await deleteDoc(doc(db, "characters", id)); };
+const deleteChar = async (id) => { if(confirm("삭제하시겠습니까?")) await deleteDoc(doc(db, "characters", id)); };
 const addBusSlot = () => { localBuses.value.push({ localId: Date.now(), raid: '2막', difficulty: '노말', members: [], dateTime: '' }); };
 const cloneCharacter = (char) => ({ ...char, id: Date.now() + Math.random() });
 
 const confirmAndUpload = async (bus, index) => {
-  if (!bus.dateTime) return alert('시간 선택!');
-  if (bus.members.length === 0) return alert('기사 없음!');
+  if (bus.members.length === 0) return alert('기사님을 1명 이상 등록해주세요!');
+  
   try {
-    // Firebase에 저장할 때도 전투력 정보가 포함된 복사본을 저장합니다.
     await addDoc(collection(db, "schedules"), {
-      raid: bus.raid, difficulty: bus.difficulty, members: JSON.parse(JSON.stringify(bus.members)), dateTime: bus.dateTime, createdAt: new Date()
+      raid: bus.raid, 
+      difficulty: bus.difficulty, 
+      members: JSON.parse(JSON.stringify(bus.members)), 
+      // [수정] 선택하지 않았다면 빈 문자열("")로 저장됨
+      dateTime: bus.dateTime || "", 
+      createdAt: new Date()
     });
     localBuses.value.splice(index, 1);
-    alert('등록 완료!');
-  } catch (e) { alert(e.message); }
+    alert('운행표가 성공적으로 등록되었습니다!');
+  } catch (e) { 
+    alert("등록 실패: " + e.message); 
+  }
 };
 </script>
 

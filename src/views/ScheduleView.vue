@@ -1,5 +1,5 @@
 <template>
-  <v-container fluid class="bg-grey-lighten-4 fill-height align-start">
+  <v-container fluid class="fill-height align-start pa-6">
     <v-row>
       <v-col cols="12" md="3" lg="2">
         <v-card variant="flat" class="rounded-lg pa-3" border min-height="85vh">
@@ -16,14 +16,18 @@
               item-key="id"
             >
               <template #item="{ element }">
-                <v-card class="mb-2 pa-2 cursor-move rounded-md" variant="tonal" color="primary" border>
+                <v-card class="mb-2 pa-2 cursor-move rounded-md bg-surface" variant="outlined" border>
                   <div class="d-flex align-center gap-2">
-                    <v-avatar size="32" class="bg-white" border>
+                    <v-avatar size="32" border>
                       <v-img :src="element.img || ''" cover></v-img>
                     </v-avatar>
                     <div class="flex-grow-1 overflow-hidden">
-                      <div class="font-weight-bold text-truncate" style="font-size: 0.8rem;">{{ element.name }}</div>
-                      <div class="text-caption text-truncate" style="font-size: 0.65rem;">Lv.{{ element.level }}</div>
+                      <div class="font-weight-bold text-truncate text-high-emphasis" style="font-size: 0.8rem;">
+                        {{ element.name }}
+                      </div>
+                      <div class="text-caption text-truncate text-medium-emphasis" style="font-size: 0.65rem;">
+                        Lv.{{ element.level }}
+                      </div>
                       <div class="text-caption text-primary font-weight-bold" style="font-size: 0.6rem;">
                         <v-icon size="10">mdi-sword-cross</v-icon> {{ element.combatPower }}
                       </div>
@@ -62,31 +66,23 @@
                 </v-toolbar>
 
                 <v-card-text class="pa-6">
-                  <div class="d-flex align-center mb-4 text-h6 font-weight-bold" :class="bus.dateTime ? 'text-red-darken-1' : 'text-grey-darken-1'">
+                  <div class="d-flex align-center mb-4 text-h6 font-weight-bold" :class="bus.dateTime ? 'text-red-accent-2' : 'text-grey'">
                     <v-icon class="me-2" size="small">mdi-clock-outline</v-icon>
                     {{ formatDateTime(bus.dateTime) }}
                   </div>
 
                   <v-divider class="mb-4"></v-divider>
 
-                  <v-alert
-                    v-if="bus.members.length > 0"
-                    variant="tonal"
-                    color="blue-darken-3"
-                    class="mb-4 rounded-lg py-2"
-                    density="compact"
-                  >
+                  <v-alert v-if="bus.members.length > 0" variant="tonal" color="blue" class="mb-4 rounded-lg py-2" density="compact">
                     <div class="d-flex justify-space-between align-center">
                       <div class="text-subtitle-2 font-weight-bold">
                         <v-icon size="small" class="me-1" color="orange-darken-2">mdi-arm-flex</v-icon> 파티 평균 전투력
                       </div>
-                      <div class="text-h6 font-weight-black">
-                        {{ calculateAveragePower(bus.members) }}
-                      </div>
+                      <div class="text-h6 font-weight-black">{{ calculateAveragePower(bus.members) }}</div>
                     </div>
                   </v-alert>
 
-                  <div class="text-subtitle-2 text-grey-darken-1 mb-2 font-weight-bold">
+                  <div class="text-subtitle-2 text-medium-emphasis mb-2 font-weight-bold">
                     <v-icon size="small" class="me-1">mdi-account-group</v-icon> 참여 기사 명단 (드롭하여 추가)
                   </div>
 
@@ -94,24 +90,24 @@
                     v-model="bus.members"
                     group="pilots"
                     item-key="id"
-                    class="d-flex flex-wrap pa-2 bg-grey-lighten-5 rounded-lg border-dashed"
+                    class="d-flex flex-wrap pa-2 bg-surface-variant rounded-lg border-dashed"
                     style="min-height: 100px"
                     @change="updateSchedule(bus)"
                   >
                     <template #item="{ element, index }">
                       <v-card
                         variant="outlined"
-                        class="ma-1 pa-2 rounded-lg member-card"
-                        style="border-color: #e0e0e0; background-color: #fafafa; width: calc(50% - 8px); min-height: 85px;"
+                        class="ma-1 pa-2 rounded-lg member-card bg-surface"
+                        style="width: calc(50% - 8px); min-height: 85px;"
                       >
                         <div class="d-flex justify-space-between align-start">
                           <span class="text-caption font-weight-black text-primary text-truncate">{{ element.job }}</span>
                           <v-btn icon="mdi-close" size="14" variant="text" color="grey" @click="removeMember(bus, index)"></v-btn>
                         </div>
-                        <div class="text-body-2 font-weight-bold text-truncate">{{ element.name }}</div>
+                        <div class="text-body-2 font-weight-bold text-truncate text-high-emphasis">{{ element.name }}</div>
                         <div style="font-size: 0.7rem;" class="mt-1">
-                          <div class="text-grey-darken-1">Lv.{{ element.level }}</div>
-                          <div class="text-blue-darken-2 font-weight-bold">
+                          <div class="text-medium-emphasis">Lv.{{ element.level }}</div>
+                          <div class="text-blue-accent-2 font-weight-bold">
                             <v-icon size="10">mdi-sword-cross</v-icon> {{ element.combatPower }}
                           </div>
                         </div>
@@ -121,7 +117,7 @@
                 </v-card-text>
 
                 <v-divider></v-divider>
-                <v-card-actions class="bg-grey-lighten-5 pa-2 px-6">
+                <v-card-actions class="pa-2 px-6">
                   <v-spacer></v-spacer>
                   <span class="text-caption text-grey">등록일: {{ formatDate(bus.createdAt) }}</span>
                 </v-card-actions>
@@ -144,20 +140,17 @@ const schedules = ref([]);
 const charList = ref([]);
 
 onMounted(() => {
-  // 1. 전체 기사 명단 실시간 리스너
   const qChar = query(collection(db, "characters"), orderBy("createdAt", "desc"));
   onSnapshot(qChar, (snapshot) => {
     charList.value = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   });
 
-  // 2. 운행 예정표 실시간 리스너
   const qSched = query(collection(db, "schedules"), orderBy("dateTime", "asc"));
   onSnapshot(qSched, (snapshot) => {
     schedules.value = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   });
 });
 
-// [기능] 평균 전투력 계산 로직
 const calculateAveragePower = (members) => {
   if (!members || members.length === 0) return "0";
   const total = members.reduce((acc, cur) => {
@@ -169,7 +162,6 @@ const calculateAveragePower = (members) => {
   return Math.floor(total / members.length).toLocaleString();
 };
 
-// [기능] 드롭 시 DB 즉시 업데이트
 const updateSchedule = async (bus) => {
   try {
     const busRef = doc(db, "schedules", bus.id);
@@ -215,7 +207,7 @@ const deleteSchedule = async (id) => {
 .cursor-move { cursor: move; }
 .character-list { max-height: 75vh; overflow-y: auto; }
 .bus-card { transition: transform 0.2s; }
-.border-dashed { border: 2px dashed #e0e0e0; }
+.border-dashed { border: 2px dashed rgba(var(--v-border-color), 0.3) !important; }
 .member-card { overflow: hidden; }
 .text-truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 </style>

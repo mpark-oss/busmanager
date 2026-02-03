@@ -1,5 +1,5 @@
 <template>
-  <v-container fluid class="bg-grey-lighten-4 fill-height align-start">
+  <v-container fluid class="fill-height align-start">
     <v-row>
       <v-col cols="12" md="3" lg="2">
         <v-card variant="flat" class="rounded-lg pa-3" border min-height="85vh">
@@ -86,7 +86,7 @@
                     </v-col>
                   </v-row>
 
-                  <div class="drop-zone pa-3 bg-grey-lighten-4 rounded-lg">
+                  <div class="drop-zone pa-3 rounded-lg">
                     <div class="text-caption text-center text-grey mb-2" v-if="bus.members.length === 0">기사님을 여기에 드롭!</div>
                     <draggable v-model="bus.members" group="pilots" item-key="id" class="d-flex flex-wrap" style="min-height: 50px">
                       <template #item="{ element, index }">

@@ -74,7 +74,15 @@
                       {{ bus.difficulty }}
                     </v-chip>
                     
-                    <v-chip v-if="isToday(bus.dateTime)" size="default" color="white" class="ms-2 font-weight-black text-deep-purple-accent-4 px-4" variant="flat">
+                    <v-chip 
+                      v-if="isToday(bus.dateTime)" 
+                      size="small" 
+                      color="white" 
+                      class="ms-2 font-weight-black today-badge"
+                      variant="flat"
+                      label
+                      >
+                      <v-icon start size="14" class="today-icon">mdi-flash</v-icon>
                       TODAY
                     </v-chip>
                     <v-chip v-else-if="!bus.dateTime" size="x-small" color="white" variant="outlined" class="ms-2">출발 미정</v-chip>
@@ -222,8 +230,28 @@ const deleteSchedule = async (id) => {
 
 /* [하이라이트 효과] 오늘 일정 보라색 강조 */
 .today-card {
-  border: 3px solid #651FFF !important; 
-  box-shadow: 0 4px 20px rgba(101, 31, 255, 0.2) !important;
+  border: 2px solid #7C4DFF !important; /* 선명한 보라색 테두리 */
+  box-shadow: 0 0 15px rgba(124, 77, 255, 0.4) !important; /* 은은한 보라색 광원 */
+  position: relative;
+}
+
+/* [수정] 오늘 운행 배지 스타일 */
+.today-badge {
+  background: linear-gradient(45deg, #FFF, #F5F5F5) !important;
+  color: #6200EA !important; /* 딥 퍼플 텍스트 */
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+  border-radius: 4px !important; /* 타원형 대신 세련된 각진 사각형 */
+}
+
+/* [추가] 아이콘에만 부드러운 깜빡임 효과 */
+.today-icon {
+  animation: glow-pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes glow-pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.7; }
+  100% { transform: scale(1); opacity: 1; }
 }
 
 /* 미정 일정 호박색 강조 */

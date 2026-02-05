@@ -5,7 +5,7 @@
         <div class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center">
           <v-icon color="primary" class="me-2">mdi-account-multiple</v-icon> 기사 명단
         </div>
-        <v-text-field v-model="searchName" label="캐릭터 검색" append-inner-icon="mdi-magnify"
+        <v-text-field v-model="searchName" label="캐릭터 추가" append-inner-icon="mdi-magnify"
           @click:append-inner="fetchCharacter" @keyup.enter="fetchCharacter" :loading="isLoading" density="compact"
           variant="solo-filled" flat hide-details class="mb-4 rounded-lg"></v-text-field>
 

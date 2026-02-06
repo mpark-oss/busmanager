@@ -653,7 +653,7 @@ const rankedCharList = computed(() => {
 }
 
 .rank-step-2 .level-badge {
-  border-color: rgba(0, 242, 255, 0.5);
+  border-color: rgba(132, 23, 146, 0.5);
   color: #d011d6;
 }
 
@@ -684,6 +684,12 @@ const rankedCharList = computed(() => {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
+}
+
+/* 3. [핵심] 테두리 회전 애니메이션 정의 */
+@keyframes border-beam {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 /* 2. 카드 전체가 숨쉬는 듯한 광채 효과 */

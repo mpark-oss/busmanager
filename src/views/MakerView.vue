@@ -461,21 +461,18 @@ const rankedCharList = computed(() => {
 </script>
 
 <style scoped>
-/* 검색창 높이 및 내부 정렬 수정 */
+/* 1. 검색창 및 기본 레이아웃 제어 */
 .custom-search-field :deep(.v-field__input) {
   min-height: 70px !important;
-  /* 높이를 48px로 상향 */
   padding-top: 0 !important;
   padding-bottom: 0 !important;
   align-items: center;
   font-size: 0.95rem;
-  /* 텍스트 크기 살짝 키움 */
 }
 
 .custom-search-field :deep(.v-field) {
   height: 70px !important;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  /* 테두리를 살짝 주어 구분감 강화 */
 }
 
 .custom-search-field :deep(.v-field__append-inner) {
@@ -498,11 +495,13 @@ const rankedCharList = computed(() => {
   border-radius: 10px;
 }
 
+/* 2. 카드 공통 및 텍스트 설정 */
 .char-rank-card {
   position: relative;
-  background: rgba(45, 45, 45, 0.9) !important;
+  background: rgba(20, 20, 20, 0.95) !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
   backdrop-filter: blur(10px);
+  overflow: hidden;
 }
 
 .rank-number {
@@ -512,82 +511,9 @@ const rankedCharList = computed(() => {
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 }
 
-.glow-overlay {
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg,
-      transparent,
-      rgba(255, 255, 255, 0.2),
-      transparent);
-  transition: none;
-  animation: sweep 2s infinite;
-  /* 3초에서 2초로 단축 */
-}
-
-@keyframes sweep {
-  0% {
-    left: -100%;
-  }
-
-  100% {
-    left: 100%;
-  }
-}
-
-.rank-step-1 {
-  border: 2px solid #ff1e00 !important;
-  box-shadow: inset 0 0 20px rgba(255, 215, 0, 0.2), 0 0 15px rgba(255, 215, 0, 0.4) !important;
-  background: linear-gradient(135deg, #2b2100 0%, #1a1a1a 100%) !important;
-}
-
-.rank-step-1 .rank-number,
-.rank-step-1 .combat-power-text {
-  color: #ff1e00 !important;
-}
-
-.rank-step-2 {
-  border: 2px solid #d011d6 !important;
-  box-shadow: inset 0 0 20px rgba(0, 242, 255, 0.1), 0 0 15px rgba(0, 242, 255, 0.3) !important;
-  background: linear-gradient(135deg, #001f2b 0%, #1a1a1a 100%) !important;
-}
-
-.rank-step-2 .rank-number,
-.rank-step-2 .combat-power-text {
-  color: #d011d6 !important;
-}
-
-.rank-step-3 {
-  border: 2px solid #ffe600 !important;
-  box-shadow: 0 0 10px rgba(255, 170, 0, 0.2) !important;
-  background: linear-gradient(135deg, #241800 0%, #1a1a1a 100%) !important;
-}
-
-.rank-step-3 .rank-number,
-.rank-step-3 .combat-power-text {
-  color: #ffe600 !important;
-}
-
-.rank-step-4 {
-  border: 1.5px solid #E0E0E0 !important;
-  background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%) !important;
-}
-
-.rank-step-4 .rank-number,
-.rank-step-4 .combat-power-text {
-  color: #E0E0E0 !important;
-}
-
-.rank-step-5 {
-  border: 1.5px solid #9b5c1d !important;
-  background: linear-gradient(135deg, #261400 0%, #1a1a1a 100%) !important;
-}
-
-.rank-step-5 .rank-number,
-.rank-step-5 .combat-power-text {
-  color: #9b5c1d !important;
+/* 텍스트가 별빛보다 위에 오도록 설정 */
+.char-rank-card .position-relative {
+  z-index: 2 !important;
 }
 
 .rank-normal {
@@ -599,294 +525,138 @@ const rankedCharList = computed(() => {
   transform: translateX(5px);
 }
 
-.profile-card {
-  background: #1a1a2e;
-  min-height: 100%;
+/* 3. 애니메이션 정의 */
+@keyframes sweep {
+  0% { left: -100%; }
+  100% { left: 100%; }
 }
 
-.profile-gradient {
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 10%, transparent 100%);
-}
-
-.gem-wrapper {
-  width: 56px;
-}
-
-.gap-2 {
-  gap: 8px;
-}
-
-.border-dashed {
-  border: 1px dashed rgba(128, 128, 128, 0.3) !important;
-}
-
-/* 아크그리드 가독성 유지 */
-.ark-slot-name {
-  line-height: 1.2 !important;
-  font-weight: 900 !important;
-}
-
-.v-theme--dark .ark-slot-name {
-  color: #FFFFFF !important;
-}
-
-.ark-slot-card[style*="background-color: rgb(239, 108, 0)"] .ark-slot-name {
-  color: #FFFFFF !important;
-}
-
-/* 레벨 배지 스타일 */
-.level-badge {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-  padding: 0px 4px;
-  border-radius: 4px;
-  font-size: 0.65rem;
-  font-weight: 800;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  line-height: 1.2;
-}
-
-/* 랭킹 1위~5위별 레벨 배지 색상 포인트 (선택 사항) */
-.rank-step-1 .level-badge {
-  border-color: rgba(255, 30, 0, 0.5);
-  color: #ff1e00;
-}
-
-.rank-step-2 .level-badge {
-  border-color: rgba(132, 23, 146, 0.5);
-  color: #d011d6;
-}
-
-.rank-step-3 .level-badge {
-  border-color: rgba(255, 170, 0, 0.5);
-  color: #ffe600;
-}
-
-.rank-step-4 .level-badge {
-  border-color: #E0E0E0;
-  color: #E0E0E0;
-}
-
-.rank-step-5 .level-badge {
-  border-color: #9b5c1d;
-  color: #9b5c1d;
-}
-
-/* 기존 전투력 텍스트 위치 미세 조정 */
-.combat-power-text {
-  letter-spacing: -0.02em;
-}
-
-/* --- 랭킹 애니메이션 고도화 --- */
-
-/* 1. 테두리를 따라 흐르는 빛 애니메이션 */
 @keyframes border-glow {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
 
-/* 3. [핵심] 테두리 회전 애니메이션 정의 */
-@keyframes border-beam {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* 2. 카드 전체가 숨쉬는 듯한 광채 효과 */
 @keyframes pulse-glow {
   0% { box-shadow: 0 0 5px var(--rank-color), inset 0 0 5px var(--rank-color); }
   50% { box-shadow: var(--glow-intensity) var(--rank-color), inset 0 0 10px var(--rank-color); }
   100% { box-shadow: 0 0 5px var(--rank-color), inset 0 0 5px var(--rank-color); }
 }
 
-/* 랭킹 카드 공통 설정 */
-.rank-step-1, .rank-step-2, .rank-step-3, .rank-step-4, .rank-step-5 {
-  position: relative;
-  background-size: 200% 200% !important;
-  z-index: 1;
-  /* 변수 초기화 */
-  --glow-intensity: 0 0 15px; 
-}
-
-/* [1등] 압도적인 화력: 가장 빠른 속도와 강한 광채 */
-.rank-step-1 {
-  --rank-color: #ff1e00;
-  --glow-intensity: 0 0 30px;
-  border: 2.5px solid #ff1e00 !important;
-  animation: border-glow 1.5s linear infinite, pulse-glow 0.8s ease-in-out infinite !important;
-  background: linear-gradient(135deg, #4a0000, #1a1a1a, #ff1e00, #1a1a1a) !important;
-  background-size: 300% 300% !important;
-}
-.rank-step-1 .rank-number { font-size: 1.5rem; text-shadow: 0 0 15px #ff1e00; }
-
-/* [2등] 매우 빠름: 선명한 네온 효과 */
-.rank-step-2 {
-  --rank-color: #d011d6;
-  --glow-intensity: 0 0 25px;
-  border: 2px solid #d011d6 !important;
-  animation: border-glow 2s linear infinite, pulse-glow 1.2s ease-in-out infinite !important;
-  background: linear-gradient(135deg, #2b002b, #1a1a1a, #d011d6) !important;
-}
-
-/* [3등] 보통 빠름: 황금빛 광채 */
-.rank-step-3 {
-  --rank-color: #ffe600;
-  --glow-intensity: 0 0 20px;
-  border: 2px solid #ffe600 !important;
-  animation: border-glow 3s linear infinite, pulse-glow 1.8s ease-in-out infinite !important;
-  background: linear-gradient(135deg, #241800, #1a1a1a, #ffe600) !important;
-}
-
-/* [4등] 차분함: 은은한 실버 광원 */
-.rank-step-4 {
-  --rank-color: #E0E0E0;
-  --glow-intensity: 0 0 10px;
-  border: 1.5px solid #E0E0E0 !important;
-  animation: border-glow 5s linear infinite, pulse-glow 3s ease-in-out infinite !important;
-  background: linear-gradient(135deg, #2d2d2d, #1a1a1a) !important;
-}
-
-/* [5등] 기본: 아주 느리고 정적인 효과 */
-.rank-step-5 {
-  --rank-color: #9b5c1d;
-  --glow-intensity: 0 0 8px;
-  border: 1.5px solid #9b5c1d !important;
-  animation: border-glow 8s linear infinite, pulse-glow 4s ease-in-out infinite !important;
-  background: #1a1a1a !important;
-}
-
-/* 랭킹 텍스트 색상 동기화 */
-.rank-step-1 .rank-number, .rank-step-1 .combat-power-text { color: #ff1e00 !important; }
-.rank-step-2 .rank-number, .rank-step-2 .combat-power-text { color: #d011d6 !important; }
-.rank-step-3 .rank-number, .rank-step-3 .combat-power-text { color: #ffe600 !important; }
-.rank-step-4 .rank-number, .rank-step-4 .combat-power-text { color: #E0E0E0 !important; }
-.rank-step-5 .rank-number, .rank-step-5 .combat-power-text { color: #9b5c1d !important; }
-
-/* 빛 반사 효과(Glow Overlay) 속도도 순위에 맞춤 */
-.rank-step-1 .glow-overlay { animation-duration: 1s; }
-.rank-step-2 .glow-overlay { animation-duration: 1.5s; }
-.rank-step-3 .glow-overlay { animation-duration: 2s; }
-.rank-step-4 .glow-overlay { animation-duration: 3s; }
-.rank-step-5 .glow-overlay { animation-duration: 4s; }
-
-/* --- 은하수 & 우주 배경 효과 --- */
-
-/* 1. 움직이는 우주 안개(Nebula) */
 @keyframes nebula-move {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
 
-/* 2. 별빛 반짝임(Twinkle) */
 @keyframes twinkle {
-  0%, 100% { opacity: 0.3; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.2); }
+  0%, 100% { opacity: 0.2; transform: scale(0.8); }
+  50% { opacity: var(--star-opacity); transform: scale(1.1); }
 }
 
-/* 랭킹 카드 공통 (1~3등 전용 우주 효과) */
+/* 4. 랭킹별 스타일 설정 (변수 제어) */
+.rank-step-1, .rank-step-2, .rank-step-3, .rank-step-4, .rank-step-5 {
+  position: relative;
+  background-size: 200% 200% !important;
+  z-index: 1;
+}
+
+/* [1등] 신급: 가장 촘촘한 밀도(40px)와 최대 밝기 */
+.rank-step-1 {
+  --rank-color: #ff1e00;
+  --glow-intensity: 0 0 35px;
+  --star-density: 40px;
+  --star-opacity: 1.0;
+  border: 2.5px solid #ff1e00 !important;
+  animation: border-glow 1s linear infinite, pulse-glow 0.6s ease-in-out infinite !important;
+  background: radial-gradient(circle at center, #600000 0%, #1a1a1a 80%) !important;
+}
+.rank-step-1 .rank-number { font-size: 1.5rem; text-shadow: 0 0 15px #ff1e00; }
+
+/* [2등] 영웅급: 높은 밀도(70px)와 중간 밝기 */
+.rank-step-2 {
+  --rank-color: #d011d6;
+  --glow-intensity: 0 0 20px;
+  --star-density: 70px;
+  --star-opacity: 0.7;
+  border: 2px solid #d011d6 !important;
+  background: linear-gradient(135deg, #150025 0%, #2a0045 50%, #150025 100%) !important;
+  animation: nebula-move 4s ease infinite, border-glow 1.5s linear infinite, pulse-glow 1.1s ease-in-out infinite !important;
+}
+
+/* [3등] 희귀급: 기본 밀도(110px)와 낮은 밝기 */
+.rank-step-3 {
+  --rank-color: #ffe600;
+  --glow-intensity: 0 0 15px;
+  --star-density: 110px;
+  --star-opacity: 0.4;
+  border: 2px solid #ffe600 !important;
+  background: radial-gradient(ellipse at top right, #2b1d00 0%, #1a1a1a 80%) !important;
+  animation: border-glow 2s linear infinite, pulse-glow 1.5s ease-in-out infinite !important;
+}
+
+.rank-step-4 { --rank-color: #E0E0E0; border: 1.5px solid #E0E0E0 !important; animation: border-glow 5s linear infinite; background: #1a1a1a !important; }
+.rank-step-5 { --rank-color: #9b5c1d; border: 1.5px solid #9b5c1d !important; animation: border-glow 8s linear infinite; background: #1a1a1a !important; }
+
+/* 랭킹 텍스트 색상 동기화 */
+.rank-step-1 .rank-number, .rank-step-1 .combat-power-text { color: #ff1e00 !important; }
+.rank-step-2 .rank-number, .rank-step-2 .combat-power-text { color: #d011d6 !important; }
+.rank-step-3 .rank-number, .rank-step-3 .combat-power-text { color: #ffe600 !important; }
+
+/* 5. [핵심] 고밀도 은하수 레이어 (1~3등 전용) */
 .rank-step-1::before, .rank-step-2::before, .rank-step-3::before {
   content: "";
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  /* 다중 box-shadow로 작은 별들 표현 */
+  /* 12개의 별 좌표를 한 패턴에 심어 밀도를 극대화 */
   background-image: 
-    radial-gradient(1px 1px at 20px 30px, #fff, rgba(0,0,0,0)),
-    radial-gradient(1px 1px at 40px 70px, #fff, rgba(0,0,0,0)),
-    radial-gradient(2px 2px at 50px 160px, #fff, rgba(0,0,0,0)),
-    radial-gradient(1px 1px at 80px 40px, #fff, rgba(0,0,0,0)),
-    radial-gradient(1px 1px at 130px 80px, #fff, rgba(0,0,0,0)),
-    radial-gradient(2px 2px at 160px 120px, #fff, rgba(0,0,0,0));
-  background-size: 200px 200px;
-  animation: twinkle 3s infinite ease-in-out;
-  opacity: 0.5;
-  z-index: 0;
+    radial-gradient(1px 1px at 10% 10%, #fff, transparent),
+    radial-gradient(1px 1px at 20% 40%, #fff, transparent),
+    radial-gradient(1px 1px at 45% 15%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 60% 30%, #fff, transparent),
+    radial-gradient(1px 1px at 80% 10%, #fff, transparent),
+    radial-gradient(1px 1px at 90% 50%, #fff, transparent),
+    radial-gradient(1px 1px at 15% 85%, #fff, transparent),
+    radial-gradient(1.2px 1.2px at 35% 70%, #fff, transparent),
+    radial-gradient(1px 1px at 50% 95%, #fff, transparent),
+    radial-gradient(1px 1px at 75% 80%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 85% 90%, #fff, transparent),
+    radial-gradient(1px 1px at 40% 55%, #fff, transparent);
+  /* 등수가 높을수록 --star-density 크기가 작아져서 패턴이 더 촘촘하게 반복됨 */
+  background-size: var(--star-density) var(--star-density);
+  animation: twinkle 2s infinite ease-in-out;
+  opacity: var(--star-opacity);
+  z-index: 1;
 }
 
-/* [1등] 태양계 파괴급: 붉은 블랙홀 & 강력한 성운 */
-.rank-step-1 {
-  --rank-color: #ff1e00;
-  --glow-intensity: 0 0 35px;
-  border: 2.5px solid #ff1e00 !important;
-  animation: border-glow 1.2s linear infinite, pulse-glow 0.7s ease-in-out infinite !important;
-  background: radial-gradient(circle at center, #660000 0%, #1a1a1a 70%, #000 100%) !important;
-  box-shadow: inset 0 0 50px rgba(255, 30, 0, 0.3) !important;
+/* 6. 추가 UI 효과 */
+.glow-overlay {
+  position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  animation: sweep 2s infinite; z-index: 1;
 }
 
-/* [2등] 보랏빛 은하: 차원 이동 효과 */
-.rank-step-2 {
-  --rank-color: #d011d6;
-  --glow-intensity: 0 0 25px;
-  border: 2px solid #d011d6 !important;
-  animation: border-glow 1.8s linear infinite, pulse-glow 1.1s ease-in-out infinite !important;
-  background: linear-gradient(135deg, #1a0033 0%, #d011d6 50%, #1a0033 100%) !important;
-  background-size: 400% 400% !important;
-  animation: nebula-move 5s ease infinite, border-glow 1.8s linear infinite !important;
-}
+.rank-step-1 .glow-overlay { animation-duration: 1s; }
+.rank-step-2 .glow-overlay { animation-duration: 1.5s; }
+.rank-step-3 .glow-overlay { animation-duration: 2s; }
 
-/* [3등] 황금 성단: 초신성 폭발 직전 */
-.rank-step-3 {
-  --rank-color: #ffe600;
-  --glow-intensity: 0 0 20px;
-  border: 2px solid #ffe600 !important;
-  animation: border-glow 2.5s linear infinite, pulse-glow 1.5s ease-in-out infinite !important;
-  background: radial-gradient(ellipse at top right, #4d3300 0%, #1a1a1a 60%) !important;
+.level-badge {
+  background: rgba(255, 255, 255, 0.1); color: #fff; padding: 0px 4px; border-radius: 4px;
+  font-size: 0.65rem; font-weight: 800; border: 1px solid rgba(255, 255, 255, 0.2); line-height: 1.2;
 }
+.rank-step-1 .level-badge { border-color: rgba(255, 30, 0, 0.5); color: #ff1e00; }
+.rank-step-2 .level-badge { border-color: rgba(132, 23, 146, 0.5); color: #d011d6; }
+.rank-step-3 .level-badge { border-color: rgba(255, 170, 0, 0.5); color: #ffe600; }
 
-/* 4~5등은 이전의 깔끔한 스타일 유지 */
-.rank-step-4 { --rank-color: #E0E0E0; --glow-intensity: 0 0 10px; border: 1.5px solid #E0E0E0 !important; animation: border-glow 5s linear infinite; background: #1a1a1a !important; }
-.rank-step-5 { --rank-color: #9b5c1d; --glow-intensity: 0 0 5px; border: 1.5px solid #9b5c1d !important; animation: border-glow 8s linear infinite; background: #1a1a1a !important; }
+.combat-power-text { letter-spacing: -0.02em; }
+.profile-card { background: #1a1a2e; min-height: 100%; }
+.profile-gradient { background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 10%, transparent 100%); }
+.gem-wrapper { width: 56px; }
+.gap-2 { gap: 8px; }
+.border-dashed { border: 1px dashed rgba(128, 128, 128, 0.3) !important; }
 
-/* 텍스트 가독성을 위해 z-index 조정 */
-.char-rank-card .position-relative {
-  z-index: 2 !important;
-}
-
-/* 드래그 앤 드롭 타겟 영역 최적화 */
-.bus-member-draggable-area {
-  min-height: 120px;
-  /* 드롭 영역을 확실하게 확보 */
-  width: 100%;
-  cursor: copy;
-  /* 드래그 중 드롭 가능하다는 커서 표시 */
-  transition: background-color 0.2s ease;
-}
-
-/* 드래그 앤 드롭 타겟 영역 최적화 */
-.bus-member-draggable-area {
-  min-height: 120px !important;
-  /* 최소 높이 강제 확보 */
-  width: 100%;
-  cursor: copy;
-}
-
-/* 안내 문구가 실제 드롭 이벤트를 방해하지 않도록 보완 */
-.empty-drop-msg {
-  position: absolute;
-  /* 영역 중앙에 띄움 */
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 100%;
-  pointer-events: none;
-  /* 중요: 드래그 요소가 이 위를 지나갈 때 간섭 방지 */
-  opacity: 0.3;
-}
-
-/* 드롭 존 레이아웃 유지 */
-.drop-zone {
-  position: relative;
-  /* empty-drop-msg 배치를 위해 필요 */
-  overflow: hidden;
-}
-
-/* 드래그 중인 원본 요소의 스타일 (선택 사항) */
-.sortable-ghost {
-  opacity: 0.3;
-  background: var(--v-theme-primary) !important;
-}
-
-.sortable-drag {
-  cursor: grabbing;
-}
+/* 7. 드래그 앤 드롭 최적화 */
+.bus-member-draggable-area { min-height: 120px !important; width: 100%; cursor: copy; }
+.empty-drop-msg { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; pointer-events: none; opacity: 0.3; }
+.drop-zone { position: relative; overflow: hidden; }
 </style>

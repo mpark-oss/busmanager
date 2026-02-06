@@ -45,9 +45,79 @@
         <v-card variant="flat" class="rounded-lg pa-4" border min-height="85vh">
           <div class="d-flex justify-space-between align-center mb-6">
             <h2 class="text-h4 font-weight-black text-primary">
-              <v-icon size="large" class="me-2">mdi-calendar-clock</v-icon>운행 예정표
+              <v-icon size="large" class="me-2">mdi-calendar-clock</v-icon>버스 운행 예정표
             </h2>
           </div>
+
+          <v-row class="mb-8">
+            <v-col cols="12">
+              <div class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center opacity-80">
+                <v-icon color="primary" class="me-2">mdi-calendar-range</v-icon> 주간 버스 일정 드래그(오늘 기준7일)
+              </div>
+              <div class="calendar-wrapper d-flex">
+                <div v-for="day in daysOfWeek" :key="day.fullDate" class="calendar-day-column flex-grow-1">
+                  <div class="day-header pa-2 text-center font-weight-bold" :class="{ 'today-header': isToday(day.fullDate) }">
+                    {{ day.display }}
+                  </div>
+                  <draggable 
+                    :list="calendarSchedules[day.fullDate]" 
+                    group="schedule-items" 
+                    item-key="id"
+                    class="day-dropzone pa-1"
+                    @change="(e) => onDateDrop(e, day.fullDate)"
+                  >
+                    <template #item="{ element }">
+                      <v-chip 
+                        size="x-small" 
+                        :color="element.difficulty === '하드' ? 'orange-darken-4' : 'primary'" 
+                        variant="flat" 
+                        class="mb-1 w-100 justify-start px-1 rounded-sm schedule-chip transition-swing"
+                        :class="{ 'elevation-5': hoveredId === element.id }"
+                        label
+                        @mouseenter="hoveredId = element.id"
+                        @mouseleave="hoveredId = null"
+                        @click="scrollToDetail(element.id)"
+                      >
+                        <span class="text-truncate font-weight-black">
+                          [{{ element.difficulty[0] }}] {{ element.raid }}
+                        </span>
+                      </v-chip>
+                    </template>
+                  </draggable>
+                </div>
+
+                <div class="calendar-day-column pending-column flex-grow-1">
+                  <div class="day-header pa-2 text-center font-weight-bold bg-amber-lighten-4 text-amber-darken-4">
+                    출발 미정
+                  </div>
+                  <draggable 
+                    :list="pendingSchedules" 
+                    group="schedule-items" 
+                    item-key="id"
+                    class="day-dropzone pa-1 bg-amber-lighten-5"
+                    @change="(e) => onDateDrop(e, '')"
+                  >
+                    <template #item="{ element }">
+                      <v-chip 
+                        size="x-small" 
+                        color="amber-darken-2" 
+                        variant="flat" 
+                        class="mb-1 w-100 justify-start px-1 rounded-sm" 
+                        label
+                        @mouseenter="hoveredId = element.id"
+                        @mouseleave="hoveredId = null"
+                        @click="scrollToDetail(element.id)"
+                      >
+                        <span class="text-truncate font-weight-black">{{ element.raid }}</span>
+                      </v-chip>
+                    </template>
+                  </draggable>
+                </div>
+              </div>
+            </v-col>
+          </v-row>
+
+          <v-divider class="mb-8"></v-divider>
 
           <v-row>
             <v-col v-if="upcomingSchedules.length === 0" cols="12" class="text-center py-10">
@@ -57,10 +127,15 @@
 
             <v-col v-for="bus in upcomingSchedules" :key="bus.id" cols="12" md="6" xl="4">
               <v-card 
+                :id="`bus-card-${bus.id}`"
                 border 
-                elevation="2" 
-                class="rounded-xl overflow-hidden mb-6 mx-auto bus-card"
-                :class="{ 'today-card': isToday(bus.dateTime), 'pending-card': !bus.dateTime }"
+                :elevation="hoveredId === bus.id || clickedId === bus.id ? 8 : 2" 
+                class="rounded-xl overflow-hidden mb-6 mx-auto bus-card transition-all"
+                :class="{ 
+                  'today-card': isToday(bus.dateTime), 
+                  'pending-card': !bus.dateTime,
+                  'highlight-focus': hoveredId === bus.id || clickedId === bus.id 
+                }"
               >
                 <v-toolbar 
                   :color="(!bus.dateTime) ? 'amber-darken-2' : (isToday(bus.dateTime) ? 'deep-purple-accent-3' : 'primary')" 
@@ -74,14 +149,7 @@
                       {{ bus.difficulty }}
                     </v-chip>
                     
-                    <v-chip 
-                      v-if="isToday(bus.dateTime)" 
-                      size="small" 
-                      color="white" 
-                      class="ms-2 font-weight-black today-badge"
-                      variant="flat"
-                      label
-                      >
+                    <v-chip v-if="isToday(bus.dateTime)" size="small" color="white" class="ms-2 font-weight-black today-badge" variant="flat" label>
                       <v-icon start size="14" class="today-icon">mdi-flash</v-icon>
                       TODAY
                     </v-chip>
@@ -141,6 +209,8 @@ import { collection, query, orderBy, onSnapshot, deleteDoc, doc, updateDoc } fro
 const schedules = ref([]);
 const charList = ref([]);
 const searchQuery = ref("");
+const hoveredId = ref(null);
+const clickedId = ref(null);
 
 onMounted(() => {
   const qChar = query(collection(db, "characters"), orderBy("createdAt", "desc"));
@@ -152,6 +222,57 @@ onMounted(() => {
     schedules.value = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   });
 });
+
+/* --- 달력 관련 로직 --- */
+const daysOfWeek = computed(() => {
+  const days = [];
+  const today = new Date();
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    days.push({
+      fullDate: d.toISOString().split('T')[0],
+      display: d.toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric', weekday: 'short' })
+    });
+  }
+  return days;
+});
+
+const calendarSchedules = computed(() => {
+  const map = {};
+  daysOfWeek.value.forEach(day => map[day.fullDate] = []);
+  schedules.value.forEach(bus => {
+    if (bus.dateTime) {
+      const dateKey = bus.dateTime.split('T')[0];
+      if (map[dateKey]) map[dateKey].push(bus);
+    }
+  });
+  return map;
+});
+
+const pendingSchedules = computed(() => schedules.value.filter(bus => !bus.dateTime));
+
+const onDateDrop = async (event, targetDate) => {
+  if (event.added) {
+    const bus = event.added.element;
+    const busRef = doc(db, "schedules", bus.id);
+    const currentTime = bus.dateTime && bus.dateTime.includes('T') ? bus.dateTime.split('T')[1] : "00:00";
+    await updateDoc(busRef, {
+      dateTime: targetDate ? `${targetDate}T${currentTime}` : ""
+    });
+  }
+};
+
+const scrollToDetail = (id) => {
+  clickedId.value = id;
+  setTimeout(() => {
+    const element = document.getElementById(`bus-card-${id}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, 50);
+};
+/* -------------------- */
 
 const isToday = (dateStr) => {
   if (!dateStr) return false;
@@ -165,9 +286,15 @@ const isToday = (dateStr) => {
 const upcomingSchedules = computed(() => {
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
-  return schedules.value.filter(bus => {
+  let list = schedules.value.filter(bus => {
     if (!bus.dateTime) return true;
     return new Date(bus.dateTime) >= todayStart;
+  });
+
+  return [...list].sort((a, b) => {
+    if (a.id === clickedId.value) return -1;
+    if (b.id === clickedId.value) return 1;
+    return new Date(a.dateTime || 0) - new Date(b.dateTime || 0);
   });
 });
 
@@ -224,29 +351,28 @@ const deleteSchedule = async (id) => {
   .character-list-wrapper { flex: 1; overflow-y: auto !important; padding-right: 8px; }
 }
 
-/* 초슬림 검색창 */
+/* 달력 스케줄러 스타일 */
+.calendar-wrapper { display: flex; background: rgba(var(--v-theme-surface), 1); border: 1px solid rgba(var(--v-border-color), 0.12); border-radius: 12px; overflow: hidden; }
+.calendar-day-column { border-right: 1px solid rgba(var(--v-border-color), 0.12); min-height: 180px; display: flex; flex-direction: column; min-width: 0; }
+.calendar-day-column:last-child { border-right: none; }
+.day-header { font-size: 0.7rem; background: rgba(var(--v-theme-surface-variant), 0.05); border-bottom: 1px solid rgba(var(--v-border-color), 0.08); }
+.today-header { background-color: #F5F3FF !important; color: #7C4DFF !important; }
+.day-dropzone { flex-grow: 1; min-height: 120px; transition: background-color 0.2s; }
+.day-dropzone:hover { background-color: rgba(124, 77, 255, 0.05); }
+.pending-column { border-left: 2px solid #FFAB00 !important; }
+.schedule-chip { font-size: 0.65rem !important; cursor: pointer; transition: transform 0.2s; }
+.schedule-chip:hover { transform: translateY(-2px); }
+
+/* 하이라이트 및 포커스 효과 */
+.highlight-focus { border: 3px solid #7C4DFF !important; transform: scale(1.02); z-index: 10; }
+.transition-all { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+
 .compact-search-field :deep(.v-field) { height: 32px !important; min-height: 32px !important; font-size: 0.75rem !important; padding: 0 8px !important; }
 .compact-search-field :deep(.v-field__input) { padding-top: 0 !important; padding-bottom: 0 !important; min-height: 32px !important; }
 
-/* [하이라이트 효과] 오늘 일정 보라색 강조 */
-.today-card {
-  border: 2px solid #7C4DFF !important; /* 선명한 보라색 테두리 */
-  box-shadow: 0 0 15px rgba(124, 77, 255, 0.4) !important; /* 은은한 보라색 광원 */
-  position: relative;
-}
-
-/* [수정] 오늘 운행 배지 스타일 */
-.today-badge {
-  background: linear-gradient(45deg, #FFF, #F5F5F5) !important;
-  color: #6200EA !important; /* 딥 퍼플 텍스트 */
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
-  border-radius: 4px !important; /* 타원형 대신 세련된 각진 사각형 */
-}
-
-/* [추가] 아이콘에만 부드러운 깜빡임 효과 */
-.today-icon {
-  animation: glow-pulse 1.5s infinite ease-in-out;
-}
+.today-card { border: 2px solid #7C4DFF !important; box-shadow: 0 0 15px rgba(124, 77, 255, 0.4) !important; position: relative; }
+.today-badge { background: linear-gradient(45deg, #FFF, #F5F5F5) !important; color: #6200EA !important; box-shadow: 0 0 8px rgba(255, 255, 255, 0.8); border-radius: 4px !important; }
+.today-icon { animation: glow-pulse 1.5s infinite ease-in-out; }
 
 @keyframes glow-pulse {
   0% { transform: scale(1); opacity: 1; }
@@ -254,11 +380,7 @@ const deleteSchedule = async (id) => {
   100% { transform: scale(1); opacity: 1; }
 }
 
-/* 미정 일정 호박색 강조 */
-.pending-card {
-  border: 2px solid #FFAB00 !important;
-}
-
+.pending-card { border: 2px solid #FFAB00 !important; }
 .cursor-move { cursor: move; }
 .border-dashed { border: 2px dashed rgba(var(--v-border-color), 0.3) !important; }
 .dropzone-area { min-height: 100px; background-color: #f5f5f5; }

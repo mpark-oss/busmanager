@@ -52,7 +52,7 @@
           <v-row class="mb-8">
             <v-col cols="12">
               <div class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center opacity-80">
-                <v-icon color="primary" class="me-2">mdi-calendar-range</v-icon> 주간 버스 일정 드래그(오늘 기준7일)
+                <v-icon color="primary" class="me-2">mdi-calendar-range</v-icon> 주간 버스 일정 드래그(오늘 기준 7일)
               </div>
               <div class="calendar-wrapper d-flex">
                 <div v-for="day in daysOfWeek" :key="day.fullDate" class="calendar-day-column flex-grow-1">
@@ -160,14 +160,20 @@
                 </v-toolbar>
 
                 <v-card-text class="pa-6">
-                  <div class="d-flex align-center mb-4 text-h6 font-weight-bold" :class="!bus.dateTime ? 'text-amber-darken-3' : (isToday(bus.dateTime) ? 'text-deep-purple-accent-3' : 'text-grey')">
-                    <v-icon class="me-2" size="small">mdi-clock-outline</v-icon>
-                    {{ formatDateTime(bus.dateTime) }}
+                  <div class="d-flex align-center justify-space-between mb-4">
+                    <div class="text-h6 font-weight-bold d-flex align-center" :class="!bus.dateTime ? 'text-amber-darken-3' : (isToday(bus.dateTime) ? 'text-deep-purple-accent-3' : 'text-grey-darken-1')">
+                      <v-icon class="me-2" size="small">mdi-clock-outline</v-icon>
+                      {{ formatDateTime(bus.dateTime) }}
+                    </div>
+                    <v-btn v-if="bus.dateTime" size="small" variant="tonal" color="primary" prepend-icon="mdi-clock-edit" @click="openTimePicker(bus)">
+                      시간 수정
+                    </v-btn>
                   </div>
+
                   <v-divider class="mb-4"></v-divider>
                   <v-alert v-if="bus.members.length > 0" variant="tonal" :color="isToday(bus.dateTime) ? 'deep-purple' : (!bus.dateTime ? 'amber' : 'blue')" class="mb-4 rounded-lg py-2" density="compact">
                     <div class="d-flex justify-space-between align-center">
-                      <div class="text-subtitle-2 font-weight-bold"><v-icon size="small" class="me-1">mdi-sword</v-icon> 파티 평균 전투력</div>
+                      <div class="text-subtitle-2 font-weight-bold"><v-icon size="small" class="me-1">mdi-arm-flex</v-icon> 파티 평균 전투력</div>
                       <div class="text-h6 font-weight-black">{{ calculateAveragePower(bus.members) }}</div>
                     </div>
                   </v-alert>
@@ -197,6 +203,29 @@
         </v-card>
       </v-col>
     </v-row>
+
+    <v-dialog v-model="timeDialog" max-width="320">
+      <v-card class="rounded-xl pa-2">
+        <v-card-title class="text-h6 font-weight-black">
+          <v-icon color="primary" class="me-2">mdi-clock-edit</v-icon>운행 시간 설정
+        </v-card-title>
+        <v-card-text>
+          <div class="text-caption mb-4 text-medium-emphasis">출발 시각을 선택해주세요.</div>
+          <v-text-field
+            v-model="tempTime"
+            type="time"
+            variant="outlined"
+            color="primary"
+            rounded="lg"
+          ></v-text-field>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn variant="text" rounded="lg" @click="timeDialog = false">취소</v-btn>
+          <v-btn color="primary" variant="flat" rounded="lg" class="px-6" @click="saveTime">저장</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -211,6 +240,11 @@ const charList = ref([]);
 const searchQuery = ref("");
 const hoveredId = ref(null);
 const clickedId = ref(null);
+
+// 시간 수정 관련 상태 추가
+const timeDialog = ref(false);
+const tempTime = ref("");
+const selectedBus = ref(null);
 
 onMounted(() => {
   const qChar = query(collection(db, "characters"), orderBy("createdAt", "desc"));
@@ -256,10 +290,36 @@ const onDateDrop = async (event, targetDate) => {
   if (event.added) {
     const bus = event.added.element;
     const busRef = doc(db, "schedules", bus.id);
-    const currentTime = bus.dateTime && bus.dateTime.includes('T') ? bus.dateTime.split('T')[1] : "00:00";
+    
+    // 기존 시간 보존 로직 추가
+    let existingTime = "00:00";
+    if (bus.dateTime && bus.dateTime.includes('T')) {
+      existingTime = bus.dateTime.split('T')[1].substring(0, 5);
+    }
+
     await updateDoc(busRef, {
-      dateTime: targetDate ? `${targetDate}T${currentTime}` : ""
+      dateTime: targetDate ? `${targetDate}T${existingTime}` : ""
     });
+  }
+};
+
+/* --- 시간 직접 수정 로직 추가 --- */
+const openTimePicker = (bus) => {
+  selectedBus.value = bus;
+  if (bus.dateTime && bus.dateTime.includes('T')) {
+    tempTime.value = bus.dateTime.split('T')[1].substring(0, 5);
+  } else {
+    tempTime.value = "00:00";
+  }
+  timeDialog.value = true;
+};
+
+const saveTime = async () => {
+  if (selectedBus.value && tempTime.value) {
+    const datePart = selectedBus.value.dateTime.split('T')[0];
+    const newDateTime = `${datePart}T${tempTime.value}`;
+    await updateDoc(doc(db, "schedules", selectedBus.value.id), { dateTime: newDateTime });
+    timeDialog.value = false;
   }
 };
 

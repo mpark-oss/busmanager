@@ -222,7 +222,7 @@
                   <v-select v-model="bus.difficulty" :items="['노말', '하드']" label="난이도" density="compact"
                     variant="outlined" class="mb-2"></v-select>
                   <div class="text-subtitle-2 font-weight-black mb-2 d-flex align-center text-high-emphasis">
-                    <v-icon size="18" class="me-1">mdi-account-check</v-icon> 참여 기사 목록
+                    <v-icon size="18" class="me-1">mdi-account-check</v-icon> 참여 공격대 목록
                   </div>
                   <div class="drop-zone pa-0 rounded-lg border-dashed mb-4"
                     :style="{ backgroundColor: theme.global.current.value.dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }">

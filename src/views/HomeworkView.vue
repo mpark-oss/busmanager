@@ -49,8 +49,7 @@
                     <v-row class="mb-8">
                         <v-col cols="12">
                             <div class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center opacity-80">
-                                <v-icon color="success" class="me-2">mdi-calendar-range</v-icon> 주간 레이드 일정  드래그(오늘 기준
-                                7일)
+                                <v-icon color="success" class="me-2">mdi-calendar-range</v-icon> 주간 레이드 일정 드래그(오늘 기준 7일)
                             </div>
                             <div class="calendar-wrapper d-flex">
                                 <div v-for="day in daysOfWeek" :key="day.fullDate"
@@ -76,31 +75,21 @@
                                                 </span>
                                             </v-chip>
                                         </template>
-
-                                        <v-col v-for="hw in upcomingHomeworks" :key="hw.id" cols="12" md="6" xl="4">
-                                            <v-card :id="`hw-card-${hw.id}`" border
-                                                :elevation="hoveredId === hw.id || clickedId === hw.id ? 8 : 2"
-                                                class="rounded-xl overflow-hidden mb-6 mx-auto homework-card transition-all"
-                                                :class="{
-                                                    'today-card': isToday(hw.dateTime),
-                                                    'pending-card': !hw.dateTime,
-                                                    'highlight-focus': hoveredId === hw.id || clickedId === hw.id
-                                                }">
-                                            </v-card>
-                                        </v-col>
                                     </draggable>
                                 </div>
 
                                 <div class="calendar-day-column pending-column flex-grow-1">
-                                    <div
-                                        class="day-header pa-2 text-center font-weight-bold bg-amber-lighten-4 text-amber-darken-4">
+                                    <div class="day-header pa-2 text-center font-weight-bold bg-amber-lighten-4 text-amber-darken-4">
                                         일정 미정
                                     </div>
                                     <draggable :list="pendingHomeworks" group="homework-items" item-key="id"
                                         class="day-dropzone pa-1 bg-amber-lighten-5" @change="(e) => onDateDrop(e, '')">
                                         <template #item="{ element }">
                                             <v-chip size="x-small" color="amber-darken-2" variant="flat"
-                                                class="mb-1 w-100 justify-start px-1 rounded-sm" label>
+                                                class="mb-1 w-100 justify-start px-1 rounded-sm homework-chip" 
+                                                :class="{ 'elevation-5': hoveredId === element.id }" label
+                                                @mouseenter="hoveredId = element.id" @mouseleave="hoveredId = null"
+                                                @click="scrollToDetail(element.id)">
                                                 <span class="text-truncate font-weight-black">{{ element.raid }}</span>
                                             </v-chip>
                                         </template>
@@ -119,12 +108,18 @@
                         </v-col>
 
                         <v-col v-for="hw in upcomingHomeworks" :key="hw.id" cols="12" md="6" xl="4">
-                            <v-card border elevation="2" class="rounded-xl overflow-hidden mb-6 mx-auto homework-card"
-                                :class="{ 'today-card': isToday(hw.dateTime), 'pending-card': !hw.dateTime }">
+                            <v-card :id="`hw-card-${hw.id}`" border
+                                :elevation="hoveredId === hw.id || clickedId === hw.id ? 12 : 2"
+                                class="rounded-xl overflow-hidden mb-6 mx-auto homework-card transition-all"
+                                :class="{
+                                    'today-card': isToday(hw.dateTime),
+                                    'pending-card': !hw.dateTime,
+                                    'highlight-focus': hoveredId === hw.id || clickedId === hw.id
+                                }">
                                 <v-toolbar
                                     :color="(!hw.dateTime) ? 'amber-darken-2' : (isToday(hw.dateTime) ? 'success' : 'teal-darken-1')"
                                     density="compact" flat>
-                                    <v-icon :icon="!hw.dateTime ? 'mdi-clock-question' : 'mdi-check-circle-outline'"
+                                    <v-icon :icon="!hw.dateTime ? 'mdi-clock-question' : 'mdi-shield-cross'"
                                         class="ms-3" size="small"></v-icon>
                                     <v-toolbar-title class="font-weight-black d-flex align-center">
                                         <span class="text-subtitle-1 me-3">{{ hw.raid }}</span>
@@ -160,14 +155,13 @@
                                         class="mb-4 rounded-lg py-2" density="compact">
                                         <div class="d-flex justify-space-between align-center">
                                             <div class="text-subtitle-2 font-weight-bold"><v-icon size="small"
-                                                    class="me-1">mdi-sword</v-icon> 파티 화력</div>
+                                                    class="me-1">mdi-sword</v-icon> 파티 평균 전투력</div>
                                             <div class="text-h6 font-weight-black">{{ calculateAveragePower(hw.members)
                                                 }}</div>
                                         </div>
                                     </v-alert>
 
-                                    <div
-                                        class="text-subtitle-2 mb-2 font-weight-bold d-flex align-center text-grey-darken-1">
+                                    <div class="text-subtitle-2 mb-2 font-weight-bold d-flex align-center text-grey-darken-1">
                                         <v-icon size="small" class="me-1">mdi-account-group</v-icon> 숙제 멤버
                                     </div>
                                     <draggable v-model="hw.members" group="pilots" item-key="id"
@@ -214,6 +208,8 @@ import { collection, query, orderBy, onSnapshot, deleteDoc, doc, updateDoc } fro
 const homeworks = ref([]);
 const charList = ref([]);
 const searchQuery = ref("");
+const hoveredId = ref(null); 
+const clickedId = ref(null);
 
 onMounted(() => {
     const qChar = query(collection(db, "characters"), orderBy("createdAt", "desc"));
@@ -266,6 +262,16 @@ const onDateDrop = async (event, targetDate) => {
         });
     }
 };
+
+const scrollToDetail = (id) => {
+    clickedId.value = id;
+    setTimeout(() => {
+        const element = document.getElementById(`hw-card-${id}`);
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }, 50);
+};
 /* -------------------- */
 
 const isToday = (dateStr) => {
@@ -277,11 +283,6 @@ const isToday = (dateStr) => {
         d.getDate() === today.getDate();
 };
 
-// [추가] 상태 관리 변수
-const hoveredId = ref(null);   // 마우스 오버 시 하이라이트용
-const clickedId = ref(null);   // 클릭 시 정렬 우선순위용
-
-// [수정] 상세 리스트 정렬 로직 (클릭된 아이템을 최상단으로)
 const upcomingHomeworks = computed(() => {
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
@@ -291,25 +292,12 @@ const upcomingHomeworks = computed(() => {
         return new Date(hw.dateTime) >= todayStart;
     });
 
-    // 클릭된 아이템이 있다면 가장 앞으로, 나머지는 시간순
     return [...list].sort((a, b) => {
         if (a.id === clickedId.value) return -1;
         if (b.id === clickedId.value) return 1;
         return new Date(a.dateTime || 0) - new Date(b.dateTime || 0);
     });
 });
-
-// [추가] 클릭 핸들러
-const scrollToDetail = (id) => {
-    clickedId.value = id;
-    // 부드럽게 시각적 피드백을 주기 위해 잠시 후 강조 해제하거나 유지
-    setTimeout(() => {
-        const element = document.getElementById(`hw-card-${id}`);
-        if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-    }, 50);
-};
 
 const sortedCharList = computed(() => {
     if (!searchQuery.value) return charList.value;
@@ -324,7 +312,7 @@ const calculateAveragePower = (members) => {
     const total = members.reduce((acc, cur) => {
         const power = typeof cur.combatPower === 'string' ? parseFloat(cur.combatPower.replace(/,/g, '')) : (cur.combatPower || 0);
         return acc + power;
-    }, 0);
+      }, 0);
     return Math.floor(total / members.length).toLocaleString();
 };
 
@@ -388,7 +376,6 @@ const deleteHomework = async (id) => {
     display: flex;
     flex-direction: column;
     min-width: 0;
-    /* flex 자식의 truncate를 위해 설정 */
 }
 
 .calendar-day-column:last-child {
@@ -422,6 +409,12 @@ const deleteHomework = async (id) => {
 
 .homework-chip {
     font-size: 0.65rem !important;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.homework-chip:hover {
+    transform: translateY(-2px);
 }
 
 .compact-search-field :deep(.v-field) {
@@ -455,20 +448,20 @@ const deleteHomework = async (id) => {
 }
 
 @keyframes glow-pulse {
-    0% {
-        transform: scale(1);
-        opacity: 1;
-    }
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.7; }
+    100% { transform: scale(1); opacity: 1; }
+}
 
-    50% {
-        transform: scale(1.2);
-        opacity: 0.7;
-    }
+/* 하이라이트 및 포커스 효과 */
+.highlight-focus {
+    border: 3px solid #4CAF50 !important;
+    transform: scale(1.02);
+    z-index: 10;
+}
 
-    100% {
-        transform: scale(1);
-        opacity: 1;
-    }
+.homework-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .pending-card {

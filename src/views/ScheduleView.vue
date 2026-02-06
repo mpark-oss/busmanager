@@ -150,7 +150,7 @@
                     </v-chip>
                     
                     <v-chip v-if="isToday(bus.dateTime)" size="small" color="white" class="ms-2 font-weight-black today-badge" variant="flat" label>
-                      <v-icon start size="14" class="today-icon">mdi-flash</v-icon>
+                      <v-icon start size="14" class="today-icon">mdi-star</v-icon>
                       TODAY
                     </v-chip>
                     <v-chip v-else-if="!bus.dateTime" size="x-small" color="white" variant="outlined" class="ms-2">출발 미정</v-chip>
@@ -167,7 +167,7 @@
                   <v-divider class="mb-4"></v-divider>
                   <v-alert v-if="bus.members.length > 0" variant="tonal" :color="isToday(bus.dateTime) ? 'deep-purple' : (!bus.dateTime ? 'amber' : 'blue')" class="mb-4 rounded-lg py-2" density="compact">
                     <div class="d-flex justify-space-between align-center">
-                      <div class="text-subtitle-2 font-weight-bold"><v-icon size="small" class="me-1">mdi-arm-flex</v-icon> 파티 평균 전투력</div>
+                      <div class="text-subtitle-2 font-weight-bold"><v-icon size="small" class="me-1">mdi-sword</v-icon> 파티 평균 전투력</div>
                       <div class="text-h6 font-weight-black">{{ calculateAveragePower(bus.members) }}</div>
                     </div>
                   </v-alert>

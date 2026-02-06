@@ -62,10 +62,10 @@
       <v-col cols="12" md="9" lg="10" class="pa-6 d-flex flex-column" style="height: 100vh; overflow-y: auto;">
         <div class="d-flex justify-space-between align-center mb-6">
           <h2 class="text-h5 font-weight-black d-flex align-center">
-            <v-icon class="me-2" color="primary">mdi-bus-school</v-icon> 캐릭터 정보 / 버스 만들기
+            <v-icon class="me-2" color="primary">mdi-bus-school</v-icon> 캐릭터 정보 / 공격대 만들기
           </h2>
           <v-btn color="primary" prepend-icon="mdi-plus" rounded="lg" size="large" elevation="2" @click="addBusSlot">
-            새 버스 슬롯 만들기
+            새 공대 만들기
           </v-btn>
         </div>
 
@@ -200,9 +200,20 @@
             <v-col v-for="(bus, bIdx) in localBuses" :key="bus.localId" cols="12" sm="6" xl="4">
               <v-card border elevation="1" class="rounded-xl overflow-hidden bus-card mb-4 bg-surface">
                 <v-toolbar color="primary" density="compact" flat>
-                  <v-icon icon="mdi-bus-side" class="ms-3" size="small" color="white"></v-icon>
-                  <v-toolbar-title class="text-body-2 font-weight-bold text-white">신규 버스 편성</v-toolbar-title>
+                  <v-icon :icon="bus.isHomework ? 'mdi-calendar-check' : 'mdi-bus-side'" class="ms-3" size="small"
+                    color="white"></v-icon>
+                  <v-toolbar-title class="text-body-2 font-weight-bold text-white">
+                    {{ bus.isHomework ? '신규 숙제 편성' : '신규 버스 편성' }}
+                  </v-toolbar-title>
+
                   <v-spacer></v-spacer>
+
+                  <div class="d-flex align-center me-2">
+                    <span class="text-caption me-2 text-white">{{ bus.isHomework ? '숙제' : '버스' }}</span>
+                    <v-switch v-model="bus.isHomework" :false-value="false" :true-value="true" hide-details
+                      density="compact" color="secondary" inset></v-switch>
+                  </div>
+
                   <v-btn icon="mdi-close" size="x-small" color="white" @click="localBuses.splice(bIdx, 1)"></v-btn>
                 </v-toolbar>
                 <v-card-text class="pa-4">
@@ -213,19 +224,24 @@
                   <div class="text-subtitle-2 font-weight-black mb-2 d-flex align-center text-high-emphasis">
                     <v-icon size="18" class="me-1">mdi-account-check</v-icon> 참여 기사 목록
                   </div>
-                  <div class="drop-zone pa-3 rounded-lg border-dashed mb-4"
+                  <div class="drop-zone pa-0 rounded-lg border-dashed mb-4"
                     :style="{ backgroundColor: theme.global.current.value.dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }">
-                    <div v-if="bus.members.length === 0"
-                      class="d-flex flex-column align-center justify-center py-4 text-medium-emphasis">
-                      <v-icon size="24" class="mb-1">mdi-drag-variant</v-icon>
-                      <div class="text-caption">기사를 이리로 드래그하세요</div>
-                    </div>
-                    <draggable v-model="bus.members" group="pilots" item-key="id" class="d-flex flex-wrap">
+
+                    <draggable v-model="bus.members" group="pilots" item-key="id"
+                      class="d-flex flex-wrap align-content-start bus-member-draggable-area pa-2">
                       <template #item="{ element, index }">
                         <v-chip closable size="small" color="primary" class="ma-1 font-weight-bold text-white" label
                           @click:close="bus.members.splice(index, 1)">
                           {{ element.job }} | {{ element.name }} | Lv.{{ element.level }} | ⚔ {{ element.combatPower }}
                         </v-chip>
+                      </template>
+
+                      <template #footer>
+                        <div v-if="bus.members.length === 0"
+                          class="empty-drop-msg d-flex flex-column align-center justify-center pointer-events-none">
+                          <v-icon size="24" class="mb-1">mdi-drag-variant</v-icon>
+                          <div class="text-caption">기사를 이리로 드래그하세요</div>
+                        </div>
                       </template>
                     </draggable>
                   </div>
@@ -260,9 +276,20 @@ const isLoading = ref(false);
 const selectedChar = ref(null);
 const isDetailLoading = ref(false);
 
+const registeredBuses = ref([]);
+
 onMounted(() => {
-  const q = query(collection(db, "characters"), orderBy("createdAt", "desc"));
-  onSnapshot(q, (snapshot) => { charList.value = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); });
+  // 기존 캐릭터 명단 쿼리
+  const qChar = query(collection(db, "characters"), orderBy("createdAt", "desc"));
+  onSnapshot(qChar, (snapshot) => {
+    charList.value = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  });
+
+  // 신규: 등록된 버스 명단 쿼리
+  const qBus = query(collection(db, "buses"), orderBy("dateTime", "asc"));
+  onSnapshot(qBus, (snapshot) => {
+    registeredBuses.value = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  });
 });
 
 const selectCharacter = async (charName) => {
@@ -296,6 +323,49 @@ const filteredEquipment = computed(() => {
   const targetTypes = ['무기', '투구', '상의', '하의', '장갑', '어깨'];
   return selectedChar.value.ArmoryEquipment.filter(item => targetTypes.includes(item.Type));
 });
+
+
+const confirmAndUpload = async (bus, index) => {
+  if (bus.members.length === 0) {
+    alert("최소 한 명 이상의 캐릭터를 편성해 주세요.");
+    return;
+  }
+
+  try {
+    isLoading.value = true;
+
+    const scheduleData = {
+      raid: bus.raid,
+      difficulty: bus.difficulty,
+      dateTime: bus.dateTime || "",
+      members: JSON.parse(JSON.stringify(bus.members.map(m => ({
+        name: m.name,
+        job: m.job,
+        level: m.level,
+        combatPower: m.combatPower,
+        img: m.img
+      })))),
+      createdAt: new Date(),
+      isHomework: bus.isHomework // 상태값 저장
+    };
+
+    // 토글 상태에 따라 저장할 컬렉션 결정
+    // 버스(false) -> schedules / 숙제(true) -> homeworks
+    const targetCollection = bus.isHomework ? "homeworks" : "schedules";
+    
+    await addDoc(collection(db, targetCollection), scheduleData);
+
+    const typeMsg = bus.isHomework ? "숙제 스케줄" : "운행표";
+    alert(`${bus.raid} ${typeMsg}가 등록되었습니다.`);
+
+    localBuses.value.splice(index, 1);
+  } catch (e) {
+    console.error("등록 실패:", e);
+    alert("등록 중 오류가 발생했습니다.");
+  } finally {
+    isLoading.value = false;
+  }
+};
 
 const fetchCharacter = async () => {
   if (!searchName.value) return;
@@ -345,8 +415,19 @@ const fetchCharacter = async () => {
 };
 
 const deleteChar = async (id) => { if (confirm("삭제하시겠습니까?")) await deleteDoc(doc(db, "characters", id)); };
-const addBusSlot = () => localBuses.value.push({ localId: Date.now(), raid: '2막', difficulty: '노말', members: [], dateTime: '' });
 const cloneCharacter = (char) => ({ ...char, id: Date.now() + Math.random() });
+
+// 1. 슬롯 추가 시 기본값 설정 (default: 버스 상태, isHomework: false)
+const addBusSlot = () => {
+  localBuses.value.push({ 
+    localId: Date.now(), 
+    raid: '2막', 
+    difficulty: '노말', 
+    members: [], 
+    dateTime: '',
+    isHomework: false // false면 버스(ON), true면 숙제(OFF)
+  });
+};
 
 const rankedCharList = computed(() => {
   // 1. 먼저 전체 데이터를 전투력 순으로 정렬하여 '진짜 순위'를 계산합니다.
@@ -468,25 +549,25 @@ const rankedCharList = computed(() => {
 }
 
 .rank-step-2 {
-  border: 2px solid #00F2FF !important;
+  border: 2px solid #d011d6 !important;
   box-shadow: inset 0 0 20px rgba(0, 242, 255, 0.1), 0 0 15px rgba(0, 242, 255, 0.3) !important;
   background: linear-gradient(135deg, #001f2b 0%, #1a1a1a 100%) !important;
 }
 
 .rank-step-2 .rank-number,
 .rank-step-2 .combat-power-text {
-  color: #00F2FF !important;
+  color: #d011d6 !important;
 }
 
 .rank-step-3 {
-  border: 2px solid #FFAA00 !important;
+  border: 2px solid #ffe600 !important;
   box-shadow: 0 0 10px rgba(255, 170, 0, 0.2) !important;
   background: linear-gradient(135deg, #241800 0%, #1a1a1a 100%) !important;
 }
 
 .rank-step-3 .rank-number,
 .rank-step-3 .combat-power-text {
-  color: #FFAA00 !important;
+  color: #ffe600 !important;
 }
 
 .rank-step-4 {
@@ -500,13 +581,13 @@ const rankedCharList = computed(() => {
 }
 
 .rank-step-5 {
-  border: 1.5px solid #CD7F32 !important;
+  border: 1.5px solid #9b5c1d !important;
   background: linear-gradient(135deg, #261400 0%, #1a1a1a 100%) !important;
 }
 
 .rank-step-5 .rank-number,
 .rank-step-5 .combat-power-text {
-  color: #CD7F32 !important;
+  color: #9b5c1d !important;
 }
 
 .rank-normal {
@@ -573,12 +654,22 @@ const rankedCharList = computed(() => {
 
 .rank-step-2 .level-badge {
   border-color: rgba(0, 242, 255, 0.5);
-  color: #00f2ff;
+  color: #d011d6;
 }
 
 .rank-step-3 .level-badge {
   border-color: rgba(255, 170, 0, 0.5);
-  color: #ffaa00;
+  color: #ffe600;
+}
+
+.rank-step-4 .level-badge {
+  border-color: #E0E0E0;
+  color: #E0E0E0;
+}
+
+.rank-step-5 .level-badge {
+  border-color: #9b5c1d;
+  color: #9b5c1d;
 }
 
 /* 기존 전투력 텍스트 위치 미세 조정 */
@@ -635,13 +726,13 @@ const rankedCharList = computed(() => {
 }
 
 .rank-step-2 {
-  --rank-color: #00F2FF;
-  border: 2px solid #00F2FF !important;
+  --rank-color: #d011d6;
+  border: 2px solid #d011d6 !important;
 }
 
 .rank-step-3 {
-  --rank-color: #FFAA00;
-  border: 2px solid #FFAA00 !important;
+  --rank-color: #ffe600;
+  border: 2px solid #ffe600 !important;
 }
 
 .rank-step-4 {
@@ -650,8 +741,8 @@ const rankedCharList = computed(() => {
 }
 
 .rank-step-5 {
-  --rank-color: #CD7F32;
-  border: 1.5px solid #CD7F32 !important;
+  --rank-color: #9b5c1d;
+  border: 1.5px solid #9b5c1d !important;
 }
 
 /* 배경에 살짝 흐르는 그라데이션 추가 */
@@ -665,5 +756,53 @@ const rankedCharList = computed(() => {
 
 .rank-step-3 {
   background: linear-gradient(135deg, #241800, #1a1a1a, #4d3300) !important;
+}
+
+/* 드래그 앤 드롭 타겟 영역 최적화 */
+.bus-member-draggable-area {
+  min-height: 120px;
+  /* 드롭 영역을 확실하게 확보 */
+  width: 100%;
+  cursor: copy;
+  /* 드래그 중 드롭 가능하다는 커서 표시 */
+  transition: background-color 0.2s ease;
+}
+
+/* 드래그 앤 드롭 타겟 영역 최적화 */
+.bus-member-draggable-area {
+  min-height: 120px !important;
+  /* 최소 높이 강제 확보 */
+  width: 100%;
+  cursor: copy;
+}
+
+/* 안내 문구가 실제 드롭 이벤트를 방해하지 않도록 보완 */
+.empty-drop-msg {
+  position: absolute;
+  /* 영역 중앙에 띄움 */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  pointer-events: none;
+  /* 중요: 드래그 요소가 이 위를 지나갈 때 간섭 방지 */
+  opacity: 0.3;
+}
+
+/* 드롭 존 레이아웃 유지 */
+.drop-zone {
+  position: relative;
+  /* empty-drop-msg 배치를 위해 필요 */
+  overflow: hidden;
+}
+
+/* 드래그 중인 원본 요소의 스타일 (선택 사항) */
+.sortable-ghost {
+  opacity: 0.3;
+  background: var(--v-theme-primary) !important;
+}
+
+.sortable-drag {
+  cursor: grabbing;
 }
 </style>

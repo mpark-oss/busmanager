@@ -22,8 +22,9 @@
       
       <v-spacer></v-spacer>
 
-      <v-btn to="/" prepend-icon="mdi-bus">버스 만들기</v-btn>
-      <v-btn to="/schedule" prepend-icon="mdi-calendar-check">운행표 확인</v-btn>
+      <v-btn to="/" prepend-icon="mdi-bus">공격대 만들기</v-btn>
+      <v-btn to="/schedule" prepend-icon="mdi-calendar-check">버스 스케줄</v-btn>
+      <v-btn prepend-icon="mdi-clipboard-check" to="/homework">숙제 스케줄</v-btn>
       <v-btn to="/board" prepend-icon="mdi-clipboard-text-outline">쌀산기</v-btn>
       <v-btn to="/guestbook" prepend-icon="mdi-message-draw">방명록</v-btn>
 

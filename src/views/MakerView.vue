@@ -677,85 +677,163 @@ const rankedCharList = computed(() => {
   letter-spacing: -0.02em;
 }
 
+/* --- 랭킹 애니메이션 고도화 --- */
+
 /* 1. 테두리를 따라 흐르는 빛 애니메이션 */
 @keyframes border-glow {
-  0% {
-    background-position: 0% 50%;
-  }
-
-  50% {
-    background-position: 100% 50%;
-  }
-
-  100% {
-    background-position: 0% 50%;
-  }
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 /* 2. 카드 전체가 숨쉬는 듯한 광채 효과 */
 @keyframes pulse-glow {
-  0% {
-    box-shadow: 0 0 5px var(--rank-color), inset 0 0 5px var(--rank-color);
-  }
-
-  50% {
-    box-shadow: 0 0 20px var(--rank-color), inset 0 0 10px var(--rank-color);
-  }
-
-  100% {
-    box-shadow: 0 0 5px var(--rank-color), inset 0 0 5px var(--rank-color);
-  }
+  0% { box-shadow: 0 0 5px var(--rank-color), inset 0 0 5px var(--rank-color); }
+  50% { box-shadow: var(--glow-intensity) var(--rank-color), inset 0 0 10px var(--rank-color); }
+  100% { box-shadow: 0 0 5px var(--rank-color), inset 0 0 5px var(--rank-color); }
 }
 
-/* 랭킹 카드 공통 애니메이션 설정 */
-.rank-step-1,
-.rank-step-2,
-.rank-step-3,
-.rank-step-4,
-.rank-step-5 {
+/* 랭킹 카드 공통 설정 */
+.rank-step-1, .rank-step-2, .rank-step-3, .rank-step-4, .rank-step-5 {
   position: relative;
   background-size: 200% 200% !important;
-  animation: border-glow 4s linear infinite, pulse-glow 2s ease-in-out infinite !important;
   z-index: 1;
+  /* 변수 초기화 */
+  --glow-intensity: 0 0 15px; 
 }
 
-/* 등급별 고유 색상 변수 설정 */
+/* [1등] 압도적인 화력: 가장 빠른 속도와 강한 광채 */
 .rank-step-1 {
   --rank-color: #ff1e00;
-  border: 2px solid #ff1e00 !important;
+  --glow-intensity: 0 0 30px;
+  border: 2.5px solid #ff1e00 !important;
+  animation: border-glow 1.5s linear infinite, pulse-glow 0.8s ease-in-out infinite !important;
+  background: linear-gradient(135deg, #4a0000, #1a1a1a, #ff1e00, #1a1a1a) !important;
+  background-size: 300% 300% !important;
 }
+.rank-step-1 .rank-number { font-size: 1.5rem; text-shadow: 0 0 15px #ff1e00; }
 
+/* [2등] 매우 빠름: 선명한 네온 효과 */
 .rank-step-2 {
   --rank-color: #d011d6;
+  --glow-intensity: 0 0 25px;
   border: 2px solid #d011d6 !important;
+  animation: border-glow 2s linear infinite, pulse-glow 1.2s ease-in-out infinite !important;
+  background: linear-gradient(135deg, #2b002b, #1a1a1a, #d011d6) !important;
 }
 
+/* [3등] 보통 빠름: 황금빛 광채 */
 .rank-step-3 {
   --rank-color: #ffe600;
+  --glow-intensity: 0 0 20px;
   border: 2px solid #ffe600 !important;
+  animation: border-glow 3s linear infinite, pulse-glow 1.8s ease-in-out infinite !important;
+  background: linear-gradient(135deg, #241800, #1a1a1a, #ffe600) !important;
 }
 
+/* [4등] 차분함: 은은한 실버 광원 */
 .rank-step-4 {
   --rank-color: #E0E0E0;
+  --glow-intensity: 0 0 10px;
   border: 1.5px solid #E0E0E0 !important;
+  animation: border-glow 5s linear infinite, pulse-glow 3s ease-in-out infinite !important;
+  background: linear-gradient(135deg, #2d2d2d, #1a1a1a) !important;
 }
 
+/* [5등] 기본: 아주 느리고 정적인 효과 */
 .rank-step-5 {
   --rank-color: #9b5c1d;
+  --glow-intensity: 0 0 8px;
   border: 1.5px solid #9b5c1d !important;
+  animation: border-glow 8s linear infinite, pulse-glow 4s ease-in-out infinite !important;
+  background: #1a1a1a !important;
 }
 
-/* 배경에 살짝 흐르는 그라데이션 추가 */
+/* 랭킹 텍스트 색상 동기화 */
+.rank-step-1 .rank-number, .rank-step-1 .combat-power-text { color: #ff1e00 !important; }
+.rank-step-2 .rank-number, .rank-step-2 .combat-power-text { color: #d011d6 !important; }
+.rank-step-3 .rank-number, .rank-step-3 .combat-power-text { color: #ffe600 !important; }
+.rank-step-4 .rank-number, .rank-step-4 .combat-power-text { color: #E0E0E0 !important; }
+.rank-step-5 .rank-number, .rank-step-5 .combat-power-text { color: #9b5c1d !important; }
+
+/* 빛 반사 효과(Glow Overlay) 속도도 순위에 맞춤 */
+.rank-step-1 .glow-overlay { animation-duration: 1s; }
+.rank-step-2 .glow-overlay { animation-duration: 1.5s; }
+.rank-step-3 .glow-overlay { animation-duration: 2s; }
+.rank-step-4 .glow-overlay { animation-duration: 3s; }
+.rank-step-5 .glow-overlay { animation-duration: 4s; }
+
+/* --- 은하수 & 우주 배경 효과 --- */
+
+/* 1. 움직이는 우주 안개(Nebula) */
+@keyframes nebula-move {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* 2. 별빛 반짝임(Twinkle) */
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+/* 랭킹 카드 공통 (1~3등 전용 우주 효과) */
+.rank-step-1::before, .rank-step-2::before, .rank-step-3::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  /* 다중 box-shadow로 작은 별들 표현 */
+  background-image: 
+    radial-gradient(1px 1px at 20px 30px, #fff, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 40px 70px, #fff, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 50px 160px, #fff, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 80px 40px, #fff, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 130px 80px, #fff, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 160px 120px, #fff, rgba(0,0,0,0));
+  background-size: 200px 200px;
+  animation: twinkle 3s infinite ease-in-out;
+  opacity: 0.5;
+  z-index: 0;
+}
+
+/* [1등] 태양계 파괴급: 붉은 블랙홀 & 강력한 성운 */
 .rank-step-1 {
-  background: linear-gradient(135deg, #2b1100, #1a1a1a, #4a0000) !important;
+  --rank-color: #ff1e00;
+  --glow-intensity: 0 0 35px;
+  border: 2.5px solid #ff1e00 !important;
+  animation: border-glow 1.2s linear infinite, pulse-glow 0.7s ease-in-out infinite !important;
+  background: radial-gradient(circle at center, #660000 0%, #1a1a1a 70%, #000 100%) !important;
+  box-shadow: inset 0 0 50px rgba(255, 30, 0, 0.3) !important;
 }
 
+/* [2등] 보랏빛 은하: 차원 이동 효과 */
 .rank-step-2 {
-  background: linear-gradient(135deg, #001f2b, #1a1a1a, #003d4d) !important;
+  --rank-color: #d011d6;
+  --glow-intensity: 0 0 25px;
+  border: 2px solid #d011d6 !important;
+  animation: border-glow 1.8s linear infinite, pulse-glow 1.1s ease-in-out infinite !important;
+  background: linear-gradient(135deg, #1a0033 0%, #d011d6 50%, #1a0033 100%) !important;
+  background-size: 400% 400% !important;
+  animation: nebula-move 5s ease infinite, border-glow 1.8s linear infinite !important;
 }
 
+/* [3등] 황금 성단: 초신성 폭발 직전 */
 .rank-step-3 {
-  background: linear-gradient(135deg, #241800, #1a1a1a, #4d3300) !important;
+  --rank-color: #ffe600;
+  --glow-intensity: 0 0 20px;
+  border: 2px solid #ffe600 !important;
+  animation: border-glow 2.5s linear infinite, pulse-glow 1.5s ease-in-out infinite !important;
+  background: radial-gradient(ellipse at top right, #4d3300 0%, #1a1a1a 60%) !important;
+}
+
+/* 4~5등은 이전의 깔끔한 스타일 유지 */
+.rank-step-4 { --rank-color: #E0E0E0; --glow-intensity: 0 0 10px; border: 1.5px solid #E0E0E0 !important; animation: border-glow 5s linear infinite; background: #1a1a1a !important; }
+.rank-step-5 { --rank-color: #9b5c1d; --glow-intensity: 0 0 5px; border: 1.5px solid #9b5c1d !important; animation: border-glow 8s linear infinite; background: #1a1a1a !important; }
+
+/* 텍스트 가독성을 위해 z-index 조정 */
+.char-rank-card .position-relative {
+  z-index: 2 !important;
 }
 
 /* 드래그 앤 드롭 타겟 영역 최적화 */

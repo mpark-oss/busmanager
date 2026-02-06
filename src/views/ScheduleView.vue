@@ -179,7 +179,7 @@
                   </v-alert>
 
                   <div class="text-subtitle-2 mb-2 font-weight-bold d-flex align-center text-grey-darken-1">
-                    <v-icon size="small" class="me-1">mdi-account-group</v-icon> 참여 기사 명단
+                    <v-icon size="small" class="me-1">mdi-account-group</v-icon> 참여 캐릭터 명단
                   </div>
                   <draggable v-model="bus.members" group="pilots" item-key="id" class="d-flex flex-wrap pa-2 rounded-lg border-dashed dropzone-area" @change="updateSchedule(bus)">
                     <template #item="{ element, index }">

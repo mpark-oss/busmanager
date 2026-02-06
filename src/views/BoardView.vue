@@ -54,7 +54,7 @@
       </v-col>
 
       <v-col cols="12" md="5">
-        <v-card variant="flat" border class="rounded-xl pa-6 sticky-card">
+        <v-card variant="flat" border class="rounded-xl pa-6 sticky-card" style="height: 100%;">
           <div class="d-flex align-center mb-6">
             <v-icon color="secondary" size="32" class="me-3">mdi-calculator-variant</v-icon>
             <h2 class="text-h5 font-weight-black text-secondary">경매 분배금 계산기</h2>

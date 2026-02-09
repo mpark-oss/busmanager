@@ -49,7 +49,7 @@
                     <v-row class="mb-8">
                         <v-col cols="12">
                             <div class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center opacity-80">
-                                <v-icon color="success" class="me-2">mdi-calendar-range</v-icon> 주간 일정 드래그 마스터 (오늘 기준
+                                <v-icon color="success" class="me-2">mdi-calendar-range</v-icon> 주간 숙제 일정 드래그(오늘 기준
                                 7일)
                             </div>
                             <div class="calendar-wrapper d-flex">

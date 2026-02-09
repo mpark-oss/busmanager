@@ -38,7 +38,7 @@
         <v-card variant="flat" class="rounded-lg pa-4" border min-height="85vh">
           <div class="d-flex justify-space-between align-center mb-6">
             <h2 class="text-h4 font-weight-black text-primary">
-              <v-icon size="large" class="me-2">mdi-calendar-clock</v-icon>버스 운행 예정표
+              <v-icon size="large" class="me-2">mdi-calendar-clock</v-icon>버스 예정표
             </h2>
           </div>
 

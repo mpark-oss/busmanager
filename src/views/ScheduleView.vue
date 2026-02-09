@@ -257,15 +257,23 @@ onMounted(() => {
   });
 });
 
-/* --- 달력 관련 로직 --- */
+/* --- 달력 관련 로직 (수정됨) --- */
 const daysOfWeek = computed(() => {
   const days = [];
   const today = new Date();
+  
   for (let i = 0; i < 7; i++) {
     const d = new Date(today);
     d.setDate(today.getDate() + i);
+    
+    // [수정] toISOString() 대신 로컬 시간 기준으로 YYYY-MM-DD 문자열 직접 생성
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const dayNum = String(d.getDate()).padStart(2, '0');
+    const localFullDate = `${year}-${month}-${dayNum}`;
+
     days.push({
-      fullDate: d.toISOString().split('T')[0],
+      fullDate: localFullDate, 
       display: d.toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric', weekday: 'short' })
     });
   }

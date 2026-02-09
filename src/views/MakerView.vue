@@ -2,17 +2,21 @@
   <v-container fluid class="fill-height align-start pa-0">
     <v-row no-gutters class="fill-height">
       <v-col cols="12" md="3" lg="2" class="pa-4 border-end d-flex flex-column"
-        style="height: 100vh; overflow: hidden;">
-        <div class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center">
-          <v-icon color="primary" class="me-2">mdi-account-multiple</v-icon> 기사 명단
+        style="height: 100vh; max-height: 100vh;">
+
+        <div class="flex-shrink-0">
+          <div class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center">
+            <v-icon color="primary" class="me-2">mdi-account-multiple</v-icon> 기사 명단
+          </div>
+
+          <v-text-field v-model="searchName" label="캐릭터 추가" append-inner-icon="mdi-magnify"
+            @click:append-inner="fetchCharacter" @keyup.enter="fetchCharacter" :loading="isLoading"
+            density="comfortable" variant="solo-filled" flat hide-details
+            class="mb-4 rounded-lg custom-search-field"></v-text-field>
+          <v-divider class="mb-4"></v-divider>
         </div>
 
-        <v-text-field v-model="searchName" label="캐릭터 추가" append-inner-icon="mdi-magnify"
-          @click:append-inner="fetchCharacter" @keyup.enter="fetchCharacter" :loading="isLoading" density="comfortable"
-          variant="solo-filled" flat hide-details class="mb-4 rounded-lg custom-search-field"></v-text-field>
-        <v-divider class="mb-4"></v-divider>
-
-        <div class="character-list-scroll custom-scroll flex-grow-1">
+        <div class="character-list-scroll custom-scroll flex-grow-1" style="overflow-y: auto; min-height: 0;">
           <draggable :model-value="rankedCharList" :group="{ name: 'pilots', pull: 'clone', put: false }"
             :clone="cloneCharacter" item-key="id">
             <template #item="{ element }">
@@ -44,13 +48,14 @@
 
                       <div class="combat-power-text font-weight-black d-flex align-center mt-1"
                         style="font-size: 0.75rem;">
-                        <v-icon size="12" class="me-1">mdi-sword-cross</v-icon>
-                        {{ element.combatPower }}
+                        <v-icon size="12" class="me-1 text-name-fix">mdi-sword-cross</v-icon>
+                        <span class="text-name-fix">{{ element.combatPower }}</span>
                       </div>
                     </div>
                   </div>
 
-                  <v-btn icon="mdi-close-circle" size="18" variant="text" color="rgba(255,255,255,0.3)"
+                  <v-btn icon="mdi-close-circle" size="18" variant="text"
+                    :color="(element.rank <= 3 || theme.global.current.value.dark) ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'"
                     @click.stop="deleteChar(element.id)"></v-btn>
                 </div>
               </v-card>
@@ -59,7 +64,8 @@
         </div>
       </v-col>
 
-      <v-col cols="12" md="9" lg="10" class="pa-6 d-flex flex-column" style="height: 100vh; overflow-y: auto;">
+      <v-col cols="12" md="9" lg="10" class="pa-6 d-flex flex-column"
+        style="height: 100vh; max-height: 100vh; overflow-y: auto;">
         <div class="d-flex justify-space-between align-center mb-6">
           <h2 class="text-h5 font-weight-black d-flex align-center">
             <v-icon class="me-2" color="primary">mdi-bus-school</v-icon> 캐릭터 정보 / 공격대 만들기
@@ -102,50 +108,87 @@
                     </v-card>
                   </v-col>
 
-                  <v-col cols="12" md="4">
-                    <div class="text-subtitle-2 font-weight-black mb-3 opacity-70">착용 장비</div>
-                    <div class="d-flex flex-column justify-space-between h-100 pb-1">
-                      <v-card v-for="item in filteredEquipment" :key="item.Name" variant="flat" border
-                        class="pa-2 rounded-lg d-flex align-center flex-grow-1 mb-1">
-                        <v-avatar size="36" rounded="sm" class="me-3 border border-opacity-25"
-                          :style="{ backgroundColor: getEquipmentBgColor(item.Grade) }"><v-img
-                            :src="item.Icon"></v-img></v-avatar>
-                        <div class="overflow-hidden">
-                          <div class="text-caption font-weight-black text-truncate" style="line-height: 1.2;">{{
-                            item.Name }}
-                          </div>
-                          <div class="text-overline text-medium-emphasis"
-                            style="font-size: 0.55rem !important; line-height: 1;">{{ item.Grade }}</div>
+                  <v-col cols="12" md="5">
+                    <v-row no-gutters class="h-100">
+                      <v-col cols="6" class="pe-1 d-flex flex-column">
+                        <div class="text-subtitle-2 font-weight-black mb-2 opacity-70">착용 장비</div>
+                        <div class="d-flex flex-column h-100">
+                          <v-card v-for="item in filteredEquipment" :key="item.Name" variant="flat" border
+                            class="pa-2 rounded-lg d-flex align-center mb-1 flex-grow-1">
+                            <v-avatar size="32" rounded="sm" class="me-2 border border-opacity-25"
+                              :style="{ backgroundColor: getEquipmentBgColor(item.Grade) }">
+                              <v-img :src="item.Icon"></v-img>
+                            </v-avatar>
+                            <div class="overflow-hidden">
+                              <div class="text-caption font-weight-black text-truncate"
+                                style="line-height: 1.1; font-size: 0.75rem !important;">
+                                {{ item.Name }}
+                              </div>
+                              <div class="text-overline opacity-60"
+                                style="font-size: 0.5rem !important; line-height: 1;">
+                                {{ item.Grade }}
+                              </div>
+                            </div>
+                          </v-card>
                         </div>
-                      </v-card>
-                    </div>
+                      </v-col>
+
+                      <v-col cols="6" class="ps-1 d-flex flex-column">
+                        <div class="text-subtitle-2 font-weight-black mb-2 opacity-70">악세서리 / 팔찌</div>
+                        <div class="d-flex flex-column h-100">
+                          <v-card v-for="acc in filteredAccessories" :key="acc.Name" variant="flat" border
+                            class="pa-2 rounded-lg mb-1 flex-grow-1 accessory-polish-card d-flex align-center"
+                            style="max-height: 100px; min-height: 60px;">
+                            <v-avatar size="30" rounded="sm" class="me-2 flex-shrink-0"
+                              :style="{ backgroundColor: getEquipmentBgColor(acc.Grade) }">
+                              <v-img :src="acc.Icon"></v-img>
+                            </v-avatar>
+
+                            <div class="flex-grow-1 custom-scroll"
+                              style="font-size: 0.65rem; overflow-y: auto; max-height: 80px;">
+                              <div v-if="acc.displayInfo" v-html="acc.displayInfo" class="line-height-normal pe-1">
+                              </div>
+                              <div v-else class="text-caption text-grey">{{ acc.Type }}</div>
+                            </div>
+                          </v-card>
+                        </div>
+                      </v-col>
+                    </v-row>
                   </v-col>
 
-                  <v-col cols="12" md="5">
+                  <v-col cols="12" md="4" class="d-flex flex-column">
                     <div class="text-subtitle-2 font-weight-black mb-3 opacity-70">아크그리드 정보</div>
-                    <div class="d-flex flex-column h-100">
+                    <div class="d-flex flex-column mb-4">
                       <v-card v-for="slot in selectedChar.ArkGrid?.Slots" :key="slot.Index" variant="flat"
-                        class="pa-2 rounded-lg d-flex align-center mb-1 flex-grow-1 shadow-sm ark-slot-card"
+                        class="pa-1 rounded-lg d-flex align-center mb-1 ark-slot-card"
                         :style="{ backgroundColor: getArkGridBgColor(slot.Grade) }">
-                        <v-avatar size="36" rounded="lg"
-                          class="me-3 border border-opacity-25 bg-white shadow-sm flex-shrink-0"><v-img
+                        <v-avatar size="30" rounded="sm"
+                          class="me-2 border border-opacity-25 bg-white shadow-sm flex-shrink-0"><v-img
                             :src="slot.Icon"></v-img></v-avatar>
                         <div class="flex-grow-1 overflow-hidden">
                           <div class="text-caption font-weight-black text-truncate ark-slot-name"
                             :class="{ 'text-white': theme.global.current.value.dark }"
-                            style="line-height: 1.2 !important;">{{
+                            style="line-height: 1.2 !important; font-size: 0.7rem;">{{
                               slot.Name }}</div>
-                          <div class="text-overline font-weight-bold d-flex justify-space-between"
-                            :class="{ 'text-grey-lighten-3': theme.global.current.value.dark || slot.Grade === '유물' }"
-                            style="line-height: 1 !important;">
-                            <span>{{ slot.Grade }} 코어</span>
-                            <span
-                              :class="theme.global.current.value.dark || slot.Grade === '유물' ? 'text-blue-lighten-4' : 'text-blue-darken-4'">{{
-                                slot.Point }}PT</span>
+                          <div class="text-overline font-weight-bold d-flex justify-space-between opacity-70"
+                            style="line-height: 1 !important; font-size: 0.5rem !important;">
+                            <span>{{ slot.Grade }}</span>
+                            <span>{{ slot.Point }}PT</span>
                           </div>
                         </div>
                       </v-card>
                     </div>
+
+                    <div class="text-subtitle-2 font-weight-black mb-2 opacity-70">아크그리드 상세 효과</div>
+                    <v-card variant="outlined" border class="pa-2 rounded-xl flex-grow-1"
+                      style="max-height: 240px; overflow-y: auto;">
+                      <div v-for="effect in selectedChar.ArkGrid?.Effects" :key="effect.Name"
+                        class="mb-1 d-flex align-center justify-space-between border-bottom border-opacity-10 pb-1">
+                        <span class="text-caption font-weight-bold text-medium-emphasis">{{ effect.Name }}</span>
+                        <v-chip size="x-small" color="primary" variant="flat" class="font-weight-black px-2">LV.{{
+                          effect.Level }}</v-chip>
+                      </div>
+                    </v-card>
                   </v-col>
                 </v-row>
 
@@ -153,8 +196,8 @@
 
                 <v-row>
                   <v-col cols="12" md="7">
-                    <div class="text-subtitle-2 font-weight-black mb-4 opacity-70">장착 보석 현황</div>
-                    <div class="d-flex flex-wrap gap-2 mb-6">
+                    <div class="text-subtitle-2 font-weight-black mb-4 opacity-70">장착 보석</div>
+                    <div class="d-flex flex-wrap gap-2">
                       <div v-for="(gem, index) in selectedChar.ArmoryGem?.Gems" :key="index"
                         class="text-center gem-wrapper">
                         <v-avatar size="52" rounded="lg" class="elevation-2 mb-1 border"><v-img
@@ -162,7 +205,10 @@
                         <div class="text-caption font-weight-black" style="font-size: 0.7rem;">{{ gem.Level }}LV</div>
                       </div>
                     </div>
-                    <div class="text-subtitle-2 font-weight-black mb-4 opacity-70">활성 각인서 효과</div>
+                  </v-col>
+
+                  <v-col cols="12" md="5">
+                    <div class="text-subtitle-2 font-weight-black mb-4 opacity-70">활성 각인</div>
                     <div class="d-flex flex-wrap gap-2">
                       <v-card v-for="engrave in selectedChar.ArmoryEngraving?.ArkPassiveEffects" :key="engrave.Name"
                         variant="outlined" border class="pa-2 px-3 rounded-pill d-flex align-center">
@@ -172,17 +218,6 @@
                         <span class="text-caption font-weight-bold">{{ engrave.Name }}</span>
                       </v-card>
                     </div>
-                  </v-col>
-                  <v-col cols="12" md="5">
-                    <div class="text-subtitle-2 font-weight-black mb-4 opacity-70">아크그리드 상세 효과</div>
-                    <v-card variant="outlined" border class="pa-4 rounded-xl">
-                      <div v-for="effect in selectedChar.ArkGrid?.Effects" :key="effect.Name"
-                        class="mb-2 d-flex align-center justify-space-between border-bottom border-opacity-10 pb-1">
-                        <span class="text-body-2 font-weight-bold text-medium-emphasis">{{ effect.Name }}</span>
-                        <v-chip size="x-small" color="primary" variant="flat" class="font-weight-black px-2">LV.{{
-                          effect.Level }}</v-chip>
-                      </div>
-                    </v-card>
                   </v-col>
                 </v-row>
               </div>
@@ -279,13 +314,11 @@ const isDetailLoading = ref(false);
 const registeredBuses = ref([]);
 
 onMounted(() => {
-  // 기존 캐릭터 명단 쿼리
   const qChar = query(collection(db, "characters"), orderBy("createdAt", "desc"));
   onSnapshot(qChar, (snapshot) => {
     charList.value = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   });
 
-  // 신규: 등록된 버스 명단 쿼리
   const qBus = query(collection(db, "buses"), orderBy("dateTime", "asc"));
   onSnapshot(qBus, (snapshot) => {
     registeredBuses.value = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -312,10 +345,14 @@ const getArkGridBgColor = (grade) => {
   }
 };
 
-const slotNameColor = computed(() => theme.global.current.value.dark ? '#FFFFFF !important' : '#000000 !important');
 const getEquipmentBgColor = (grade) => {
-  const colors = { '고대': '#3d3325', '유물': '#441c04', '전설': '#362003' };
+  const colors = { '고대': '#3d3325', '유물': '#441c04', '전설': '#362003', '영웅': '#182233' };
   return colors[grade] || '#EEEEEE';
+};
+
+const getGradeColor = (grade) => {
+  const colors = { '고대': '#E3C7A1', '유물': '#EF6C00', '전설': '#FFD200', '영웅': '#CE43FC' };
+  return colors[grade] || '#999';
 };
 
 const filteredEquipment = computed(() => {
@@ -324,181 +361,162 @@ const filteredEquipment = computed(() => {
   return selectedChar.value.ArmoryEquipment.filter(item => targetTypes.includes(item.Type));
 });
 
+const filteredAccessories = computed(() => {
+  if (!selectedChar.value?.ArmoryEquipment) return [];
+  const targetTypes = ['목걸이', '귀걸이', '반지', '팔찌', '어빌리티 스톤'];
+
+  return selectedChar.value.ArmoryEquipment
+    .filter(item => targetTypes.includes(item.Type))
+    .map(item => {
+      let displayInfo = "";
+      try {
+        const tooltip = JSON.parse(item.Tooltip);
+        for (const key in tooltip) {
+          const element = tooltip[key];
+          if (!element || !element.type) continue;
+
+          // 1. 악세서리 & 팔찌 (ItemPartBox)
+          if (element.type === 'ItemPartBox') {
+            const title = element.value?.Element_000 || "";
+            // 연마 효과 또는 팔찌 효과 추출
+            if (title.includes("연마 효과") || title.includes("팔찌 효과")) {
+              let content = element.value.Element_001;
+              content = content.replace(/<img[^>]*>/g, ""); // 아이콘 제거
+              displayInfo = content;
+              break;
+            }
+          }
+
+          // 2. 어빌리티 스톤 (IndentStringGroup) -> 무작위 각인 효과
+          if (element.type === 'IndentStringGroup') {
+            const title = element.value?.Element_000?.topStr || "";
+            if (title.includes("무작위 각인 효과")) {
+              const contentObj = element.value.Element_000.contentStr;
+              let stoneHtml = "";
+              for (const k in contentObj) {
+                let str = contentObj[k].contentStr || "";
+                str = str.replace(/<img[^>]*>/g, ""); // 아이콘 제거
+                stoneHtml += str;
+              }
+              displayInfo = stoneHtml;
+              break;
+            }
+          }
+        }
+      } catch (e) { console.error(e); }
+
+      return { ...item, displayInfo };
+    })
+    .sort((a, b) => {
+      const order = ['목걸이', '귀걸이', '반지', '팔찌', '어빌리티 스톤'];
+      return order.indexOf(a.Type) - order.indexOf(b.Type);
+    });
+});
 
 const confirmAndUpload = async (bus, index) => {
-  if (bus.members.length === 0) {
-    alert("최소 한 명 이상의 캐릭터를 편성해 주세요.");
-    return;
-  }
-
+  if (bus.members.length === 0) return;
   try {
     isLoading.value = true;
-
     const scheduleData = {
-      raid: bus.raid,
-      difficulty: bus.difficulty,
-      dateTime: bus.dateTime || "",
-      members: JSON.parse(JSON.stringify(bus.members.map(m => ({
-        name: m.name,
-        job: m.job,
-        level: m.level,
-        combatPower: m.combatPower,
-        img: m.img
-      })))),
-      createdAt: new Date(),
-      isHomework: bus.isHomework // 상태값 저장
+      raid: bus.raid, difficulty: bus.difficulty, dateTime: bus.dateTime || "",
+      members: JSON.parse(JSON.stringify(bus.members)), createdAt: new Date(), isHomework: bus.isHomework
     };
-
-    // 토글 상태에 따라 저장할 컬렉션 결정
-    // 버스(false) -> schedules / 숙제(true) -> homeworks
     const targetCollection = bus.isHomework ? "homeworks" : "schedules";
-
     await addDoc(collection(db, targetCollection), scheduleData);
-
-    const typeMsg = bus.isHomework ? "숙제 스케줄" : "운행표";
-    alert(`${bus.raid} ${typeMsg}가 등록되었습니다.`);
-
     localBuses.value.splice(index, 1);
-  } catch (e) {
-    console.error("등록 실패:", e);
-    alert("등록 중 오류가 발생했습니다.");
-  } finally {
-    isLoading.value = false;
-  }
+  } catch (e) { console.error(e); } finally { isLoading.value = false; }
 };
 
 const fetchCharacter = async () => {
   if (!searchName.value) return;
   isLoading.value = true;
-
   try {
     const url = `https://developer-lostark.game.onstove.com/armories/characters/${encodeURIComponent(searchName.value)}/profiles`;
-    const response = await axios.get(url, {
-      headers: {
-        'accept': 'application/json',
-        'authorization': `bearer ${API_KEY.trim()}`
-      }
-    });
-
+    const response = await axios.get(url, { headers: { 'accept': 'application/json', 'authorization': `bearer ${API_KEY.trim()}` } });
     const data = response.data;
-
     if (data && data.CharacterName) {
-      // 1. 기존 동일 캐릭터가 있는지 확인
       const existingChar = charList.value.find(c => c.name === data.CharacterName);
-
-      // 2. 기존 캐릭터 삭제 (순위 및 위치 갱신을 위함)
-      if (existingChar) {
-        await deleteDoc(doc(db, "characters", existingChar.id));
-      }
-
-      // 3. 신규 데이터 등록
-      // createdAt을 현재 시간으로 설정하여 5등 밖일 경우 최상단에 오도록 함
+      if (existingChar) await deleteDoc(doc(db, "characters", existingChar.id));
       await addDoc(collection(db, "characters"), {
-        name: data.CharacterName,
-        level: data.ItemAvgLevel,
-        job: data.CharacterClassName,
-        img: data.CharacterImage,
-        combatPower: data.CombatPower,
-        createdAt: new Date()
+        name: data.CharacterName, level: data.ItemAvgLevel, job: data.CharacterClassName, img: data.CharacterImage, combatPower: data.CombatPower, createdAt: new Date()
       });
-
       searchName.value = '';
-    } else {
-      alert("캐릭터를 찾을 수 없습니다.");
     }
-  } catch (e) {
-    console.error(e);
-    alert("검색 중 오류가 발생했습니다.");
-  } finally {
-    isLoading.value = false;
-  }
+  } catch (e) { console.error(e); } finally { isLoading.value = false; }
 };
 
 const deleteChar = async (id) => { if (confirm("삭제하시겠습니까?")) await deleteDoc(doc(db, "characters", id)); };
 const cloneCharacter = (char) => ({ ...char, id: Date.now() + Math.random() });
-
-// 1. 슬롯 추가 시 기본값 설정 (default: 버스 상태, isHomework: false)
-const addBusSlot = () => {
-  localBuses.value.push({
-    localId: Date.now(),
-    raid: '2막',
-    difficulty: '노말',
-    members: [],
-    dateTime: '',
-    isHomework: false // false면 버스(ON), true면 숙제(OFF)
-  });
-};
+const addBusSlot = () => { localBuses.value.push({ localId: Date.now(), raid: '2막', difficulty: '노말', members: [], dateTime: '', isHomework: false }); };
 
 const rankedCharList = computed(() => {
-  // 1. 먼저 전체 데이터를 전투력 순으로 정렬하여 '진짜 순위'를 계산합니다.
   const powerSorted = [...charList.value].sort((a, b) => {
     const powerA = parseInt(a.combatPower?.replace(/,/g, '') || 0);
     const powerB = parseInt(b.combatPower?.replace(/,/g, '') || 0);
     return powerB - powerA;
   });
-
-  // 2. 상위 5명을 추출합니다. (랭킹 존)
   const top5Names = powerSorted.slice(0, 5).map(c => c.name);
-  const top5 = powerSorted.slice(0, 5).map((char, index) => ({
-    ...char,
-    rank: index + 1
-  }));
-
-  // 3. 나머지 캐릭터들을 추출하고 '추가된 시간(createdAt)' 최신순으로 정렬합니다.
-  const others = charList.value
-    .filter(c => !top5Names.includes(c.name)) // 상위 5명 제외
-    .sort((a, b) => {
-      // 파이어베이스 Timestamp 또는 Date 객체 대응
-      const dateA = a.createdAt?.seconds ? a.createdAt.seconds : new Date(a.createdAt).getTime();
-      const dateB = b.createdAt?.seconds ? b.createdAt.seconds : new Date(b.createdAt).getTime();
-      return dateB - dateA; // 최신순
-    })
-    .map(char => ({ ...char, rank: 999 })); // 6등 이하는 순위 표시 제외용 임의 값
-
-  // 4. 상위 5명 + 나머지 최신순 목록을 합쳐서 반환합니다.
+  const top5 = powerSorted.slice(0, 5).map((char, index) => ({ ...char, rank: index + 1 }));
+  const others = charList.value.filter(c => !top5Names.includes(c.name)).map(char => ({ ...char, rank: 999 }));
   return [...top5, ...others];
 });
 </script>
 
 <style scoped>
-/* 1. 검색창 및 기본 레이아웃 제어 */
-.custom-search-field :deep(.v-field__input) {
-  min-height: 70px !important;
-  padding-top: 0 !important;
-  padding-bottom: 0 !important;
-  align-items: center;
-  font-size: 0.95rem;
+/* [수정] 1~3등(상위권)만 흰색 텍스트와 그림자 효과 강제 적용 */
+.rank-step-1 .text-name-fix,
+.rank-step-1 .text-job-fix,
+.rank-step-2 .text-name-fix,
+.rank-step-2 .text-job-fix,
+.rank-step-3 .text-name-fix,
+.rank-step-3 .text-job-fix {
+  text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.8) !important;
+  color: white !important;
 }
 
-.custom-search-field :deep(.v-field) {
-  height: 70px !important;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+/* [추가] 그 외(4등, 5등, 일반)는 Vuetify 테마 색상(Light:검정, Dark:흰색)을 따름 */
+.rank-step-4 .text-name-fix,
+.rank-step-5 .text-name-fix,
+.rank-normal .text-name-fix {
+  color: rgb(var(--v-theme-on-surface)) !important;
+  text-shadow: none !important;
 }
 
-.custom-search-field :deep(.v-field__append-inner) {
-  align-items: center;
-  padding-top: 0 !important;
+.rank-step-4 .text-job-fix,
+.rank-step-5 .text-job-fix,
+.rank-normal .text-job-fix {
+  color: rgba(var(--v-theme-on-surface), 0.7) !important;
+  text-shadow: none !important;
 }
 
-.character-list-scroll {
-  max-height: calc(100vh - 200px);
-  overflow-y: auto !important;
-  padding-right: 8px;
+:deep(.v-theme--light) .rank-step-2 {
+  background: linear-gradient(135deg, #4a004d 0%, #7b1fa2 50%, #4a004d 100%) !important;
+}
+
+:deep(.v-theme--light) .rank-step-3 {
+  background: linear-gradient(135deg, #7c5e00 0%, #b8860b 50%, #7c5e00 100%) !important;
+}
+
+.accessory-polish-card {
+  background: rgba(var(--v-theme-surface-variant), 0.05) !important;
+}
+
+.ark-slot-card {
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
 }
 
 .custom-scroll::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
+  height: 4px;
 }
 
 .custom-scroll::-webkit-scrollbar-thumb {
-  background: rgba(128, 128, 128, 0.3);
+  background: rgba(128, 128, 128, 0.2);
   border-radius: 10px;
 }
 
-/* 2. 카드 공통 및 텍스트 설정 */
 .char-rank-card {
   position: relative;
-  /* 일반 카드는 시스템 테마 배경을 따름 */
   border: 1px solid rgba(128, 128, 128, 0.2) !important;
   backdrop-filter: blur(10px);
   overflow: hidden;
@@ -509,38 +527,21 @@ const rankedCharList = computed(() => {
   font-size: 1.2rem;
   font-style: italic;
   margin-right: 4px;
-  /* 기본 텍스트 그림자는 테마에 맞게 약하게 설정 */
-}
-
-/* 상위권(1~3등) 전용: 배경이 항상 어두우므로 텍스트를 흰색으로 강제 고정 */
-.rank-step-1 .text-white-fix,
-.rank-step-2 .text-white-fix,
-.rank-step-3 .text-white-fix {
-  color: white !important;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 }
 
 .char-rank-card .position-relative {
   z-index: 2 !important;
 }
 
-.rank-normal {
-  opacity: 0.9;
+.rank-normal .text-name-fix {
+  color: rgb(var(--v-theme-on-surface)) !important;
+  text-shadow: none !important;
 }
 
-.rank-normal:hover {
-  opacity: 1;
-  transform: translateX(5px);
-}
-
-/* 3. 애니메이션 정의 */
-@keyframes sweep {
-  0% {
-    left: -100%;
-  }
-
-  100% {
-    left: 100%;
-  }
+.rank-normal .text-job-fix {
+  color: rgba(var(--v-theme-on-surface), 0.7) !important;
+  text-shadow: none !important;
 }
 
 @keyframes border-glow {
@@ -571,20 +572,6 @@ const rankedCharList = computed(() => {
   }
 }
 
-@keyframes nebula-move {
-  0% {
-    background-position: 0% 50%;
-  }
-
-  50% {
-    background-position: 100% 50%;
-  }
-
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
 @keyframes twinkle {
 
   0%,
@@ -599,65 +586,36 @@ const rankedCharList = computed(() => {
   }
 }
 
-/* 4. 랭킹별 스타일 설정 */
 .rank-step-1,
 .rank-step-2,
 .rank-step-3 {
   position: relative;
   background-size: 200% 200% !important;
   z-index: 1;
-  /* 상위권은 무조건 어두운 배경 사용 */
   color: white !important;
 }
 
-/* [1등] 신급 */
 .rank-step-1 {
   --rank-color: #ff1e00;
-  --glow-intensity: 0 0 35px;
-  --star-density: 40px;
-  --star-opacity: 1.0;
   border: 2.5px solid #ff1e00 !important;
   animation: border-glow 1s linear infinite, pulse-glow 0.6s ease-in-out infinite !important;
   background: radial-gradient(circle at center, #600000 0%, #1a1a1a 80%) !important;
 }
 
-.rank-step-1 .rank-number {
-  font-size: 1.5rem;
-  text-shadow: 0 0 15px #ff1e00;
-  color: #ff1e00 !important;
-}
-
-/* [2등] 영웅급 */
 .rank-step-2 {
   --rank-color: #d011d6;
-  --glow-intensity: 0 0 20px;
-  --star-density: 70px;
-  --star-opacity: 0.7;
   border: 2px solid #d011d6 !important;
   background: linear-gradient(135deg, #150025 0%, #2a0045 50%, #150025 100%) !important;
-  animation: nebula-move 4s ease infinite, border-glow 1.5s linear infinite, pulse-glow 1.1s ease-in-out infinite !important;
+  animation: border-glow 1.5s linear infinite !important;
 }
 
-.rank-step-2 .rank-number {
-  color: #d011d6 !important;
-}
-
-/* [3등] 희귀급 */
 .rank-step-3 {
   --rank-color: #ffe600;
-  --glow-intensity: 0 0 15px;
-  --star-density: 110px;
-  --star-opacity: 0.4;
   border: 2px solid #ffe600 !important;
   background: radial-gradient(ellipse at top right, #2b1d00 0%, #1a1a1a 80%) !important;
-  animation: border-glow 2s linear infinite, pulse-glow 1.5s ease-in-out infinite !important;
+  animation: border-glow 2s linear infinite !important;
 }
 
-.rank-step-3 .rank-number {
-  color: #ffe600 !important;
-}
-
-/* [4~5등 및 일반] 화이트/다크 모드 자동 대응 */
 .rank-step-4 {
   --rank-color: #757575;
   border: 1.5px solid #E0E0E0 !important;
@@ -668,20 +626,6 @@ const rankedCharList = computed(() => {
   border: 1.5px solid #9b5c1d !important;
 }
 
-/* 전투력 텍스트 색상 고정 (가시성) */
-.rank-step-1 .combat-power-text {
-  color: #ff1e00 !important;
-}
-
-.rank-step-2 .combat-power-text {
-  color: #d011d6 !important;
-}
-
-.rank-step-3 .combat-power-text {
-  color: #ffe600 !important;
-}
-
-/* 5. 고밀도 은하수 레이어 (1~3등 전용) */
 .rank-step-1::before,
 .rank-step-2::before,
 .rank-step-3::before {
@@ -691,26 +635,13 @@ const rankedCharList = computed(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background-image:
-    radial-gradient(1px 1px at 10% 10%, #fff, transparent),
-    radial-gradient(1px 1px at 20% 40%, #fff, transparent),
-    radial-gradient(1px 1px at 45% 15%, #fff, transparent),
-    radial-gradient(1.5px 1.5px at 60% 30%, #fff, transparent),
-    radial-gradient(1px 1px at 80% 10%, #fff, transparent),
-    radial-gradient(1px 1px at 90% 50%, #fff, transparent),
-    radial-gradient(1px 1px at 15% 85%, #fff, transparent),
-    radial-gradient(1.2px 1.2px at 35% 70%, #fff, transparent),
-    radial-gradient(1px 1px at 50% 95%, #fff, transparent),
-    radial-gradient(1px 1px at 75% 80%, #fff, transparent),
-    radial-gradient(1.5px 1.5px at 85% 90%, #fff, transparent),
-    radial-gradient(1px 1px at 40% 55%, #fff, transparent);
+  background-image: radial-gradient(1px 1px at 10% 10%, #fff, transparent), radial-gradient(1.5px 1.5px at 60% 30%, #fff, transparent), radial-gradient(1.5px 1.5px at 85% 90%, #fff, transparent);
   background-size: var(--star-density) var(--star-density);
   animation: twinkle 2s infinite ease-in-out;
   opacity: var(--star-opacity);
   z-index: 1;
 }
 
-/* 6. 추가 UI 효과 */
 .glow-overlay {
   position: absolute;
   top: 0;
@@ -722,6 +653,48 @@ const rankedCharList = computed(() => {
   z-index: 1;
 }
 
+@keyframes sweep {
+  0% {
+    left: -100%;
+  }
+
+  100% {
+    left: 100%;
+  }
+}
+
+/* 1. 검색창 스타일 */
+.custom-search-field :deep(.v-field__input) {
+  min-height: 70px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  align-items: center;
+  font-size: 0.95rem;
+}
+
+.custom-search-field :deep(.v-field) {
+  height: 70px !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 2. 스크롤바 스타일 */
+.character-list-scroll {
+  /* max-height 제거 -> flex-grow로 제어 */
+  padding-right: 8px;
+}
+
+.custom-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+  /* 가로 스크롤바 높이 추가 */
+}
+
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: rgba(128, 128, 128, 0.3);
+  border-radius: 10px;
+}
+
+
 .level-badge {
   background: rgba(128, 128, 128, 0.1);
   padding: 0px 4px;
@@ -732,7 +705,6 @@ const rankedCharList = computed(() => {
   line-height: 1.2;
 }
 
-/* 7. 드래그 앤 드롭 및 기타 레이아웃 */
 .profile-card {
   background: #1a1a2e;
   min-height: 100%;
@@ -760,18 +732,32 @@ const rankedCharList = computed(() => {
   cursor: copy;
 }
 
-.empty-drop-msg {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 100%;
-  pointer-events: none;
-  opacity: 0.3;
-}
-
 .drop-zone {
   position: relative;
   overflow: hidden;
 }
+
+.line-height-normal p,
+.line-height-normal font,
+.line-height-normal div {
+  line-height: 1.2 !important;
+  margin-bottom: 0 !important;
+}
+
+/* [추가] 화이트 모드일 때, 악세서리 정보 내의 '흰색' 폰트를 강제로 '진한 회색'으로 변경 */
+:deep(.v-theme--light) .accessory-polish-card font[color='#FFFFFF'] {
+  color: #424242 !important;
+}
+
+/* 기존에 추가했던 흰색 폰트 강제 변경 코드 아래에 이어서 작성하세요 */
+
+/* [추가] 화이트 모드일 때, 어빌리티 스톤의 밝은 노란색(#FFFFAC)을 진한 오렌지/브라운 색으로 변경 */
+:deep(.v-theme--light) .accessory-polish-card font[color='#FFFFAC'] {
+  color: #E65100 !important;
+  /* 진한 오렌지색 (가독성 확보) */
+  font-weight: 900 !important;
+}
+
+/* (참고) 혹시 붉은색(#FE2E2E - 감소 각인)도 잘 안 보인다면 아래 코드도 추가 고려 */
+/* :deep(.v-theme--light) .accessory-polish-card font[color='#FE2E2E'] { color: #D50000 !important; } */
 </style>

@@ -6,7 +6,7 @@
 
         <div class="flex-shrink-0">
           <div class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center">
-            <v-icon color="primary" class="me-2">mdi-account-multiple</v-icon> 기사 명단
+            <v-icon color="primary" class="me-2">mdi-account-multiple</v-icon> 캐릭터 명단
           </div>
 
           <v-text-field v-model="searchName" label="캐릭터 추가" append-inner-icon="mdi-magnify"
@@ -135,7 +135,7 @@
                       </v-col>
 
                       <v-col cols="6" class="ps-1 d-flex flex-column">
-                        <div class="text-subtitle-2 font-weight-black mb-2 opacity-70">악세서리 / 팔찌</div>
+                        <div class="text-subtitle-2 font-weight-black mb-2 opacity-70">악세서리 / 스톤</div>
                         <div class="d-flex flex-column h-100">
                           <v-card v-for="acc in filteredAccessories" :key="acc.Name" variant="flat" border
                             class="pa-2 rounded-lg mb-1 flex-grow-1 accessory-polish-card d-flex align-center"
@@ -183,7 +183,7 @@
                       </v-card>
                     </div>
 
-                    <div class="text-subtitle-2 font-weight-black mb-2 opacity-70">아크그리드 상세 효과</div>
+                    <div class="text-subtitle-2 font-weight-black mb-2 opacity-70">장착 젬 효과</div>
                     <v-card variant="outlined" border class="pa-2 rounded-xl flex-grow-1"
                       style="max-height: 240px; overflow-y: auto;">
                       <div v-for="effect in selectedChar.ArkGrid?.Effects" :key="effect.Name"
@@ -282,7 +282,7 @@
                         <div v-if="bus.members.length === 0"
                           class="empty-drop-msg d-flex flex-column align-center justify-center pointer-events-none position-absolute w-100 h-100 top-0 left-0">
                           <v-icon size="24" class="mb-1">mdi-drag-variant</v-icon>
-                          <div class="text-caption">기사를 이리로 드래그하세요</div>
+                          <div class="text-caption">캐릭터를 이리로 드래그하세요</div>
                         </div>
                       </template>
                     </draggable>

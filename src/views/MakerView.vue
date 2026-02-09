@@ -258,8 +258,9 @@
                 </v-toolbar>
                 <v-card-text class="pa-4">
                   <v-select v-model="bus.raid" :items="['2막', '3막', '4막', '종막', '세르카']" label="레이드" density="compact"
-                    variant="outlined" class="mb-2"></v-select>
-                  <v-select v-model="bus.difficulty" :items="['노말', '하드']" label="난이도" density="compact"
+                    variant="outlined" class="mb-2" @update:model-value="bus.difficulty = '노말'"></v-select>
+
+                  <v-select v-model="bus.difficulty" :items="getDifficultyList(bus.raid)" label="난이도" density="compact"
                     variant="outlined" class="mb-2"></v-select>
                   <div class="text-subtitle-2 font-weight-black mb-2 d-flex align-center text-high-emphasis">
                     <v-icon size="18" class="me-1">mdi-account-check</v-icon> 참여 공격대 목록
@@ -317,6 +318,18 @@ const selectedChar = ref(null);
 const isDetailLoading = ref(false);
 
 const registeredBuses = ref([]);
+
+// 레이드 종류에 따라 난이도 목록을 반환하는 함수
+const getDifficultyList = (raidName) => {
+  if (raidName === '종막') {
+    return ['노말', '하드', 'The First'];
+  } else if (raidName === '세르카') {
+    return ['노말', '하드', '나이트메어'];
+  } else {
+    // 그 외 (2막, 3막, 4막 등)
+    return ['노말', '하드'];
+  }
+};
 
 onMounted(() => {
   const qChar = query(collection(db, "characters"), orderBy("createdAt", "desc"));

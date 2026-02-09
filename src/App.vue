@@ -9,9 +9,9 @@
           <v-img 
             src="/favicon.ico.png" 
             alt="흐흣 로고"
-            width="32" 
-            height="32" 
-            max-width="32"
+            width="50" 
+            height="50" 
+            max-width="50"
             class="me-3 rounded-lg border border-opacity-25"
             cover
           ></v-img>

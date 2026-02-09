@@ -194,12 +194,13 @@
 
                 <v-divider class="my-6"></v-divider>
 
-                <v-row>
-                  <v-col cols="12" md="7">
+                <v-row dense>
+                  <v-col cols="12" md="6">
                     <div class="text-subtitle-2 font-weight-black mb-4 opacity-70">장착 보석</div>
-                    <div class="d-flex flex-wrap gap-2">
+
+                    <div class="d-flex flex-nowrap align-center overflow-x-auto custom-scroll pb-2" style="gap: 8px;">
                       <div v-for="(gem, index) in selectedChar.ArmoryGem?.Gems" :key="index"
-                        class="text-center gem-wrapper">
+                        class="text-center gem-wrapper flex-shrink-0">
                         <v-avatar size="52" rounded="lg" class="elevation-2 mb-1 border"><v-img
                             :src="gem.Icon"></v-img></v-avatar>
                         <div class="text-caption font-weight-black" style="font-size: 0.7rem;">{{ gem.Level }}LV</div>
@@ -207,15 +208,16 @@
                     </div>
                   </v-col>
 
-                  <v-col cols="12" md="5">
+                  <v-col cols="12" md="6">
                     <div class="text-subtitle-2 font-weight-black mb-4 opacity-70">활성 각인</div>
-                    <div class="d-flex flex-wrap gap-2">
+
+                    <div class="d-flex flex-nowrap align-center overflow-x-auto custom-scroll pb-2" style="gap: 8px;">
                       <v-card v-for="engrave in selectedChar.ArmoryEngraving?.ArkPassiveEffects" :key="engrave.Name"
-                        variant="outlined" border class="pa-2 px-3 rounded-pill d-flex align-center">
+                        variant="outlined" border class="pa-2 px-3 rounded-pill d-flex align-center flex-shrink-0">
                         <v-chip size="x-small" color="orange-darken-4" class="me-2 font-weight-black text-white"
                           label>Lv.{{
-                            engrave.Level }}</v-chip>
-                        <span class="text-caption font-weight-bold">{{ engrave.Name }}</span>
+                          engrave.Level }}</v-chip>
+                        <span class="text-caption font-weight-bold text-truncate">{{ engrave.Name }}</span>
                       </v-card>
                     </div>
                   </v-col>

@@ -172,7 +172,7 @@
                           <div class="text-caption font-weight-black text-truncate ark-slot-name"
                             :class="{ 'text-white': theme.global.current.value.dark }"
                             style="line-height: 1.2 !important; font-size: 0.7rem;">{{
-                            slot.Name }}</div>
+                              slot.Name }}</div>
                           <div class="text-overline font-weight-bold d-flex justify-space-between opacity-70"
                             style="line-height: 1 !important; font-size: 0.5rem !important;">
                             <span>{{ slot.Grade }}</span>
@@ -268,7 +268,7 @@
                     :style="{ backgroundColor: theme.global.current.value.dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }">
 
                     <draggable v-model="bus.members" group="pilots" item-key="id"
-                      class="d-flex flex-wrap align-content-start bus-member-draggable-area pa-2">
+                      class="d-flex flex-wrap align-content-start bus-member-draggable-area pa-2 position-relative">
                       <template #item="{ element, index }">
                         <v-chip closable size="small" color="primary" class="ma-1 font-weight-bold text-white" label
                           @click:close="bus.members.splice(index, 1)">
@@ -278,7 +278,7 @@
 
                       <template #footer>
                         <div v-if="bus.members.length === 0"
-                          class="empty-drop-msg d-flex flex-column align-center justify-center pointer-events-none">
+                          class="empty-drop-msg d-flex flex-column align-center justify-center pointer-events-none position-absolute w-100 h-100 top-0 left-0">
                           <v-icon size="24" class="mb-1">mdi-drag-variant</v-icon>
                           <div class="text-caption">기사를 이리로 드래그하세요</div>
                         </div>

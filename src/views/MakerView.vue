@@ -75,8 +75,9 @@
           </v-btn>
         </div>
 
-        <v-card variant="flat" class="rounded-xl pa-6 d-flex flex-column flex-grow-1 elevation-1" border
-          min-height="85vh">
+        <v-card variant="flat"
+          class="rounded-xl pa-6 d-flex flex-column flex-grow-1 elevation-1 overflow-y-auto custom-scroll" border
+          height="85vh">
           <div v-if="localBuses.length === 0" class="flex-grow-1 d-flex flex-column">
             <v-fade-transition hide-on-leave>
               <div v-if="selectedChar && !isDetailLoading" class="dashboard-container w-100">

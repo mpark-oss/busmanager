@@ -162,14 +162,17 @@
                       <v-card v-for="slot in selectedChar.ArkGrid?.Slots" :key="slot.Index" variant="flat"
                         class="pa-1 rounded-lg d-flex align-center mb-1 ark-slot-card"
                         :style="{ backgroundColor: getArkGridBgColor(slot.Grade) }">
-                        <v-avatar size="30" rounded="sm"
-                          class="me-2 border border-opacity-25 bg-white shadow-sm flex-shrink-0"><v-img
-                            :src="slot.Icon"></v-img></v-avatar>
+
+                        <v-avatar size="30" rounded="sm" class="me-2 border border-opacity-25 shadow-sm flex-shrink-0"
+                          :style="{ backgroundColor: getEquipmentBgColor(slot.Grade) }">
+                          <v-img :src="slot.Icon"></v-img>
+                        </v-avatar>
+
                         <div class="flex-grow-1 overflow-hidden">
                           <div class="text-caption font-weight-black text-truncate ark-slot-name"
                             :class="{ 'text-white': theme.global.current.value.dark }"
                             style="line-height: 1.2 !important; font-size: 0.7rem;">{{
-                              slot.Name }}</div>
+                            slot.Name }}</div>
                           <div class="text-overline font-weight-bold d-flex justify-space-between opacity-70"
                             style="line-height: 1 !important; font-size: 0.5rem !important;">
                             <span>{{ slot.Grade }}</span>
@@ -216,7 +219,7 @@
                         variant="outlined" border class="pa-2 px-3 rounded-pill d-flex align-center flex-shrink-0">
                         <v-chip size="x-small" color="orange-darken-4" class="me-2 font-weight-black text-white"
                           label>Lv.{{
-                          engrave.Level }}</v-chip>
+                            engrave.Level }}</v-chip>
                         <span class="text-caption font-weight-bold text-truncate">{{ engrave.Name }}</span>
                       </v-card>
                     </div>

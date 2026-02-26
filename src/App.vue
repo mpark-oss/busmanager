@@ -1,38 +1,51 @@
 <template>
   <v-app :theme="theme">
-    <v-app-bar :color="theme === 'light' ? 'primary' : '#111111'" 
-      elevation="2"
-      border>
+    <v-app-bar :color="theme === 'light' ? 'primary' : '#111111'" elevation="2" border>
       
       <v-app-bar-title class="font-weight-black" style="flex: none !important; margin-right: 24px;">
         <div class="d-flex flex-row align-center">
-          <v-img 
-            src="/favicon.ico.png" 
-            alt="흐흣 로고"
-            width="50" 
-            height="50" 
-            max-width="50"
-            class="me-3 rounded-lg border border-opacity-25"
-            cover
-          ></v-img>
-          
+          <v-img src="/favicon.ico.png" alt="흐흣 로고" width="50" height="50" class="me-3 rounded-lg border border-opacity-25" cover></v-img>
           <span class="text-h6">흐흣 운수</span>
         </div>
       </v-app-bar-title>
 
-      <div v-if="mainCharacter" class="d-flex align-center cursor-pointer" style="cursor: pointer;" @click="charSettingDialog = true">
-        <v-avatar size="32" border class="me-2">
-          <v-img :src="mainCharacter.img" cover></v-img>
-        </v-avatar>
-        <div class="d-flex flex-column" style="line-height: 1.2;">
-          <span class="text-caption font-weight-black">{{ mainCharacter.name }}</span>
-          <span class="text-overline text-grey-lighten-1" style="font-size: 0.6rem !important;">Lv. {{ mainCharacter.level }}</span>
-        </div>
-        <v-icon size="small" class="ms-1">mdi-chevron-down</v-icon>
+      <div class="d-flex align-center">
+        <v-menu v-if="mainCharSlots.length > 0" offset-y transition="scale-transition">
+          <template v-slot:activator="{ props }">
+            <v-btn v-bind="props" variant="flat" color="orange-darken-3" class="rounded-pill px-4" size="small">
+              <v-avatar size="24" class="me-2" v-if="getCurrentSlot">
+                <v-img :src="getCurrentSlot.img" cover></v-img>
+              </v-avatar>
+              <span class="font-weight-black me-2">{{ currentMainName || '계정 선택' }}</span>
+              <v-icon size="small">mdi-chevron-down</v-icon>
+            </v-btn>
+          </template>
+
+          <v-list class="pa-2 rounded-xl mt-2" min-width="200" elevation="10">
+            <v-list-item v-for="char in mainCharSlots" :key="char.name" 
+              @click="switchAccount(char.name)"
+              :class="currentMainName === char.name ? 'bg-orange-lighten-5 text-orange-darken-4' : ''"
+              class="rounded-lg mb-1"
+            >
+              <template v-slot:prepend>
+                <v-avatar size="32" border><v-img :src="char.img" cover></v-img></v-avatar>
+              </template>
+              <v-list-item-title class="font-weight-black text-body-2">{{ char.name }}</v-list-item-title>
+              <v-list-item-subtitle style="font-size: 0.65rem;">Lv. {{ char.level }}</v-list-item-subtitle>
+            </v-list-item>
+            
+            <v-divider class="my-2"></v-divider>
+            
+            <v-list-item prepend-icon="mdi-cog-outline" title="계정 추가/삭제" 
+              @click="charSettingDialog = true" class="rounded-lg"></v-list-item>
+          </v-list>
+        </v-menu>
+
+        <v-btn v-else variant="tonal" color="orange-darken-2" prepend-icon="mdi-account-plus" 
+          class="rounded-pill font-weight-black" @click="charSettingDialog = true">
+          대표 캐릭터를 설정하세요
+        </v-btn>
       </div>
-      <v-btn v-else variant="tonal" size="small" prepend-icon="mdi-account-circle" @click="charSettingDialog = true">
-        캐릭터 설정
-      </v-btn>
       
       <v-spacer></v-spacer>
 
@@ -51,147 +64,129 @@
     <v-dialog v-model="charSettingDialog" max-width="400">
       <v-card class="rounded-xl pa-4">
         <v-card-title class="font-weight-black d-flex align-center">
-          <v-icon class="me-2">mdi-account-cog</v-icon> 기준 캐릭터 설정
+          <v-icon class="me-2">mdi-account-multiple-plus</v-icon> 대표 캐릭터 관리 ({{ mainCharSlots.length }}/5)
         </v-card-title>
         <v-card-text>
           <div class="d-flex align-center gap-2 mb-4">
-            <v-text-field
-              v-model="searchCharName"
-              label="캐릭터명 입력"
-              variant="outlined"
-              hide-details
-              density="compact"
-              color="orange-darken-2"
-              @keyup.enter="setMainCharacter"
-            ></v-text-field>
-            <v-btn color="orange-darken-2" icon="mdi-account-search" variant="flat" class="ms-2" :loading="isFetching" @click="setMainCharacter"></v-btn>
+            <v-text-field v-model="searchCharName" label="새 대표 캐릭터명" variant="outlined" hide-details density="compact" color="orange-darken-2" @keyup.enter="addNewSlot"></v-text-field>
+            <v-btn color="orange-darken-2" icon="mdi-account-search" variant="flat" class="ms-2" :loading="isFetching" @click="addNewSlot"></v-btn>
           </div>
-          
-          <v-divider v-if="mainCharacter" class="my-4"></v-divider>
-          
-          <div v-if="mainCharacter" class="pa-3 bg-grey-darken-4 rounded-lg d-flex align-center">
-             <v-avatar size="48" class="me-3" border><v-img :src="mainCharacter.img" cover></v-img></v-avatar>
-             <div>
-               <div class="font-weight-bold text-subtitle-1">{{ mainCharacter.name }}</div>
-               <div class="text-caption text-grey">Lv. {{ mainCharacter.level }} {{ mainCharacter.className }}</div>
-             </div>
-          </div>
+          <v-divider v-if="mainCharSlots.length > 0" class="my-4"></v-divider>
+          <v-list v-if="mainCharSlots.length > 0" class="bg-transparent pa-0">
+            <v-list-item v-for="char in mainCharSlots" :key="char.name" class="bg-grey-darken-4 rounded-lg mb-2 pa-2">
+              <template v-slot:prepend><v-avatar size="40" border><v-img :src="char.img" cover></v-img></v-avatar></template>
+              <v-list-item-title class="font-weight-bold text-subtitle-2">{{ char.name }}</v-list-item-title>
+              <v-list-item-subtitle class="text-caption">Lv. {{ char.level }}</v-list-item-subtitle>
+              <template v-slot:append><v-btn icon="mdi-delete-outline" variant="text" color="error" size="small" @click="removeSlot(char.name)"></v-btn></template>
+            </v-list-item>
+          </v-list>
         </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn variant="text" @click="charSettingDialog = false">닫기</v-btn>
-        </v-card-actions>
+        <v-card-actions><v-spacer></v-spacer><v-btn variant="text" @click="charSettingDialog = false">닫기</v-btn></v-card-actions>
       </v-card>
     </v-dialog>
 
-    <v-main>
-      <router-view></router-view>
-    </v-main>
+    <v-main><router-view></router-view></v-main>
   </v-app>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import axios from 'axios';
 
 const theme = ref(localStorage.getItem('theme') || 'light');
-const mainCharacter = ref(null);
+const mainCharSlots = ref([]);
+const currentMainName = ref(localStorage.getItem('current_main_name') || "");
 const charSettingDialog = ref(false);
 const searchCharName = ref("");
 const isFetching = ref(false);
 const API_KEY = import.meta.env.VITE_LOSTARK_API_KEY || "";
+
+// 현재 선택된 슬롯의 전체 데이터 반환
+const getCurrentSlot = computed(() => {
+  return mainCharSlots.value.find(c => c.name === currentMainName.value);
+});
 
 const toggleTheme = () => {
   theme.value = theme.value === 'light' ? 'dark' : 'light';
   localStorage.setItem('theme', theme.value);
 };
 
-// [신규] 매주 수요일 오전 6시 초기화 로직
+const switchAccount = (name) => {
+  currentMainName.value = name;
+  localStorage.setItem('current_main_name', name);
+  window.dispatchEvent(new CustomEvent('main-char-changed', { detail: name }));
+};
+
 const checkWeeklyReset = () => {
   const lastReset = localStorage.getItem('last_hw_reset');
   const now = new Date();
-  
-  // 최근 수요일 오전 6시 계산
   const getRecentResetTime = () => {
     const d = new Date(now);
-    const day = d.getDay(); // 0(일) ~ 6(토)
+    const day = d.getDay();
     const diff = (day < 3 || (day === 3 && d.getHours() < 6)) ? (day + 4) : (day - 3);
     d.setDate(d.getDate() - diff);
     d.setHours(6, 0, 0, 0);
     return d.getTime();
   };
-
   const resetTime = getRecentResetTime();
-
-  // 저장된 마지막 초기화 시간이 최근 수요일 06시보다 이전이면 초기화 진행
   if (!lastReset || parseInt(lastReset) < resetTime) {
-    const savedChars = localStorage.getItem('hw_characters');
-    if (savedChars) {
-      const chars = JSON.parse(savedChars);
-      const resetChars = chars.map(c => ({ ...c, completedTasks: [] }));
-      localStorage.setItem('hw_characters', JSON.stringify(resetChars));
-      localStorage.setItem('last_hw_reset', resetTime.toString());
-      console.log("주간 숙제가 수요일 오전 6시 기준으로 초기화되었습니다.");
-      // 현재 페이지가 숙제 관리 페이지라면 새로고침 유도 (이벤트 발송)
-      window.dispatchEvent(new CustomEvent('main-char-changed'));
-    }
+    mainCharSlots.value.forEach(slot => {
+      const storageKey = `hw_chars_${slot.name}`;
+      const savedChars = localStorage.getItem(storageKey);
+      if (savedChars) {
+        const chars = JSON.parse(savedChars);
+        const resetChars = chars.map(c => ({ ...c, completedTasks: [] }));
+        localStorage.setItem(storageKey, JSON.stringify(resetChars));
+      }
+    });
+    localStorage.setItem('last_hw_reset', resetTime.toString());
+    window.dispatchEvent(new CustomEvent('main-char-changed', { detail: currentMainName.value }));
   }
 };
 
-const setMainCharacter = async () => {
-  if (!searchCharName.value) return;
+const addNewSlot = async () => {
+  if (!searchCharName.value || mainCharSlots.value.length >= 5) return;
   isFetching.value = true;
   try {
     const url = `/api/armories/characters/${encodeURIComponent(searchCharName.value)}/profiles`;
-    const res = await axios.get(url, {
-      headers: { 'Authorization': `bearer ${API_KEY.trim()}` }
-    });
-    
+    const res = await axios.get(url, { headers: { 'Authorization': `bearer ${API_KEY.trim()}` } });
     if (res.data) {
       const data = res.data;
-      mainCharacter.value = {
-        name: data.CharacterName,
-        level: data.ItemAvgLevel, // ItemAvgLevel로 일치시킴
-        className: data.CharacterClassName,
-        img: data.CharacterImage
-      };
-      localStorage.setItem('main_char', JSON.stringify(mainCharacter.value));
+      const newChar = { name: data.CharacterName, level: data.ItemAvgLevel, className: data.CharacterClassName, img: data.CharacterImage };
+      if (!mainCharSlots.value.some(c => c.name === newChar.name)) {
+        mainCharSlots.value.push(newChar);
+        localStorage.setItem('main_char_slots', JSON.stringify(mainCharSlots.value));
+        switchAccount(newChar.name);
+      }
       searchCharName.value = "";
-      window.dispatchEvent(new CustomEvent('main-char-changed'));
     }
-  } catch (e) {
-    alert("캐릭터를 찾을 수 없습니다.");
-  } finally {
-    isFetching.value = false;
+  } catch (e) { alert("캐릭터를 찾을 수 없습니다."); } finally { isFetching.value = false; }
+};
+
+const removeSlot = (name) => {
+  if (!confirm(`${name} 슬롯을 제거하시겠습니까?`)) return;
+  mainCharSlots.value = mainCharSlots.value.filter(c => c.name !== name);
+  localStorage.setItem('main_char_slots', JSON.stringify(mainCharSlots.value));
+  if (currentMainName.value === name) {
+    const nextChar = mainCharSlots.value[0];
+    switchAccount(nextChar ? nextChar.name : "");
   }
 };
 
 onMounted(() => {
-  const saved = localStorage.getItem('main_char');
-  if (saved) mainCharacter.value = JSON.parse(saved);
-  
-  // 앱 실행 시 초기화 여부 체크
+  const savedSlots = localStorage.getItem('main_char_slots');
+  if (savedSlots) mainCharSlots.value = JSON.parse(savedSlots);
+  if (!currentMainName.value && mainCharSlots.value.length > 0) switchAccount(mainCharSlots.value[0].name);
   checkWeeklyReset();
 });
 </script>
 
 <style>
-/* 기존 스타일 유지 */
 body { font-family: 'Pretendard', sans-serif; }
-.v-theme--dark.v-application {
-  background-color: #121212 !important;
-}
-.v-theme--dark .v-container {
-  background-color: transparent !important;
-}
-.v-theme--dark .v-card {
-  background-color: #1e1e1e !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
-}
-.v-theme--dark .v-btn {
-  color: #e0e0e0 !important;
-}
-.v-theme--dark .v-app-bar {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-}
+.v-theme--dark.v-application { background-color: #121212 !important; }
+.v-theme--dark .v-card { background-color: #1e1e1e !important; border-color: rgba(255, 255, 255, 0.1) !important; }
+.v-theme--dark .v-btn { color: #e0e0e0 !important; }
+.v-theme--dark .v-app-bar { border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important; }
+.gap-2 { gap: 8px; }
+.cursor-pointer { cursor: pointer; }
 </style>

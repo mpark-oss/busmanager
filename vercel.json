@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://developer-lostark.game.onstove.com/:path*"
+    }
+  ]
+}

@@ -7,19 +7,26 @@
                         <v-icon>mdi-calendar-check</v-icon>
                     </v-avatar>
                     <div>
-                        <h2 class="text-h4 font-weight-black text-primary">숙제 스케줄러</h2>
+                        <h2 class="text-h4 font-weight-black text-primary">개인 숙제 관리</h2>
                         <div class="text-caption text-medium-emphasis font-weight-bold">
                             상위 3개 레이드 골드가 자동으로 합산됩니다. (주간 {{ getTotalGold().toLocaleString() }}G 획득 가능)
                         </div>
                     </div>
                     <v-spacer></v-spacer>
-                    <v-btn color="primary" prepend-icon="mdi-plus" class="rounded-lg"
-                        @click="addCharacterDialog = true">
-                        캐릭터 추가
-                    </v-btn>
-                </div>
+                    </div>
 
-                <v-row>
+                <v-row v-if="characters.length === 0 && !isFetching" justify="center" class="py-12">
+                    <v-col cols="12" sm="8" md="6" class="text-center">
+                        <v-icon size="64" color="grey-lighten-1" class="mb-4">mdi-account-search-outline</v-icon>
+                        <h3 class="text-h5 font-weight-bold mb-2">설정된 대표 캐릭터가 없습니다.</h3>
+                        <p class="text-body-1 text-medium-emphasis mb-6">
+                            상단바의 <strong>'캐릭터 설정'</strong> 버튼을 눌러 대표 캐릭터를 등록하면<br>
+                            원정대 목록을 자동으로 불러옵니다.
+                        </p>
+                    </v-col>
+                </v-row>
+
+                <v-row v-else>
                     <v-col v-for="char in characters" :key="char.name" cols="12" sm="6" md="4" lg="4" xl="3">
                         <v-card border variant="flat" class="rounded-xl overflow-hidden shadow-sm bg-card">
                             <v-list-item class="pa-3 bg-profile-header"
@@ -52,18 +59,6 @@
                             <v-divider></v-divider>
 
                             <v-card-text class="pa-3">
-                                <div class="d-flex align-center mb-2">
-                                    <v-chip size="x-small" color="orange" variant="flat" class="me-2 font-weight-bold">DAILY</v-chip>
-                                    <span class="text-caption font-weight-black text-medium-emphasis">일일 숙제</span>
-                                </div>
-                                <div class="d-flex flex-column gap-1 mb-3">
-                                    <v-checkbox v-for="task in dailyTasks" :key="task.id" v-model="char.completedTasks"
-                                        :value="task.id" :label="task.name" hide-details density="compact"
-                                        color="orange" @change="saveToLocal" class="custom-chk"></v-checkbox>
-                                </div>
-
-                                <v-divider class="my-3 border-opacity-25"></v-divider>
-
                                 <div class="d-flex align-center mb-2">
                                     <v-chip size="x-small" color="primary" variant="flat" class="me-2 font-weight-bold">WEEKLY</v-chip>
                                     <span class="text-caption font-weight-black text-medium-emphasis">주간 레이드 (골드 획득 상위 3종)</span>
@@ -99,8 +94,7 @@
             </v-col>
         </v-row>
 
-        <v-dialog v-model="addCharacterDialog" max-width="400">
-            </v-dialog>
+        <v-dialog v-model="addCharacterDialog" max-width="400" persistent v-if="false"></v-dialog>
     </v-container>
 </template>
 
@@ -120,17 +114,17 @@ const dailyTasks = [
 ];
 
 const raidList = [
-    { group: "마녀", name: "고통의 마녀(나이트메어)", level: 1740, gold: 54000 },
-    { group: "마녀", name: "고통의 마녀(하드)", level: 1730, gold: 44000 },
-    { group: "마녀", name: "고통의 마녀(노멀)", level: 1710, gold: 35000 },
-    { group: "종막", name: "종막: 최후의 날(하드)", level: 1730, gold: 52000 },
-    { group: "종막", name: "종막: 최후의 날(노멀)", level: 1710, gold: 40000 },
-    { group: "4막", name: "4막: 파멸의 성채(하드)", level: 1720, gold: 42000 },
-    { group: "4막", name: "4막: 파멸의 성채(노멀)", level: 1700, gold: 33000 },
-    { group: "3막", name: "3막: 칠흑(하드)", level: 1700, gold: 27000 },
-    { group: "3막", name: "3막: 칠흑(노멀)", level: 1680, gold: 21000 },
-    { group: "2막", name: "2막: 부유(하드)", level: 1690, gold: 23000 },
-    { group: "2막", name: "2막: 부유(노멀)", level: 1670, gold: 14500 },
+    { group: "마녀", name: "그림자: 세르카(나이트메어)", level: 1740, gold: 54000 },
+    { group: "마녀", name: "그림자: 세르카(하드)", level: 1730, gold: 44000 },
+    { group: "마녀", name: "그림자: 세르카(노말)", level: 1710, gold: 35000 },
+    { group: "종막", name: "종막: 카제로스(하드)", level: 1730, gold: 52000 },
+    { group: "종막", name: "종막: 카제로스(노말)", level: 1710, gold: 40000 },
+    { group: "4막", name: "4막: 아르모체(하드)", level: 1720, gold: 42000 },
+    { group: "4막", name: "4막: 아르모체(노말)", level: 1700, gold: 33000 },
+    { group: "3막", name: "3막: 모르둠(하드)", level: 1700, gold: 27000 },
+    { group: "3막", name: "3막: 모르둠(노말)", level: 1680, gold: 21000 },
+    { group: "2막", name: "2막: 아브렐슈드(하드)", level: 1690, gold: 23000 },
+    { group: "2막", name: "2막: 아브렐슈드(노말)", level: 1670, gold: 14500 },
 ];
 
 const getGoldTargetRaids = (char) => {
@@ -165,7 +159,7 @@ const isRaidDisabled = (char, raid) => {
 const getDifficulty = (name) => {
     if (name.includes("나이트메어")) return { text: "나메", color: "purple-darken-1" };
     if (name.includes("하드")) return { text: "하드", color: "orange-darken-1" };
-    if (name.includes("노멀")) return { text: "노말", color: "green-darken-1" };
+    if (name.includes("노말")) return { text: "노말", color: "green-darken-1" };
     return { text: "일반", color: "grey" };
 };
 
@@ -182,7 +176,6 @@ const saveToLocal = () => {
     localStorage.setItem('hw_characters', JSON.stringify(characters.value)); 
 };
 
-// [수정] 삭제 시 블랙리스트에 추가하여 API가 다시 불러오지 못하게 차단
 const deleteCharacter = (name) => {
     if (confirm(`${name} 삭제하시겠습니까?`)) {
         const blacklist = JSON.parse(localStorage.getItem('hw_blacklist') || '[]');
@@ -208,7 +201,6 @@ const fetchMyExpedition = async (charName) => {
             const blacklist = JSON.parse(localStorage.getItem('hw_blacklist') || '[]');
             
             const newList = response.data
-                // 블랙리스트에 있는 캐릭터는 제외
                 .filter(char => !blacklist.includes(char.CharacterName))
                 .sort((a, b) => parseFloat(b.ItemAvgLevel.replace(',', '')) - parseFloat(a.ItemAvgLevel.replace(',', '')))
                 .map(char => {
@@ -228,7 +220,6 @@ const fetchMyExpedition = async (charName) => {
             characters.value = newList;
             saveToLocal();
 
-            // 이미지 로드 시 타임아웃 방지를 위해 순차적 업데이트 보강
             newList.forEach((c, index) => {
                 if(!c.img) updateCharImage(c.name, index);
             });
@@ -240,14 +231,12 @@ const fetchMyExpedition = async (charName) => {
     }
 };
 
-// [보강] 이미지 업데이트 시 에러 핸들링 추가
 const updateCharImage = async (name, index) => {
     try {
         const url = `/api/armories/characters/${encodeURIComponent(name)}/profiles`;
         const res = await axios.get(url, {
             headers: { 'authorization': `bearer ${API_KEY.trim()}` }
         });
-        // 1700 미만 캐릭터라도 공식 홈페이지에 데이터가 있다면 반드시 CharacterImage가 존재함
         if (res.data && res.data.CharacterImage) {
             if (characters.value[index]) {
                 characters.value[index].img = res.data.CharacterImage;
@@ -270,7 +259,6 @@ onMounted(() => {
     }
     
     window.addEventListener('main-char-changed', () => {
-        // 대표 캐릭터 변경 시 블랙리스트 초기화 여부 선택 (보통은 초기화하는 게 원정대가 달라지므로 맞음)
         localStorage.removeItem('hw_blacklist');
         const updatedMain = localStorage.getItem('main_char');
         if (updatedMain) fetchMyExpedition(JSON.parse(updatedMain).name);
@@ -279,7 +267,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* 기존 스타일 유지 */
 .gap-1 { gap: 2px; }
 .shadow-sm { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important; }
 .difficulty-badge {

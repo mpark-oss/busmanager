@@ -205,8 +205,23 @@
                     <div class="d-flex flex-nowrap align-center overflow-x-auto custom-scroll pb-2" style="gap: 8px;">
                       <div v-for="(gem, index) in selectedChar.ArmoryGem?.Gems" :key="index"
                         class="text-center gem-wrapper flex-shrink-0">
-                        <v-avatar size="52" rounded="lg" class="elevation-2 mb-1 border"><v-img
-                            :src="gem.Icon"></v-img></v-avatar>
+
+                        <v-tooltip location="top" open-delay="50" color="#0a0a0a">
+                          <template v-slot:activator="{ props }">
+                            <v-avatar size="52" rounded="lg" class="elevation-2 mb-1 border" v-bind="props"
+                              style="cursor: help;">
+                              <v-img :src="gem.Icon"></v-img>
+                            </v-avatar>
+                          </template>
+
+                          <div class="text-center pa-2 gem-tooltip-content">
+                            <div class="text-caption font-weight-black mb-1 gem-name-text" v-html="gem.Name"></div>
+                            <v-divider class="mb-2 border-opacity-50"></v-divider>
+                            <div class="text-subtitle-2 font-weight-bold gem-effect-text"
+                              v-html="parseGemEffect(gem.Tooltip)"></div>
+                          </div>
+                        </v-tooltip>
+
                         <div class="text-caption font-weight-black" style="font-size: 0.7rem;">{{ gem.Level }}LV</div>
                       </div>
                     </div>
@@ -351,6 +366,7 @@ const selectCharacter = async (charName) => {
     const url = `https://developer-lostark.game.onstove.com/armories/characters/${encodeURIComponent(charName)}`;
     const response = await axios.get(url, { headers: { 'accept': 'application/json', 'authorization': `bearer ${API_KEY.trim()}` } });
     if (response.data) selectedChar.value = response.data;
+    console.log(selectedChar.value);
   } catch (e) { console.error(e); } finally { isDetailLoading.value = false; }
 };
 
@@ -479,6 +495,34 @@ const rankedCharList = computed(() => {
   const others = charList.value.filter(c => !top5Names.includes(c.name)).map(char => ({ ...char, rank: 999 }));
   return [...top5, ...others];
 });
+
+// 스크립트 하단 적절한 위치에 추가
+const parseGemEffect = (tooltipJson) => {
+  try {
+    const tooltip = JSON.parse(tooltipJson);
+    for (const key in tooltip) {
+      const item = tooltip[key];
+      // ItemPartBox 타입이면서 "효과"라는 텍스트를 포함한 섹션을 찾음
+      if (item?.type === "ItemPartBox" && item.value?.Element_000?.includes("효과")) {
+        let effectText = item.value.Element_001;
+
+        // 1. [블래스터] 등 직업 태그 제거
+        effectText = effectText.replace(/\[.*?\]\s?/, "");
+
+        // 2. T4 보석의 경우 <BR> 뒤에 오는 '추가 효과'들을 잘라내고 첫 번째 핵심 스킬 효과만 취득
+        if (effectText.includes("<BR>")) {
+          effectText = effectText.split("<BR>")[0];
+        }
+
+        return effectText.trim();
+      }
+    }
+  } catch (e) {
+    return "효과 정보 없음";
+  }
+  return "효과 정보 없음";
+};
+
 </script>
 
 <style scoped>
@@ -775,6 +819,44 @@ const rankedCharList = computed(() => {
   color: #E65100 !important;
   /* 진한 오렌지색 (가독성 확보) */
   font-weight: 900 !important;
+}
+
+/* 보석 툴팁 전용 가독성 개선 */
+.gem-tooltip-content {
+  max-width: 250px;
+  word-break: keep-all;
+}
+
+.gem-effect-text {
+  /* 다크모드 배경에서도 글자가 선명하도록 외곽선 효과(그림자) 추가 */
+  text-shadow: 0px 0px 4px rgba(0, 0, 0, 0.9);
+  line-height: 1.4;
+}
+
+/* 툴팁 내 노란색 스킬명 강조 (#FFD200) 가 다크모드에서 너무 쨍하면 조정 가능 */
+:deep(.gem-effect-text font[color='#FFD200']) {
+  font-weight: 900 !important;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* 보석 이름 가독성 개선 */
+.gem-name-text :deep(font) {
+  /* 게임 데이터의 어두운 황금색 등을 무시하고 밝은 색으로 고정 */
+  color: #FFFFFF !important; 
+  text-shadow: 0px 0px 3px rgba(0, 0, 0, 1) !important;
+  font-weight: 900 !important;
+}
+
+/* 툴팁 내 전반적인 텍스트 그림자 강화 */
+.gem-tooltip-content {
+  color: white !important;
+  text-shadow: 0px 0px 4px rgba(0, 0, 0, 1);
+}
+
+/* 스킬 효과 텍스트 내의 font 태그들도 그림자 적용 */
+.gem-effect-text :deep(font) {
+  text-shadow: 0px 0px 3px rgba(0, 0, 0, 1) !important;
 }
 
 /* (참고) 혹시 붉은색(#FE2E2E - 감소 각인)도 잘 안 보인다면 아래 코드도 추가 고려 */

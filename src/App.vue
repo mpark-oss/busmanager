@@ -4,7 +4,7 @@
       elevation="2"
       border>
       
-      <v-app-bar-title class="font-weight-black">
+      <v-app-bar-title class="font-weight-black" style="flex: none !important; margin-right: 24px;">
         <div class="d-flex flex-row align-center">
           <v-img 
             src="/favicon.ico.png" 
@@ -19,10 +19,8 @@
           <span class="text-h6">흐흣 운수</span>
         </div>
       </v-app-bar-title>
-      
-      <v-spacer></v-spacer>
 
-      <div v-if="mainCharacter" class="d-flex align-center me-4 cursor-pointer" style="cursor: pointer;" @click="charSettingDialog = true">
+      <div v-if="mainCharacter" class="d-flex align-center cursor-pointer" style="cursor: pointer;" @click="charSettingDialog = true">
         <v-avatar size="32" border class="me-2">
           <v-img :src="mainCharacter.img" cover></v-img>
         </v-avatar>
@@ -32,14 +30,16 @@
         </div>
         <v-icon size="small" class="ms-1">mdi-chevron-down</v-icon>
       </div>
-      <v-btn v-else variant="tonal" size="small" prepend-icon="mdi-account-circle" class="me-4" @click="charSettingDialog = true">
+      <v-btn v-else variant="tonal" size="small" prepend-icon="mdi-account-circle" @click="charSettingDialog = true">
         캐릭터 설정
       </v-btn>
+      
+      <v-spacer></v-spacer>
 
       <v-btn to="/" prepend-icon="mdi-bus">공격대 만들기</v-btn>
       <v-btn to="/schedule" prepend-icon="mdi-calendar-check">버스 스케줄</v-btn>
       <v-btn prepend-icon="mdi-clipboard-check" to="/homework">숙제 스케줄</v-btn>
-      <v-btn to="/homework-schedule" prepend-icon="mdi-calendar-check">숙제 관리</v-btn>
+      <v-btn to="/homework-schedule" prepend-icon="mdi-calendar-check">개인 숙제 관리</v-btn>
       <v-btn to="/board" prepend-icon="mdi-clipboard-text-outline">쌀산기</v-btn>
       <v-btn to="/guestbook" prepend-icon="mdi-message-draw">방명록</v-btn>
 

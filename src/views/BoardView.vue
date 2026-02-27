@@ -1,5 +1,5 @@
 <template>
-  <v-container fluid class="bg-grey-lighten-4">
+  <v-container fluid class="board-container">
     <v-row>
       <v-col cols="12" md="7">
         <v-card variant="flat" border class="rounded-xl pa-4 overflow-y-auto" style="max-height: 85vh;">
@@ -173,6 +173,25 @@ onUnmounted(() => clearInterval(timer));
 </script>
 
 <style scoped>
+
+/* [수정] 배경색을 테마에 맞게 자동 조정 */
+.board-container {
+  min-height: 100vh;
+  /* 라이트 모드일 때만 아주 연한 회색 배경을 주고 싶다면 아래처럼 설정 */
+  background-color: rgb(var(--v-theme-background));
+}
+
+/* [추가] 다크모드에서 테이블 헤더 가독성 확보 */
+.calculation-table :deep(thead tr) {
+  background-color: rgba(var(--v-theme-surface-variant), 0.2) !important;
+}
+
+/* [추가] 다크모드에서 강조된 행(4인, 8인) 배경색 조정 */
+.bg-blue-lighten-5 {
+  background-color: rgba(33, 150, 243, 0.1) !important;
+  color: inherit !important;
+}
+
 .sticky-card {
   position: sticky;
   top: 20px;

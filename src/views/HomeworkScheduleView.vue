@@ -3,12 +3,14 @@
         <v-row>
             <v-col cols="12">
                 <div class="d-flex align-center mb-6">
-                    <v-avatar size="40" class="me-3" color="primary"
-                        variant="tonal"><v-icon>mdi-calendar-check</v-icon></v-avatar>
+                    <v-avatar size="40" class="me-3" color="primary" variant="tonal">
+                        <v-icon>mdi-calendar-check</v-icon>
+                    </v-avatar>
                     <div>
                         <h2 class="text-h4 font-weight-black text-primary">개인 숙제 관리</h2>
-                        <div class="text-caption text-medium-emphasis font-weight-bold">상위 3개 레이드 골드가 자동으로 합산됩니다. (주간 {{
-                            getTotalGold().toLocaleString() }}G 획득 가능)</div>
+                        <div class="text-caption text-medium-emphasis font-weight-bold">
+                            상위 3개 레이드 골드가 자동으로 합산됩니다. (주간 {{ getTotalGold().toLocaleString() }}G 획득 가능)
+                        </div>
                     </div>
                     <v-spacer></v-spacer>
                 </div>
@@ -17,8 +19,10 @@
                     <v-col cols="12" sm="8" md="6" class="text-center">
                         <v-icon size="64" color="grey-lighten-1" class="mb-4">mdi-account-search-outline</v-icon>
                         <h3 class="text-h5 font-weight-bold mb-2">설정된 대표 캐릭터가 없습니다.</h3>
-                        <p class="text-body-1 text-medium-emphasis mb-6">상단바의 <strong>'+'</strong> 버튼을 눌러 대표 캐릭터를
-                            등록하면<br>해당 계정의 원정대 목록을 불러옵니다.</p>
+                        <p class="text-body-1 text-medium-emphasis mb-6">
+                            상단바의 <strong>'+'</strong> 버튼을 눌러 대표 캐릭터를 등록하면<br>
+                            해당 계정의 원정대 목록을 불러옵니다.
+                        </p>
                     </v-col>
                 </v-row>
 
@@ -27,38 +31,56 @@
                         <v-card border variant="flat" class="rounded-xl overflow-hidden shadow-sm bg-card">
                             <v-list-item class="pa-3 bg-profile-header"
                                 :subtitle="`Lv. ${char.level} ${char.className}`">
-                                <template v-slot:prepend><v-avatar size="60" border
-                                        class="elevation-3 bg-grey-lighten-4"><v-img :src="char.img" cover
-                                            position="top center"></v-img></v-avatar></template>
-                                <template v-slot:title><span class="text-subtitle-1 font-weight-black">{{ char.name
-                                        }}</span></template>
+                                <template v-slot:prepend>
+                                    <v-avatar size="60" border class="elevation-3 bg-grey-lighten-4">
+                                        <v-img :src="char.img" cover position="top center"></v-img>
+                                    </v-avatar>
+                                </template>
+                                <template v-slot:title>
+                                    <div class="d-flex align-center">
+                                        <span class="text-subtitle-1 font-weight-black">{{ char.name }}</span>
+                                        <v-chip v-if="getCharSchedules(char.name).length > 0" size="x-small"
+                                            color="error" variant="flat" class="ms-2 font-weight-black pulse-badge"
+                                            style="cursor: pointer;" @click.stop="openScheduleModal(char.name)">
+                                            일정 {{ getCharSchedules(char.name).length }}
+                                        </v-chip>
+                                    </div>
+                                </template>
                                 <template v-slot:append>
                                     <div class="text-right mr-2">
-                                        <div class="text-caption font-weight-bold text-amber-darken-4">{{
-                                            getCharGold(char).toLocaleString() }} G</div>
+                                        <div class="text-caption font-weight-bold text-amber-darken-4">
+                                            {{ getCharGold(char).toLocaleString() }} G
+                                        </div>
                                     </div>
                                     <v-btn icon="mdi-delete-outline" variant="text" color="error" size="small"
                                         @click="deleteCharacter(char.name)"></v-btn>
                                 </template>
                             </v-list-item>
+
                             <v-divider></v-divider>
+
                             <v-card-text class="pa-3">
-                                <div class="d-flex align-center mb-2"><v-chip size="x-small" color="orange"
-                                        variant="flat" class="me-2 font-weight-bold">DAILY</v-chip><span
-                                        class="text-caption font-weight-black text-medium-emphasis">일일 숙제</span></div>
+                                <div class="d-flex align-center mb-2">
+                                    <v-chip size="x-small" color="orange" variant="flat"
+                                        class="me-2 font-weight-bold">DAILY</v-chip>
+                                    <span class="text-caption font-weight-black text-medium-emphasis">일일 숙제</span>
+                                </div>
+
                                 <div class="d-flex flex-column gap-3 mb-3">
                                     <div v-for="task in dailyTasks" :key="task.id" class="task-container">
                                         <div class="d-flex align-center justify-space-between mb-1">
                                             <v-checkbox v-model="char.completedTasks" :value="task.id"
                                                 :label="task.name" hide-details density="compact" color="orange"
                                                 @change="saveToLocal" class="custom-chk flex-grow-1"></v-checkbox>
-                                            <div class="rest-input-wrapper"><span
-                                                    class="text-caption font-weight-bold grey--text mr-1">휴게</span><input
-                                                    type="number" v-model.number="char.restGauges[task.id]"
+
+                                            <div class="rest-input-wrapper">
+                                                <span class="text-caption font-weight-bold grey--text mr-1">휴게</span>
+                                                <input type="number" v-model.number="char.restGauges[task.id]"
                                                     class="rest-input text-caption font-weight-black"
                                                     @change="validateAndSaveRest(char)" min="0" max="200" step="10" />
                                             </div>
                                         </div>
+
                                         <div class="rest-gauge-bar">
                                             <div v-for="n in 10" :key="n" class="gauge-segment"
                                                 :class="getSegmentClass(char, task.id, n)">
@@ -67,6 +89,7 @@
                                         </div>
                                     </div>
                                 </div>
+
                                 <v-divider class="my-3 border-opacity-25"></v-divider>
 
                                 <div class="d-flex align-center mb-2">
@@ -80,10 +103,14 @@
                                         density="compact" color="cyan-darken-2" @change="saveToLocal"
                                         class="custom-chk-horizontal"></v-checkbox>
                                 </div>
-                                <v-divider class="my-4"></v-divider>
-                                <div class="d-flex align-center mb-2"><v-chip size="x-small" color="primary"
-                                        variant="flat" class="me-2 font-weight-bold">WEEKLY</v-chip><span
-                                        class="text-caption font-weight-black text-medium-emphasis">주간 레이드</span></div>
+
+                                <v-divider class="my-3 border-opacity-25"></v-divider>
+
+                                <div class="d-flex align-center mb-2">
+                                    <v-chip size="x-small" color="primary" variant="flat"
+                                        class="me-2 font-weight-bold">WEEKLY</v-chip>
+                                    <span class="text-caption font-weight-black text-medium-emphasis">주간 레이드</span>
+                                </div>
                                 <div class="d-flex flex-column gap-1">
                                     <div v-for="raid in char.availableRaids" :key="raid.id" class="d-flex align-center">
                                         <v-checkbox v-model="char.completedTasks" :value="raid.id" hide-details
@@ -93,14 +120,17 @@
                                                 <div class="d-flex align-center w-100 py-1"
                                                     :style="isRaidDisabled(char, raid) ? 'opacity: 0.4' : ''">
                                                     <v-sheet :color="getDifficulty(raid.name).color"
-                                                        class="difficulty-badge me-2" rounded="sm">{{
-                                                            getDifficulty(raid.name).text }}</v-sheet>
+                                                        class="difficulty-badge me-2" rounded="sm">
+                                                        {{ getDifficulty(raid.name).text }}
+                                                    </v-sheet>
                                                     <span class="text-caption font-weight-medium text-wrap flex-grow-1"
-                                                        :class="{ 'text-decoration-line-through text-grey': isGoldExcluded(char, raid.id) }">{{
-                                                            stripDifficulty(raid.name) }}</span>
+                                                        :class="{ 'text-decoration-line-through text-grey': isGoldExcluded(char, raid.id) }">
+                                                        {{ stripDifficulty(raid.name) }}
+                                                    </span>
                                                     <span class="text-caption font-weight-bold text-amber-darken-3 ml-2"
-                                                        :class="{ 'text-decoration-line-through text-grey': isGoldExcluded(char, raid.id) }">{{
-                                                            (raid.gold / 1000).toFixed(1) }}k</span>
+                                                        :class="{ 'text-decoration-line-through text-grey': isGoldExcluded(char, raid.id) }">
+                                                        {{ (raid.gold / 1000).toFixed(1) }}k
+                                                    </span>
                                                 </div>
                                             </template>
                                         </v-checkbox>
@@ -112,16 +142,58 @@
                 </v-row>
             </v-col>
         </v-row>
+
+        <v-dialog v-model="scheduleDialog" max-width="450">
+            <v-card class="rounded-xl pa-2">
+                <v-card-title class="font-weight-black d-flex align-center">
+                    <v-icon color="primary" class="me-2">mdi-calendar-multiselect</v-icon>
+                    {{ activeCharName }}의 참여 일정
+                </v-card-title>
+                <v-card-text class="pa-4">
+                    <v-list v-if="activeSchedules.length > 0">
+                        <v-list-item v-for="item in activeSchedules" :key="item.id" border class="rounded-lg mb-3 pa-3">
+                            <div class="d-flex justify-space-between align-center mb-1">
+                                <v-chip :color="item.isBus ? 'error' : 'success'" size="x-small" label
+                                    class="font-weight-black text-white">
+                                    {{ item.isBus ? '버스' : '숙제' }}
+                                </v-chip>
+                                <span class="text-caption font-weight-bold text-primary">{{
+                                    formatScheduleTime(item.dateTime)
+                                    }}</span>
+                            </div>
+                            <div class="text-subtitle-1 font-weight-black mb-1">{{ item.raidName }}</div>
+                            <div class="text-caption text-medium-emphasis">
+                                <v-icon size="14" class="me-1">mdi-account-group</v-icon>
+                                {{item.members.map(p => p.name).join(', ')}}
+                            </div>
+                        </v-list-item>
+                    </v-list>
+                    <div v-else class="text-center py-6 text-grey">참여 중인 일정이 없습니다.</div>
+                </v-card-text>
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn variant="text" @click="scheduleDialog = false" class="font-weight-bold">닫기</v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
     </v-container>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
+import { db } from '../firebase';
+import { collection, onSnapshot } from "firebase/firestore";
 
 const API_KEY = import.meta.env.VITE_LOSTARK_API_KEY || "";
 const characters = ref([]);
 const isFetching = ref(false);
+
+// 일정 상태
+const allSchedules = ref([]);
+const scheduleDialog = ref(false);
+const activeCharName = ref("");
+const activeSchedules = ref([]);
 
 const dailyTasks = [{ id: 'chaos', name: '카오스 던전' }, { id: 'guardian', name: '가디언 토벌' }];
 const raidList = [
@@ -140,15 +212,56 @@ const raidList = [
     { group: "1막", name: "1막: 에기르(노말)", level: 1660, gold: 11500 }
 ];
 
-// Script 부분: 변수 및 배열 정의
 const specialTasks = [
     { id: 'sky', label: '천상' },
     { id: 'hell', label: '지옥' },
-    { id: 'hall', label: '할모래' }
+    { id: 'hall', label: '할' }
 ];
 
-// 초기화 로직 보강 (App.vue의 checkWeeklyReset과 연동)
-// 특수 항목들도 주간 초기화 시 함께 비워지도록 합니다.
+const fetchSchedules = () => {
+    const collections = [
+        { name: 'schedules', isBus: true }, 
+        { name: 'homeworks', isBus: false }
+    ];
+    
+    collections.forEach(colConfig => {
+        onSnapshot(collection(db, colConfig.name), (snapshot) => {
+            const data = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+                // 혹시 데이터에 isBus가 없더라도 컬렉션 이름 기준으로 강제 설정
+                isBus: doc.data().isBus !== undefined ? doc.data().isBus : colConfig.isBus,
+                colName: colConfig.name
+            }));
+            
+            // 기존 리스트에서 현재 업데이트된 컬렉션 데이터만 교체
+            const filteredOther = allSchedules.value.filter(s => s.colName !== colConfig.name);
+            allSchedules.value = [...filteredOther, ...data];
+        });
+    });
+};
+
+const getCharSchedules = (charName) => {
+    const now = new Date();
+    return allSchedules.value.filter(raid => {
+        // [핵심] members 배열 내에 이름이 있는지 확인
+        const isParticipant = raid.members?.some(p => p.name === charName);
+        const isFuture = raid.dateTime ? new Date(raid.dateTime) >= now : true;
+        return isParticipant && isFuture;
+    });
+};
+
+const openScheduleModal = (charName) => {
+    activeCharName.value = charName;
+    activeSchedules.value = getCharSchedules(charName);
+    scheduleDialog.value = true;
+};
+
+const formatScheduleTime = (timeStr) => {
+    if (!timeStr) return "시간 미정";
+    const date = new Date(timeStr);
+    return date.toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+};
 
 const getAccountKey = () => `hw_chars_${localStorage.getItem('current_main_name') || 'default'}`;
 const getBlacklistKey = () => `hw_blacklist_${localStorage.getItem('current_main_name') || 'default'}`;
@@ -181,52 +294,36 @@ const validateAndSaveRest = (char) => {
 const updateDailyRestGauges = () => {
     const now = new Date();
     const today6AM = new Date(now);
-
-    // 현재 시간이 새벽 6시 이전이면 기준점을 '어제 오전 6시'로 잡음
     if (now.getHours() < 6) today6AM.setDate(today6AM.getDate() - 1);
     today6AM.setHours(6, 0, 0, 0);
 
     characters.value.forEach(char => {
-        // 데이터 초기화 방어 로직
         if (!char.restGauges) char.restGauges = { chaos: 0, guardian: 0 };
         if (!char.lastDailyUpdate) {
             char.lastDailyUpdate = today6AM.getTime();
             return;
         }
-
         const lastUpdate = new Date(char.lastDailyUpdate);
-
-        // 날짜 차이 계산 (밀리초 단위 차이를 하루 단위로 환산)
         const msPerDay = 1000 * 60 * 60 * 24;
         const daysDiff = Math.floor((today6AM.getTime() - lastUpdate.getTime()) / msPerDay);
 
-        // 1일 이상 차이가 날 경우 소급 정산 시작
         if (daysDiff > 0) {
             dailyTasks.forEach(task => {
                 const isCompleted = char.completedTasks.includes(task.id);
                 let currentRest = char.restGauges[task.id] || 0;
-
-                // 1. 첫 번째 날 (체크박스 상태 반영)
                 if (isCompleted) {
                     if (currentRest >= 40) currentRest -= 40;
-                    // 체크가 되어 있었다면 그날은 게이지 상승(+20) 없음
                 } else {
                     currentRest = Math.min(200, currentRest + 20);
                 }
-
-                // 2. 두 번째 날부터 (사용자가 접속 안 한 날들이므로 무조건 미클리어 처리)
                 if (daysDiff > 1) {
                     for (let i = 1; i < daysDiff; i++) {
                         currentRest = Math.min(200, currentRest + 20);
                     }
                 }
-
                 char.restGauges[task.id] = currentRest;
             });
-
-            // 정산이 끝났으므로 일일 숙제 체크박스 초기화
             char.completedTasks = char.completedTasks.filter(id => !['chaos', 'guardian'].includes(id));
-            // 마지막 업데이트 시간을 오늘 오전 6시로 갱신
             char.lastDailyUpdate = today6AM.getTime();
         }
     });
@@ -300,6 +397,7 @@ const updateCharImage = async (name, index) => {
 onMounted(() => {
     const currentMain = localStorage.getItem('current_main_name');
     if (currentMain) fetchMyExpedition(currentMain);
+    fetchSchedules();
     window.addEventListener('main-char-changed', (e) => { fetchMyExpedition(e.detail); });
 });
 </script>
@@ -393,5 +491,26 @@ onMounted(() => {
 .text-wrap {
     white-space: normal !important;
     word-break: keep-all;
+}
+
+.pulse-badge {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.6;
+        transform: scale(1.05);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 </style>

@@ -117,29 +117,48 @@ const switchAccount = (name) => {
   window.dispatchEvent(new CustomEvent('main-char-changed', { detail: name }));
 };
 
+// [수정] 매주 수요일 오전 6시 초기화 로직 (오류 해결 버전)
 const checkWeeklyReset = () => {
   const lastReset = localStorage.getItem('last_hw_reset');
   const now = new Date();
+  
+  // 최근 수요일 오전 6시 계산 함수 (함수 내부에서 바로 정의 및 사용)
   const getRecentResetTime = () => {
     const d = new Date(now);
-    const day = d.getDay();
+    const day = d.getDay(); // 0(일) ~ 6(토)
+    // 오늘이 수요일(3)이고 6시 이전이면 지난주 수요일로 계산, 아니면 이번주 수요일
     const diff = (day < 3 || (day === 3 && d.getHours() < 6)) ? (day + 4) : (day - 3);
     d.setDate(d.getDate() - diff);
     d.setHours(6, 0, 0, 0);
     return d.getTime();
   };
+
   const resetTime = getRecentResetTime();
+
+  // 저장된 마지막 초기화 시간이 계산된 resetTime보다 이전이면 전체 초기화
   if (!lastReset || parseInt(lastReset) < resetTime) {
+    // 모든 계정 슬롯 순회
     mainCharSlots.value.forEach(slot => {
       const storageKey = `hw_chars_${slot.name}`;
       const savedChars = localStorage.getItem(storageKey);
       if (savedChars) {
         const chars = JSON.parse(savedChars);
-        const resetChars = chars.map(c => ({ ...c, completedTasks: [] }));
+        // 수요일 6시에는 주간 레이드 + 신규 항목(천상/지옥/할)을 모두 비움
+        const resetChars = chars.map(c => ({ 
+          ...c, 
+          // 일일 숙제(chaos, guardian)는 updateDailyRestGauges에서 매일 처리하므로 건드리지 않음
+          // 주간 레이드 및 sky, hell, hall 등 모든 주간 항목을 비우기 위해 
+          // 일일 숙제 ID만 남기고 필터링하거나, 그냥 전체를 비워도 됨
+          completedTasks: c.completedTasks.filter(id => ['chaos', 'guardian'].includes(id)) 
+        }));
         localStorage.setItem(storageKey, JSON.stringify(resetChars));
       }
     });
+    
     localStorage.setItem('last_hw_reset', resetTime.toString());
+    console.log("주간 데이터가 수요일 오전 6시 기준으로 초기화되었습니다.");
+    
+    // 현재 페이지 데이터 갱신을 위해 이벤트 발송
     window.dispatchEvent(new CustomEvent('main-char-changed', { detail: currentMainName.value }));
   }
 };

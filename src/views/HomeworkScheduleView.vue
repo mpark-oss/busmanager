@@ -3,10 +3,12 @@
         <v-row>
             <v-col cols="12">
                 <div class="d-flex align-center mb-6">
-                    <v-avatar size="40" class="me-3" color="primary" variant="tonal"><v-icon>mdi-calendar-check</v-icon></v-avatar>
+                    <v-avatar size="40" class="me-3" color="primary"
+                        variant="tonal"><v-icon>mdi-calendar-check</v-icon></v-avatar>
                     <div>
                         <h2 class="text-h4 font-weight-black text-primary">개인 숙제 관리</h2>
-                        <div class="text-caption text-medium-emphasis font-weight-bold">상위 3개 레이드 골드가 자동으로 합산됩니다. (주간 {{ getTotalGold().toLocaleString() }}G 획득 가능)</div>
+                        <div class="text-caption text-medium-emphasis font-weight-bold">상위 3개 레이드 골드가 자동으로 합산됩니다. (주간 {{
+                            getTotalGold().toLocaleString() }}G 획득 가능)</div>
                     </div>
                     <v-spacer></v-spacer>
                 </div>
@@ -15,43 +17,90 @@
                     <v-col cols="12" sm="8" md="6" class="text-center">
                         <v-icon size="64" color="grey-lighten-1" class="mb-4">mdi-account-search-outline</v-icon>
                         <h3 class="text-h5 font-weight-bold mb-2">설정된 대표 캐릭터가 없습니다.</h3>
-                        <p class="text-body-1 text-medium-emphasis mb-6">상단바의 <strong>'+'</strong> 버튼을 눌러 대표 캐릭터를 등록하면<br>해당 계정의 원정대 목록을 불러옵니다.</p>
+                        <p class="text-body-1 text-medium-emphasis mb-6">상단바의 <strong>'+'</strong> 버튼을 눌러 대표 캐릭터를
+                            등록하면<br>해당 계정의 원정대 목록을 불러옵니다.</p>
                     </v-col>
                 </v-row>
 
                 <v-row v-else>
                     <v-col v-for="char in characters" :key="char.name" cols="12" sm="6" md="4" lg="4" xl="3">
                         <v-card border variant="flat" class="rounded-xl overflow-hidden shadow-sm bg-card">
-                            <v-list-item class="pa-3 bg-profile-header" :subtitle="`Lv. ${char.level} ${char.className}`">
-                                <template v-slot:prepend><v-avatar size="60" border class="elevation-3 bg-grey-lighten-4"><v-img :src="char.img" cover position="top center"></v-img></v-avatar></template>
-                                <template v-slot:title><span class="text-subtitle-1 font-weight-black">{{ char.name }}</span></template>
+                            <v-list-item class="pa-3 bg-profile-header"
+                                :subtitle="`Lv. ${char.level} ${char.className}`">
+                                <template v-slot:prepend><v-avatar size="60" border
+                                        class="elevation-3 bg-grey-lighten-4"><v-img :src="char.img" cover
+                                            position="top center"></v-img></v-avatar></template>
+                                <template v-slot:title><span class="text-subtitle-1 font-weight-black">{{ char.name
+                                        }}</span></template>
                                 <template v-slot:append>
-                                    <div class="text-right mr-2"><div class="text-caption font-weight-bold text-amber-darken-4">{{ getCharGold(char).toLocaleString() }} G</div></div>
-                                    <v-btn icon="mdi-delete-outline" variant="text" color="error" size="small" @click="deleteCharacter(char.name)"></v-btn>
+                                    <div class="text-right mr-2">
+                                        <div class="text-caption font-weight-bold text-amber-darken-4">{{
+                                            getCharGold(char).toLocaleString() }} G</div>
+                                    </div>
+                                    <v-btn icon="mdi-delete-outline" variant="text" color="error" size="small"
+                                        @click="deleteCharacter(char.name)"></v-btn>
                                 </template>
                             </v-list-item>
                             <v-divider></v-divider>
                             <v-card-text class="pa-3">
-                                <div class="d-flex align-center mb-2"><v-chip size="x-small" color="orange" variant="flat" class="me-2 font-weight-bold">DAILY</v-chip><span class="text-caption font-weight-black text-medium-emphasis">일일 숙제</span></div>
+                                <div class="d-flex align-center mb-2"><v-chip size="x-small" color="orange"
+                                        variant="flat" class="me-2 font-weight-bold">DAILY</v-chip><span
+                                        class="text-caption font-weight-black text-medium-emphasis">일일 숙제</span></div>
                                 <div class="d-flex flex-column gap-3 mb-3">
                                     <div v-for="task in dailyTasks" :key="task.id" class="task-container">
                                         <div class="d-flex align-center justify-space-between mb-1">
-                                            <v-checkbox v-model="char.completedTasks" :value="task.id" :label="task.name" hide-details density="compact" color="orange" @change="saveToLocal" class="custom-chk flex-grow-1"></v-checkbox>
-                                            <div class="rest-input-wrapper"><span class="text-caption font-weight-bold grey--text mr-1">휴게</span><input type="number" v-model.number="char.restGauges[task.id]" class="rest-input text-caption font-weight-black" @change="validateAndSaveRest(char)" min="0" max="200" step="10"/></div>
+                                            <v-checkbox v-model="char.completedTasks" :value="task.id"
+                                                :label="task.name" hide-details density="compact" color="orange"
+                                                @change="saveToLocal" class="custom-chk flex-grow-1"></v-checkbox>
+                                            <div class="rest-input-wrapper"><span
+                                                    class="text-caption font-weight-bold grey--text mr-1">휴게</span><input
+                                                    type="number" v-model.number="char.restGauges[task.id]"
+                                                    class="rest-input text-caption font-weight-black"
+                                                    @change="validateAndSaveRest(char)" min="0" max="200" step="10" />
+                                            </div>
                                         </div>
-                                        <div class="rest-gauge-bar"><div v-for="n in 10" :key="n" class="gauge-segment" :class="getSegmentClass(char, task.id, n)"><div class="gauge-fill" :style="getFillStyle(char, task.id, n)"></div></div></div>
+                                        <div class="rest-gauge-bar">
+                                            <div v-for="n in 10" :key="n" class="gauge-segment"
+                                                :class="getSegmentClass(char, task.id, n)">
+                                                <div class="gauge-fill" :style="getFillStyle(char, task.id, n)"></div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <v-divider class="my-3 border-opacity-25"></v-divider>
-                                <div class="d-flex align-center mb-2"><v-chip size="x-small" color="primary" variant="flat" class="me-2 font-weight-bold">WEEKLY</v-chip><span class="text-caption font-weight-black text-medium-emphasis">주간 레이드</span></div>
+
+                                <div class="d-flex align-center mb-2">
+                                    <v-chip size="x-small" color="cyan-darken-1" variant="flat"
+                                        class="me-2 font-weight-bold text-white">SPECIAL</v-chip>
+                                    <span class="text-caption font-weight-black text-medium-emphasis">주간 숙제</span>
+                                </div>
+                                <div class="d-flex flex-row flex-wrap mb-3" style="gap: 4px;">
+                                    <v-checkbox v-for="task in specialTasks" :key="task.id"
+                                        v-model="char.completedTasks" :value="task.id" :label="task.label" hide-details
+                                        density="compact" color="cyan-darken-2" @change="saveToLocal"
+                                        class="custom-chk-horizontal"></v-checkbox>
+                                </div>
+                                <v-divider class="my-4"></v-divider>
+                                <div class="d-flex align-center mb-2"><v-chip size="x-small" color="primary"
+                                        variant="flat" class="me-2 font-weight-bold">WEEKLY</v-chip><span
+                                        class="text-caption font-weight-black text-medium-emphasis">주간 레이드</span></div>
                                 <div class="d-flex flex-column gap-1">
                                     <div v-for="raid in char.availableRaids" :key="raid.id" class="d-flex align-center">
-                                        <v-checkbox v-model="char.completedTasks" :value="raid.id" hide-details :disabled="isRaidDisabled(char, raid)" density="compact" color="primary" @change="saveToLocal" class="custom-chk">
+                                        <v-checkbox v-model="char.completedTasks" :value="raid.id" hide-details
+                                            :disabled="isRaidDisabled(char, raid)" density="compact" color="primary"
+                                            @change="saveToLocal" class="custom-chk">
                                             <template v-slot:label>
-                                                <div class="d-flex align-center w-100 py-1" :style="isRaidDisabled(char, raid) ? 'opacity: 0.4' : ''">
-                                                    <v-sheet :color="getDifficulty(raid.name).color" class="difficulty-badge me-2" rounded="sm">{{ getDifficulty(raid.name).text }}</v-sheet>
-                                                    <span class="text-caption font-weight-medium text-wrap flex-grow-1" :class="{ 'text-decoration-line-through text-grey': isGoldExcluded(char, raid.id) }">{{ stripDifficulty(raid.name) }}</span>
-                                                    <span class="text-caption font-weight-bold text-amber-darken-3 ml-2" :class="{ 'text-decoration-line-through text-grey': isGoldExcluded(char, raid.id) }">{{ (raid.gold / 1000).toFixed(1) }}k</span>
+                                                <div class="d-flex align-center w-100 py-1"
+                                                    :style="isRaidDisabled(char, raid) ? 'opacity: 0.4' : ''">
+                                                    <v-sheet :color="getDifficulty(raid.name).color"
+                                                        class="difficulty-badge me-2" rounded="sm">{{
+                                                            getDifficulty(raid.name).text }}</v-sheet>
+                                                    <span class="text-caption font-weight-medium text-wrap flex-grow-1"
+                                                        :class="{ 'text-decoration-line-through text-grey': isGoldExcluded(char, raid.id) }">{{
+                                                            stripDifficulty(raid.name) }}</span>
+                                                    <span class="text-caption font-weight-bold text-amber-darken-3 ml-2"
+                                                        :class="{ 'text-decoration-line-through text-grey': isGoldExcluded(char, raid.id) }">{{
+                                                            (raid.gold / 1000).toFixed(1) }}k</span>
                                                 </div>
                                             </template>
                                         </v-checkbox>
@@ -91,6 +140,16 @@ const raidList = [
     { group: "1막", name: "1막: 에기르(노말)", level: 1660, gold: 11500 }
 ];
 
+// Script 부분: 변수 및 배열 정의
+const specialTasks = [
+    { id: 'sky', label: '천상' },
+    { id: 'hell', label: '지옥' },
+    { id: 'hall', label: '할모래' }
+];
+
+// 초기화 로직 보강 (App.vue의 checkWeeklyReset과 연동)
+// 특수 항목들도 주간 초기화 시 함께 비워지도록 합니다.
+
 const getAccountKey = () => `hw_chars_${localStorage.getItem('current_main_name') || 'default'}`;
 const getBlacklistKey = () => `hw_blacklist_${localStorage.getItem('current_main_name') || 'default'}`;
 
@@ -122,7 +181,7 @@ const validateAndSaveRest = (char) => {
 const updateDailyRestGauges = () => {
     const now = new Date();
     const today6AM = new Date(now);
-    
+
     // 현재 시간이 새벽 6시 이전이면 기준점을 '어제 오전 6시'로 잡음
     if (now.getHours() < 6) today6AM.setDate(today6AM.getDate() - 1);
     today6AM.setHours(6, 0, 0, 0);
@@ -136,7 +195,7 @@ const updateDailyRestGauges = () => {
         }
 
         const lastUpdate = new Date(char.lastDailyUpdate);
-        
+
         // 날짜 차이 계산 (밀리초 단위 차이를 하루 단위로 환산)
         const msPerDay = 1000 * 60 * 60 * 24;
         const daysDiff = Math.floor((today6AM.getTime() - lastUpdate.getTime()) / msPerDay);
@@ -225,7 +284,7 @@ const fetchMyExpedition = async (charName) => {
                 };
             });
             updateDailyRestGauges();
-            characters.value.forEach((c, i) => { if(!c.img) updateCharImage(c.name, i); });
+            characters.value.forEach((c, i) => { if (!c.img) updateCharImage(c.name, i); });
         }
     } catch (e) { console.error(e); } finally { isFetching.value = false; }
 };
@@ -235,7 +294,7 @@ const updateCharImage = async (name, index) => {
         const url = `/api/armories/characters/${encodeURIComponent(name)}/profiles`;
         const res = await axios.get(url, { headers: { 'authorization': `bearer ${API_KEY.trim()}` } });
         if (res.data && res.data.CharacterImage) { if (characters.value[index]) { characters.value[index].img = res.data.CharacterImage; saveToLocal(); } }
-    } catch (e) {}
+    } catch (e) { }
 };
 
 onMounted(() => {
@@ -246,18 +305,93 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.task-container { background: rgba(var(--v-theme-surface-variant), 0.03); padding: 8px; border-radius: 12px; }
-.rest-gauge-bar { display: flex; gap: 2px; height: 12px; width: 100%; background: rgba(0, 0, 0, 0.1); padding: 2px; border-radius: 4px; }
-.gauge-segment { flex: 1; background: rgba(128, 128, 128, 0.2); border-radius: 1px; overflow: hidden; position: relative; }
-.gauge-fill { height: 100%; background: #9e9e9e; transition: width 0.3s ease, background-color 0.3s ease; }
-.full-active .gauge-fill, .half-active .gauge-fill { background: linear-gradient(to bottom, #4CAF50, #2E7D32); box-shadow: 0 0 4px rgba(76, 175, 80, 0.5); }
-.rest-input-wrapper { display: flex; align-items: center; background: rgba(0, 0, 0, 0.05); padding: 2px 8px; border-radius: 6px; }
-.rest-input { width: 35px; border: none; text-align: right; background: transparent; color: #fb8c00; outline: none; }
-.rest-input::-webkit-inner-spin-button { display: none; }
-.difficulty-badge { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 18px; font-size: 0.65rem !important; font-weight: 800; color: white; }
-.custom-chk :deep(.v-label) { font-size: 0.8rem !important; opacity: 1; }
-.shadow-sm { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important; }
-.v-theme--light .bg-profile-header { background-color: #f5f5f5; }
-.v-theme--dark .bg-profile-header { background-color: #2c2c2c; }
-.text-wrap { white-space: normal !important; word-break: keep-all; }
+.task-container {
+    background: rgba(var(--v-theme-surface-variant), 0.03);
+    padding: 8px;
+    border-radius: 12px;
+}
+
+.rest-gauge-bar {
+    display: flex;
+    gap: 2px;
+    height: 12px;
+    width: 100%;
+    background: rgba(0, 0, 0, 0.1);
+    padding: 2px;
+    border-radius: 4px;
+}
+
+.gauge-segment {
+    flex: 1;
+    background: rgba(128, 128, 128, 0.2);
+    border-radius: 1px;
+    overflow: hidden;
+    position: relative;
+}
+
+.gauge-fill {
+    height: 100%;
+    background: #9e9e9e;
+    transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.full-active .gauge-fill,
+.half-active .gauge-fill {
+    background: linear-gradient(to bottom, #4CAF50, #2E7D32);
+    box-shadow: 0 0 4px rgba(76, 175, 80, 0.5);
+}
+
+.rest-input-wrapper {
+    display: flex;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.05);
+    padding: 2px 8px;
+    border-radius: 6px;
+}
+
+.rest-input {
+    width: 35px;
+    border: none;
+    text-align: right;
+    background: transparent;
+    color: #fb8c00;
+    outline: none;
+}
+
+.rest-input::-webkit-inner-spin-button {
+    display: none;
+}
+
+.difficulty-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 18px;
+    font-size: 0.65rem !important;
+    font-weight: 800;
+    color: white;
+}
+
+.custom-chk :deep(.v-label) {
+    font-size: 0.8rem !important;
+    opacity: 1;
+}
+
+.shadow-sm {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+}
+
+.v-theme--light .bg-profile-header {
+    background-color: #f5f5f5;
+}
+
+.v-theme--dark .bg-profile-header {
+    background-color: #2c2c2c;
+}
+
+.text-wrap {
+    white-space: normal !important;
+    word-break: keep-all;
+}
 </style>

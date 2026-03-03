@@ -119,10 +119,14 @@
                                 <v-toolbar
                                     :color="(!hw.dateTime) ? 'amber-darken-2' : (isToday(hw.dateTime) ? 'success' : 'teal-darken-1')"
                                     density="compact" flat>
+
                                     <v-icon :icon="!hw.dateTime ? 'mdi-clock-question' : 'mdi-shield-cross'"
                                         class="ms-3 me-2" size="small"></v-icon>
 
-                                    <div class="d-flex align-center flex-grow-1 overflow-hidden" style="min-width: 0;">
+                                    <div class="d-flex align-center flex-grow-1 overflow-hidden"
+                                        style="min-width: 0; cursor: pointer; height: 100%; position: relative; z-index: 1;"
+                                        @click="openRaidPicker(hw)">
+
                                         <span class="text-subtitle-1 font-weight-black me-2 text-truncate">{{ hw.raid
                                             }}</span>
 
@@ -131,6 +135,9 @@
                                             label>
                                             {{ hw.difficulty }}
                                         </v-chip>
+
+                                        <v-icon size="small" class="ms-1 opacity-60"
+                                            style="pointer-events: none;">mdi-pencil-circle</v-icon>
 
                                         <v-chip v-if="isToday(hw.dateTime)" size="small" color="white"
                                             class="ms-2 font-weight-black today-badge flex-shrink-0" variant="flat"
@@ -145,7 +152,7 @@
                                     <v-spacer></v-spacer>
 
                                     <v-btn icon="mdi-delete" size="small" variant="text"
-                                        @click="deleteHomework(hw.id)"></v-btn>
+                                        @click.stop="deleteHomework(hw.id)"></v-btn>
                                 </v-toolbar>
 
                                 <v-card-text class="pa-6">
@@ -188,7 +195,7 @@
                                                 <div class="d-flex justify-space-between align-start">
                                                     <span
                                                         class="text-caption font-weight-black text-success text-truncate">{{
-                                                        element.job }}</span>
+                                                            element.job }}</span>
                                                     <v-btn icon="mdi-close" size="14" variant="text" color="grey"
                                                         @click="removeMember(hw, index)"></v-btn>
                                                 </div>
@@ -228,6 +235,26 @@
                 </v-card-actions>
             </v-card>
         </v-dialog>
+
+        <v-dialog v-model="editRaidDialog" max-width="400">
+            <v-card class="rounded-xl pa-2">
+                <v-card-title class="text-h6 font-weight-black">
+                    <v-icon color="success" class="me-2">mdi-sword</v-icon>레이드 정보 수정
+                </v-card-title>
+                <v-card-text>
+                    <v-select v-model="tempRaid" :items="['2막', '3막', '4막', '종막', '세르카']" label="레이드 선택"
+                        variant="outlined" color="success" class="mb-2"
+                        @update:model-value="tempDifficulty = '노말'"></v-select>
+                    <v-select v-model="tempDifficulty" :items="getDifficultyList(tempRaid)" label="난이도 선택"
+                        variant="outlined" color="success"></v-select>
+                </v-card-text>
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn variant="text" rounded="lg" @click="editRaidDialog = false">취소</v-btn>
+                    <v-btn color="success" variant="flat" rounded="lg" class="px-6" @click="saveRaidInfo">저장</v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
     </v-container>
 </template>
 
@@ -247,6 +274,44 @@ const clickedId = ref(null);
 const timeDialog = ref(false);
 const tempTime = ref("");
 const selectedHw = ref(null);
+
+/* --- script setup 내부에 추가 --- */
+
+// 레이드 수정 관련 상태
+const editRaidDialog = ref(false);
+const tempRaid = ref("");
+const tempDifficulty = ref("");
+
+// 수정 팝업 열기
+const openRaidPicker = (hw) => {
+    selectedHw.value = hw;
+    tempRaid.value = hw.raid;
+    tempDifficulty.value = hw.difficulty;
+    editRaidDialog.value = true;
+};
+
+// 레이드/난이도 리스트 반환
+const getDifficultyList = (raidName) => {
+    if (raidName === '종막') return ['노말', '하드', 'The First'];
+    if (raidName === '세르카') return ['노말', '하드', '나이트메어'];
+    return ['노말', '하드'];
+};
+
+// DB 업데이트
+const saveRaidInfo = async () => {
+    if (selectedHw.value && tempRaid.value) {
+        try {
+            const hwRef = doc(db, "homeworks", selectedHw.value.id);
+            await updateDoc(hwRef, {
+                raid: tempRaid.value,
+                difficulty: tempDifficulty.value
+            });
+            editRaidDialog.value = false;
+        } catch (e) {
+            alert("수정 실패: " + e.message);
+        }
+    }
+};
 
 onMounted(() => {
     onSnapshot(query(collection(db, "characters"), orderBy("createdAt", "desc")), (s) => {
@@ -410,6 +475,15 @@ const getDifficultyColor = (difficulty) => {
 </script>
 
 <style scoped>
+/* style scoped 내부에 추가 */
+.homework-card .v-toolbar {
+    transition: filter 0.2s;
+}
+
+.homework-card .v-toolbar:hover {
+    filter: brightness(1.1);
+}
+
 @media (min-width: 960px) {
     .sticky-sidebar {
         position: sticky;

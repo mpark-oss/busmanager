@@ -112,10 +112,14 @@
                   <div class="d-flex align-center flex-grow-1 overflow-hidden" style="min-width: 0;">
                     <span class="text-subtitle-1 font-weight-black me-2 text-truncate">{{ bus.raid }}</span>
 
-                    <v-chip size="small" :color="getDifficultyColor(bus.difficulty)"
-                      class="font-weight-black text-white px-2 flex-shrink-0" variant="flat" label>
-                      {{ bus.difficulty }}
-                    </v-chip>
+                    <div class="d-flex align-center flex-grow-1 overflow-hidden" style="min-width: 0; cursor: pointer;"
+                      @click="openRaidPicker(bus)">
+                      <v-chip size="small" :color="getDifficultyColor(bus.difficulty)"
+                        class="font-weight-black text-white px-2 flex-shrink-0" variant="flat" label>
+                        {{ bus.difficulty }}
+                      </v-chip>
+                      <v-icon size="small" class="ms-1 opacity-60">mdi-pencil-circle</v-icon>
+                    </div>
 
                     <v-chip v-if="isToday(bus.dateTime)" size="small" color="white"
                       class="ms-2 font-weight-black today-badge flex-shrink-0" variant="flat" label>
@@ -165,7 +169,7 @@
                         style="width: calc(50% - 8px); min-height: 85px;">
                         <div class="d-flex justify-space-between align-start">
                           <span class="text-caption font-weight-black text-primary text-truncate">{{ element.job
-                            }}</span>
+                          }}</span>
                           <v-btn icon="mdi-close" size="14" variant="text" color="grey"
                             @click="removeMember(bus, index)"></v-btn>
                         </div>
@@ -202,6 +206,25 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <v-dialog v-model="editRaidDialog" max-width="400">
+      <v-card class="rounded-xl pa-2">
+        <v-card-title class="text-h6 font-weight-black">
+          <v-icon color="primary" class="me-2">mdi-sword-cross</v-icon>레이드 정보 수정
+        </v-card-title>
+        <v-card-text>
+          <v-select v-model="tempRaid" :items="['2막', '3막', '4막', '종막', '세르카']" label="레이드 선택" variant="outlined"
+            class="mb-2" @update:model-value="tempDifficulty = '노말'"></v-select>
+          <v-select v-model="tempDifficulty" :items="getDifficultyList(tempRaid)" label="난이도 선택"
+            variant="outlined"></v-select>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn variant="text" @click="editRaidDialog = false">취소</v-btn>
+          <v-btn color="primary" variant="flat" rounded="lg" class="px-6" @click="saveRaidInfo">저장</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -221,6 +244,38 @@ const clickedId = ref(null);
 const timeDialog = ref(false);
 const tempTime = ref("");
 const selectedBus = ref(null);
+
+// [추가] 레이드 및 난이도 수정을 위한 상태
+const editRaidDialog = ref(false);
+const tempRaid = ref("");
+const tempDifficulty = ref("");
+
+// [추가] 수정 팝업 열기
+const openRaidPicker = (bus) => {
+  selectedBus.value = bus;
+  tempRaid.value = bus.raid;
+  tempDifficulty.value = bus.difficulty;
+  editRaidDialog.value = true;
+};
+
+// [추가] 레이드/난이도 정보 DB 업데이트
+const saveRaidInfo = async () => {
+  if (selectedBus.value) {
+    const busRef = doc(db, "schedules", selectedBus.value.id);
+    await updateDoc(busRef, {
+      raid: tempRaid.value,
+      difficulty: tempDifficulty.value
+    });
+    editRaidDialog.value = false;
+  }
+};
+
+// MakerView.vue에 있던 난이도 리스트 로직 재사용
+const getDifficultyList = (raidName) => {
+  if (raidName === '종막') return ['노말', '하드', 'The First'];
+  if (raidName === '세르카') return ['노말', '하드', '나이트메어'];
+  return ['노말', '하드'];
+};
 
 onMounted(() => {
   const qChar = query(collection(db, "characters"), orderBy("createdAt", "desc"));

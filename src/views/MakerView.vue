@@ -347,6 +347,19 @@ const getDifficultyList = (raidName) => {
   }
 };
 
+// 00:00부터 23:50까지 10분 단위 리스트 생성
+const timeOptions = computed(() => {
+  const times = [];
+  for (let h = 0; h < 24; h++) {
+    for (let m = 0; m < 60; m += 10) {
+      const hh = String(h).padStart(2, '0');
+      const mm = String(m).padStart(2, '0');
+      times.push(`${hh}:${mm}`);
+    }
+  }
+  return times;
+});
+
 onMounted(() => {
   const qChar = query(collection(db, "characters"), orderBy("createdAt", "desc"));
   onSnapshot(qChar, (snapshot) => {

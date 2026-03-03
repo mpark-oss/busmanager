@@ -24,7 +24,8 @@
 
                 <v-row v-else>
                     <v-col v-for="char in characters" :key="char.name" cols="12" sm="6" md="4" lg="4" xl="3">
-                        <v-card border variant="flat" class="rounded-xl overflow-hidden shadow-sm bg-card">
+                        <v-card border variant="flat" class="rounded-xl overflow-hidden shadow-sm bg-card"
+                            :style="char.isGoldCharacter ? 'border: 2px solid #FFB300 !important' : ''">
                             <v-list-item class="pa-3 bg-profile-header"
                                 :subtitle="`Lv. ${char.level} ${char.className}`">
                                 <template v-slot:prepend>
@@ -34,6 +35,12 @@
                                 </template>
                                 <template v-slot:title>
                                     <div class="d-flex align-center">
+                                        <v-btn icon variant="text" size="x-small"
+                                            :color="char.isGoldCharacter ? 'amber-darken-3' : 'grey-lighten-1'"
+                                            @click.stop="toggleGoldCharacter(char)" class="me-1">
+                                            <v-icon size="18">{{ char.isGoldCharacter ? 'mdi-database-check' :
+                                                'mdi-database-outline' }}</v-icon>
+                                        </v-btn>
                                         <span class="text-subtitle-1 font-weight-black">{{ char.name }}</span>
                                         <v-chip v-if="getCharSchedules(char.name).length > 0" size="x-small"
                                             color="error" variant="flat" class="ms-2 font-weight-black pulse-badge"
@@ -44,8 +51,9 @@
                                 </template>
                                 <template v-slot:append>
                                     <div class="text-right mr-1">
-                                        <div class="text-caption font-weight-bold text-amber-darken-4">
-                                            {{ getCharGold(char).toLocaleString() }} G
+                                        <div class="text-caption font-weight-bold"
+                                            :class="char.isGoldCharacter ? 'text-amber-darken-4' : 'text-grey-lighten-1'">
+                                            {{ (char.isGoldCharacter ? getCharGold(char) : 0).toLocaleString() }} G
                                         </div>
                                     </div>
                                     <v-btn icon="mdi-cog-outline" variant="text" color="grey-darken-1" size="small"
@@ -110,6 +118,7 @@
                                     </div>
                                     <v-divider class="my-3 border-opacity-25"></v-divider>
                                 </div>
+
                                 <template v-if="char.settings?.showWeekly">
                                     <div class="d-flex align-center mb-2">
                                         <v-chip size="x-small" color="primary" variant="flat"
@@ -131,33 +140,53 @@
                                                     {{ groupName }}
                                                 </span>
                                             </div>
-                                            <div class="d-flex flex-wrap px-1">
+                                            <div class="d-flex flex-column px-1">
                                                 <template v-for="raid in getRaidsByGroup(groupName)" :key="raid.name">
-                                                    <v-checkbox v-for="gate in raid.gates" :key="gate.g"
-                                                        v-show="(char.settings?.selectedGateIds || []).includes(raid.name + '_G' + gate.g)"
-                                                        v-model="char.completedTasks" :value="raid.name + '_G' + gate.g"
-                                                        :disabled="isGateDisabled(char, raid, gate)"
-                                                        @change="toggleGate(char, raid, gate)" hide-details
-                                                        density="compact" color="primary" class="gate-chk">
-                                                        <template v-slot:label>
-                                                            <div class="d-flex align-center">
-                                                                <v-chip size="x-small"
-                                                                    :color="getDifficulty(raid.name).color" label
-                                                                    class="me-1 text-white font-weight-black px-1"
-                                                                    style="min-width: 24px; justify-content: center; height: 16px;">
-                                                                    {{ getDifficulty(raid.name).text[0] }}
-                                                                </v-chip>
-                                                                <span class="text-overline font-weight-black">
-                                                                    {{ gate.g }} 관문
-                                                                    <span class="ms-1"
-                                                                        style="font-size: 0.6rem; opacity: 0.7">
-                                                                        ({{ (gate.gold / 1000).toFixed(1) }}k{{
-                                                                        raid.name.includes('싱글') ? ' 귀속' : '' }})
-                                                                    </span>
-                                                                </span>
-                                                            </div>
-                                                        </template>
-                                                    </v-checkbox>
+                                                    <template v-for="gate in (raid.gates || [])" :key="gate.g">
+                                                        <div v-if="gate && (char.settings?.selectedGateIds || []).includes(raid.name + '_G' + gate.g)"
+                                                            class="d-flex align-center mb-n1">
+                                                            <v-checkbox v-model="char.completedTasks"
+                                                                :value="raid.name + '_G' + gate.g"
+                                                                :disabled="isGateDisabled(char, raid, gate)"
+                                                                @change="toggleGate(char, raid, gate)" hide-details
+                                                                density="compact" color="primary"
+                                                                class="gate-chk flex-grow-1">
+                                                                <template v-slot:label>
+                                                                    <div class="d-flex align-center">
+                                                                        <v-chip size="x-small"
+                                                                            :color="getDifficulty(raid.name).color"
+                                                                            label
+                                                                            class="me-1 text-white font-weight-black px-1"
+                                                                            style="min-width: 24px; justify-content: center; height: 16px;">
+                                                                            {{ getDifficulty(raid.name).text[0] }}
+                                                                        </v-chip>
+                                                                        <span class="text-overline font-weight-black">
+                                                                            {{ gate.g }} 관문
+                                                                            <span class="ms-1"
+                                                                                style="font-size: 0.6rem; opacity: 0.7">({{
+                                                                                (gate.gold / 1000).toFixed(1) }}k{{
+                                                                                raid.name.includes('싱글') ? ' 귀속' : ''
+                                                                                }})</span>
+                                                                        </span>
+                                                                    </div>
+                                                                </template>
+                                                            </v-checkbox>
+
+                                                            <v-btn icon variant="text" size="x-small"
+                                                                :color="(char.moreTasks || []).includes(raid.name + '_G' + gate.g + '_More') ? 'indigo-accent-2' : 'grey-lighten-1'"
+                                                                @click.stop="toggleMoreReward(char, raid.name, gate.g)"
+                                                                class="ms-1">
+                                                                <v-icon size="18">{{ (char.moreTasks ||
+                                                                    []).includes(raid.name + '_G' + gate.g + '_More') ?
+                                                                    'mdi-plus-box' :
+                                                                    'mdi-plus-box-outline' }}</v-icon>
+                                                                <v-tooltip activator="parent" location="top"
+                                                                    open-delay="300">
+                                                                    더보기 비용: {{ gate.moreGold?.toLocaleString() }}G
+                                                                </v-tooltip>
+                                                            </v-btn>
+                                                        </div>
+                                                    </template>
                                                 </template>
                                             </div>
                                         </div>
@@ -177,7 +206,6 @@
                 </v-card-title>
                 <v-divider></v-divider>
                 <v-card-text class="pa-4" style="height: 600px;">
-                    
                     <div class="text-subtitle-2 font-weight-bold mb-3 text-high-emphasis">숙제 표시 여부</div>
                     <div class="bg-grey-lighten-4 rounded-lg pa-3 mb-4">
                         <div class="text-caption font-weight-bold mb-2">일일 숙제</div>
@@ -186,7 +214,7 @@
                                 :color="isTaskVisibleInSettings(task.id) ? 'orange' : 'grey-darken-2'"
                                 class="text-white px-3" @click="toggleTaskVisibility(task.id)">
                                 <v-icon start size="14">{{ isTaskVisibleInSettings(task.id) ? 'mdi-eye' : 'mdi-eye-off'
-                                }}</v-icon>
+                                    }}</v-icon>
                                 {{ task.name }}
                             </v-btn>
                         </div>
@@ -197,18 +225,19 @@
                                 :color="isTaskVisibleInSettings(task.id) ? 'cyan-darken-2' : 'grey-darken-2'"
                                 class="text-white px-3" @click="toggleTaskVisibility(task.id)">
                                 <v-icon start size="14">{{ isTaskVisibleInSettings(task.id) ? 'mdi-eye' : 'mdi-eye-off'
-                                }}</v-icon>
+                                    }}</v-icon>
                                 {{ task.label }}
                             </v-btn>
                         </div>
                     </div>
 
                     <v-divider class="mb-4"></v-divider>
-                    <div class="text-subtitle-2 font-weight-bold mb-1 text-high-emphasis">레이드 설정</div>
-                    <v-list density="compact" class="pa-0">
+                    <div class="text-subtitle-2 font-weight-bold mb-1 text-high-emphasis">레이드 설정 (드래그 순서 변경)</div>
+                    <v-list density="compact" class="pa-0 shadow-none bg-transparent">
                         <draggable v-model="tempSettings.allGroups" handle=".drag-handle" item-key="toString">
                             <template #item="{ element: group }">
-                                <div class="theme.global.current.value.dark ? 'bg-grey-darken-4' : 'bg-white'">
+                                <div class="border rounded-lg mb-2 overflow-hidden shadow-sm"
+                                    :class="theme === 'dark' ? 'bg-grey-darken-4' : 'bg-white'">
                                     <v-list-item class="bg-grey-lighten-4 py-1">
                                         <template v-slot:prepend>
                                             <v-icon class="drag-handle me-2 cursor-move"
@@ -247,7 +276,8 @@
                                                             []).includes(raid.name + '_G' + gate.g) ? 'mdi-eye' :
                                                             'mdi-eye-off'
                                                         }}</v-icon>
-                                                        {{ gate.g }}관 ({{ (gate.gold/1000).toFixed(1) }}k{{ raid.name.includes('싱글') ? ' 귀속' : '' }})
+                                                        {{ gate.g }}관 ({{ (gate.gold / 1000).toFixed(1) }}k{{
+                                                            raid.name.includes('싱글') ? '귀속' : '' }})
                                                     </v-btn>
                                                 </div>
                                             </div>
@@ -277,22 +307,17 @@
                         <v-list-item v-for="item in activeSchedules" :key="item.id" border class="rounded-lg mb-3 pa-3">
                             <div class="d-flex justify-space-between align-center mb-2">
                                 <v-chip :color="item.isHomework ? 'success' : 'error'" size="x-small" label
-                                    class="font-weight-black text-white">
-                                    {{ item.isHomework ? '숙제' : '버스' }}
-                                </v-chip>
+                                    class="font-weight-black text-white">{{ item.isHomework ? '숙제' : '버스' }}</v-chip>
                                 <span class="text-caption font-weight-bold text-primary">{{
                                     formatScheduleTime(item.dateTime)
                                     }}</span>
                             </div>
-
                             <div class="d-flex align-center mb-2">
                                 <v-chip size="x-small" :color="getDifficulty(item.difficulty).color" label
-                                    class="me-2 text-white font-weight-black">
-                                    {{ getDifficulty(item.difficulty).text }}
-                                </v-chip>
+                                    class="me-2 text-white font-weight-black">{{ getDifficulty(item.difficulty).text
+                                    }}</v-chip>
                                 <span class="text-subtitle-1 font-weight-black">{{ item.raid }}</span>
                             </div>
-
                             <div class="text-caption text-medium-emphasis d-flex align-center">
                                 <v-icon size="16" class="me-1">mdi-account-group-outline</v-icon>
                                 <span class="font-weight-bold">멤버: {{(item.members || []).map(p => p.name).join(', ')
@@ -319,6 +344,7 @@ import { collection, onSnapshot } from "firebase/firestore";
 const API_KEY = import.meta.env.VITE_LOSTARK_API_KEY || "";
 const characters = ref([]);
 const isFetching = ref(false);
+const theme = ref(localStorage.getItem('theme') || 'light');
 
 const charSettingsDialog = ref(false);
 const targetChar = ref(null);
@@ -334,42 +360,30 @@ const dailyTasks = [{ id: 'chaos', name: '카오스 던전' }, { id: 'guardian',
 const specialTasks = [{ id: 'sky', label: '천상' }, { id: 'hell', label: '지옥' }, { id: 'hall', label: '할' }];
 
 const raidList = [
-    { group: "세르카", name: "그림자: 세르카(나이트메어)", level: 1740, gold: 54000, gates: [{ g: 1, gold: 21000 }, { g: 2, gold: 33000 }] },
-    { group: "세르카", name: "그림자: 세르카(하드)", level: 1730, gold: 44000, gates: [{ g: 1, gold: 17500 }, { g: 2, gold: 26500 }] },
-    { group: "세르카", name: "그림자: 세르카(노말)", level: 1710, gold: 35000, gates: [{ g: 1, gold: 14000 }, { g: 2, gold: 21000 }] },
-    { group: "종막", name: "종막: 카제로스(하드)", level: 1730, gold: 52000, gates: [{ g: 1, gold: 17000 }, { g: 2, gold: 35000 }] },
-    { group: "종막", name: "종막: 카제로스(노말)", level: 1710, gold: 40000, gates: [{ g: 1, gold: 14000 }, { g: 2, gold: 26000 }] },
-    { group: "4막", name: "4막: 아르모체(하드)", level: 1720, gold: 42000, gates: [{ g: 1, gold: 15000 }, { g: 2, gold: 27000 }] },
-    { group: "4막", name: "4막: 아르모체(노말)", level: 1700, gold: 33000, gates: [{ g: 1, gold: 12500 }, { g: 2, gold: 20500 }] },
-
-
-    { group: "3막", name: "3막: 모르둠(하드)", level: 1700, gold: 27000, gates: [{ g: 1, gold: 5000 }, { g: 2, gold: 8000 }, { g: 3, gold: 14000 }] },
-    { group: "3막", name: "3막: 모르둠(노말)", level: 1680, gold: 21000, gates: [{ g: 1, gold: 4000 }, { g: 2, gold: 7000 }, { g: 3, gold: 10000 }] },
-    { group: "3막", name: "3막: 모르둠(싱글)", level: 1680, gold: 21000, gates: [{ g: 1, gold: 4000 }, { g: 2, gold: 7000 }, { g: 3, gold: 10000 }] },
-
-    // 2막 싱글 (1680, 1670 동일)
-
-    { group: "2막", name: "2막: 아브렐슈드(하드)", level: 1690, gold: 23000, gates: [{ g: 1, gold: 7500 }, { g: 2, gold: 15500 }] },
-    { group: "2막", name: "2막: 아브렐슈드(노말)", level: 1670, gold: 16500, gates: [{ g: 1, gold: 5500 }, { g: 2, gold: 11000 }] },
-    { group: "2막", name: "2막: 아브렐슈드(싱글)", level: 1670, gold: 16500, gates: [{ g: 1, gold: 5500 }, { g: 2, gold: 11000 }] },
-
-    // 1막 싱글 (1680, 1670, 1660 동일)
-
-    { group: "1막", name: "1막: 에기르(하드)", level: 1680, gold: 18000, gates: [{ g: 1, gold: 5500 }, { g: 2, gold: 12500 }] },
-    { group: "1막", name: "1막: 에기르(노말)", level: 1660, gold: 11500, gates: [{ g: 1, gold: 3500 }, { g: 2, gold: 8000 }] },
-    { group: "1막", name: "1막: 에기르(싱글)", level: 1660, gold: 11500, gates: [{ g: 1, gold: 3500 }, { g: 2, gold: 8000 }] },
+    { group: "세르카", name: "그림자: 세르카(나이트메어)", level: 1740, gold: 54000, gates: [{ g: 1, gold: 21000, moreGold: 6720 }, { g: 2, gold: 33000, moreGold: 10560 }] },
+    { group: "세르카", name: "그림자: 세르카(하드)", level: 1730, gold: 44000, gates: [{ g: 1, gold: 17500, moreGold: 5600 }, { g: 2, gold: 26500, moreGold: 8480 }] },
+    { group: "세르카", name: "그림자: 세르카(노말)", level: 1710, gold: 35000, gates: [{ g: 1, gold: 14000, moreGold: 4480 }, { g: 2, gold: 21000, moreGold: 6720 }] },
+    { group: "종막", name: "종막: 카제로스(하드)", level: 1730, gold: 52000, gates: [{ g: 1, gold: 17000, moreGold: 5440 }, { g: 2, gold: 35000, moreGold: 11200 }] },
+    { group: "종막", name: "종막: 카제로스(노말)", level: 1710, gold: 40000, gates: [{ g: 1, gold: 14000, moreGold: 4480 }, { g: 2, gold: 26000, moreGold: 8320 }] },
+    { group: "4막", name: "4막: 아르모체(하드)", level: 1720, gold: 42000, gates: [{ g: 1, gold: 15000, moreGold: 4800 }, { g: 2, gold: 27000, moreGold: 8640 }] },
+    { group: "4막", name: "4막: 아르모체(노말)", level: 1700, gold: 33000, gates: [{ g: 1, gold: 12500, moreGold: 4000 }, { g: 2, gold: 20500, moreGold: 6560 }] },
+    { group: "3막", name: "3막: 모르둠(하드)", level: 1700, gold: 27000, gates: [{ g: 1, gold: 5000, moreGold: 1650 }, { g: 2, gold: 8000, moreGold: 2640 }, { g: 3, gold: 14000, moreGold: 4060 }] },
+    { group: "3막", name: "3막: 모르둠(노말)", level: 1680, gold: 21000, gates: [{ g: 1, gold: 4000, moreGold: 1300 }, { g: 2, gold: 7000, moreGold: 2350 }, { g: 3, gold: 10000, moreGold: 3360 }] },
+    { group: "3막", name: "3막: 모르둠(싱글)", level: 1680, gold: 21000, gates: [{ g: 1, gold: 4000, moreGold: 1300 }, { g: 2, gold: 7000, moreGold: 2350 }, { g: 3, gold: 10000, moreGold: 3360 }] },
+    { group: "2막", name: "2막: 아브렐슈드(하드)", level: 1690, gold: 23000, gates: [{ g: 1, gold: 7500, moreGold: 2400 }, { g: 2, gold: 15500, moreGold: 5100 }] },
+    { group: "2막", name: "2막: 아브렐슈드(노말)", level: 1670, gold: 16500, gates: [{ g: 1, gold: 5500, moreGold: 1820 }, { g: 2, gold: 11000, moreGold: 3720 }] },
+    { group: "2막", name: "2막: 아브렐슈드(싱글)", level: 1670, gold: 16500, gates: [{ g: 1, gold: 5500, moreGold: 1820 }, { g: 2, gold: 11000, moreGold: 3720 }] },
+    { group: "1막", name: "1막: 에기르(하드)", level: 1680, gold: 18000, gates: [{ g: 1, gold: 5500, moreGold: 1820 }, { g: 2, gold: 12500, moreGold: 4150 }] },
+    { group: "1막", name: "1막: 에기르(노말)", level: 1660, gold: 11500, gates: [{ g: 1, gold: 3500, moreGold: 750 }, { g: 2, gold: 8000, moreGold: 1780 }] },
+    { group: "1막", name: "1막: 에기르(싱글)", level: 1660, gold: 11500, gates: [{ g: 1, gold: 3500, moreGold: 750 }, { g: 2, gold: 8000, moreGold: 1780 }] },
+    { group: "서막", name: "서막: 바르칸(싱글)", level: 1620, gold: 6100, gates: [{ g: 1, gold: 2000, moreGold: 0 }, { g: 2, gold: 4100, moreGold: 0 }] }
 ];
 
 const raidGroups = computed(() => [...new Set(raidList.map(r => r.group))]);
 const getRaidsByGroup = (groupName) => raidList.filter(r => r.group === groupName);
 
-// --- 안전한 가시성 제어 ---
-const isTaskVisible = (char, taskId) => {
-    return !char.settings?.hiddenTaskIds?.includes(taskId);
-};
-const isTaskVisibleInSettings = (taskId) => {
-    return !tempSettings.value.hiddenTaskIds?.includes(taskId);
-};
+const isTaskVisible = (char, taskId) => !char.settings?.hiddenTaskIds?.includes(taskId);
+const isTaskVisibleInSettings = (taskId) => !tempSettings.value.hiddenTaskIds?.includes(taskId);
 const toggleTaskVisibility = (taskId) => {
     if (!tempSettings.value.hiddenTaskIds) tempSettings.value.hiddenTaskIds = [];
     const idx = tempSettings.value.hiddenTaskIds.indexOf(taskId);
@@ -379,7 +393,6 @@ const toggleTaskVisibility = (taskId) => {
 const hasVisibleDaily = (char) => dailyTasks.some(t => isTaskVisible(char, t.id));
 const hasVisibleSpecial = (char) => specialTasks.some(t => isTaskVisible(char, t.id));
 
-// --- 레이드 비활성화 및 토글 (복구) ---
 const isGateDisabled = (char, raid, gate) => {
     if (!char.completedTasks) return false;
     const currentId = raid.name + '_G' + gate.g;
@@ -390,6 +403,7 @@ const isGateDisabled = (char, raid, gate) => {
         char.completedTasks.includes(otherRaid.name + '_G' + gate.g)
     );
 };
+
 const toggleGate = (char, raid, gate) => {
     const taskId = raid.name + '_G' + gate.g;
     if (char.completedTasks.includes(taskId)) {
@@ -401,19 +415,50 @@ const toggleGate = (char, raid, gate) => {
     saveToLocal();
 };
 
+const toggleMoreReward = (char, raidName, gateG) => {
+    if (!char.moreTasks) char.moreTasks = [];
+    const taskId = raidName + '_G' + gateG + '_More';
+
+    const idx = char.moreTasks.indexOf(taskId);
+    if (idx > -1) {
+        char.moreTasks.splice(idx, 1);
+    } else {
+        char.moreTasks.push(taskId);
+    }
+    saveToLocal();
+};
+
+// [수정] 골드 계산 로직: (상위 3개 수익) - (모든 더보기 지출)
 const getCharGold = (char) => {
-    const visibleGroups = char.settings?.visibleGroups || [];
-    let raidGoldList = [];
-    visibleGroups.forEach(groupName => {
-        let goldSum = 0;
-        getRaidsByGroup(groupName).forEach(raid => {
-            (raid.gates || []).forEach(gate => {
-                if ((char.completedTasks || []).includes(raid.name + '_G' + gate.g)) goldSum += gate.gold;
+    // 1. 수익 계산 (골드 캐릭터인 경우만 상위 3개 그룹 합산)
+    let grossGold = 0;
+    if (char.isGoldCharacter) {
+        const visibleGroups = char.settings?.visibleGroups || [];
+        let raidGoldList = [];
+        visibleGroups.forEach(groupName => {
+            let goldSum = 0;
+            getRaidsByGroup(groupName).forEach(raid => {
+                (raid.gates || []).forEach(gate => {
+                    if ((char.completedTasks || []).includes(raid.name + '_G' + gate.g)) goldSum += gate.gold;
+                });
             });
+            if (goldSum > 0) raidGoldList.push({ name: groupName, gold: goldSum });
         });
-        if (goldSum > 0) raidGoldList.push({ name: groupName, gold: goldSum });
+        grossGold = raidGoldList.sort((a, b) => b.gold - a.gold).slice(0, 3).reduce((sum, r) => sum + r.gold, 0);
+    }
+
+    // 2. 지출 계산 (체크된 모든 관문의 더보기 비용 합산)
+    let totalMoreCost = 0;
+    raidList.forEach(raid => {
+        raid.gates.forEach(gate => {
+            const moreId = raid.name + '_G' + gate.g + '_More';
+            if ((char.moreTasks || []).includes(moreId)) {
+                totalMoreCost += gate.moreGold || 0;
+            }
+        });
     });
-    return raidGoldList.sort((a, b) => b.gold - a.gold).slice(0, 3).reduce((sum, r) => sum + r.gold, 0);
+
+    return grossGold - totalMoreCost;
 };
 
 const isGoldExcluded = (char, groupName) => {
@@ -431,53 +476,46 @@ const isGoldExcluded = (char, groupName) => {
 
 const getDifficulty = (difficultyText) => {
     const diff = difficultyText || "노말";
-
     if (diff.includes("나이트메어")) return { text: "나메", color: "purple-darken-1" };
     if (diff.includes("하드")) return { text: "하드", color: "orange-darken-1" };
     if (diff.includes("The First")) return { text: "퍼스트", color: "red-darken-4" };
-
-    // 싱글 난이도 추가
     if (diff.includes("싱글")) return { text: "싱글", color: "light-blue-darken-1" };
-
     return { text: "노말", color: "green-darken-1" };
 };
 
-const stripDifficulty = (name) => name.replace(/\(.*\)/, "").trim();
 const getSegmentClass = (char, taskId, index) => { const score = char.restGauges?.[taskId] || 0; return score >= index * 20 ? 'full-active' : score >= index * 20 - 10 ? 'half-active' : ''; };
 const getFillStyle = (char, taskId, index) => { const score = char.restGauges?.[taskId] || 0; return { width: score >= index * 20 ? '100%' : score >= index * 20 - 10 ? '50%' : '0%' }; };
 const validateAndSaveRest = (char) => { dailyTasks.forEach(task => { let v = char.restGauges[task.id]; char.restGauges[task.id] = Math.max(0, Math.min(200, Math.round(v / 10) * 10)); }); saveToLocal(); };
 
-// --- 설정 제어 ---
-const getEyeIcon = (group) => tempSettings.value.visibleGroups.includes(group) ? 'mdi-eye' : 'mdi-eye-off';
-const getEyeColor = (group) => tempSettings.value.visibleGroups.includes(group) ? 'primary' : 'grey-darken-3';
 const toggleExpand = (group) => { expandedGroup.value = expandedGroup.value === group ? null : group; };
 const toggleGroupSelection = (group) => {
     const idx = tempSettings.value.visibleGroups.indexOf(group);
     if (idx > -1) tempSettings.value.visibleGroups.splice(idx, 1);
     else tempSettings.value.visibleGroups.push(group);
 };
+
 const toggleGateVisibility = (raidName, gateNum) => {
     const id = raidName + '_G' + gateNum;
     if (!tempSettings.value.selectedGateIds) tempSettings.value.selectedGateIds = [];
-
     const idx = tempSettings.value.selectedGateIds.indexOf(id);
-
-    if (idx > -1) {
-        // 1. 관문을 끌 때
-        tempSettings.value.selectedGateIds.splice(idx, 1);
-    } else {
-        // 2. 관문을 켤 때
+    if (idx > -1) tempSettings.value.selectedGateIds.splice(idx, 1);
+    else {
         tempSettings.value.selectedGateIds.push(id);
-
-        // [추가된 로직] 해당 레이드가 속한 그룹(Group)을 찾아서 자동으로 visibleGroups에 추가
         const parentRaid = raidList.find(r => r.name === raidName);
-        if (parentRaid) {
-            const groupName = parentRaid.group;
-            if (!tempSettings.value.visibleGroups.includes(groupName)) {
-                tempSettings.value.visibleGroups.push(groupName);
-            }
+        if (parentRaid && !tempSettings.value.visibleGroups.includes(parentRaid.group)) {
+            tempSettings.value.visibleGroups.push(parentRaid.group);
         }
     }
+};
+
+const toggleGoldCharacter = (char) => {
+    const currentGoldChars = characters.value.filter(c => c.isGoldCharacter).length;
+    if (!char.isGoldCharacter && currentGoldChars >= 6) {
+        alert("골드 획득 캐릭터는 최대 6명까지 지정 가능합니다.");
+        return;
+    }
+    char.isGoldCharacter = !char.isGoldCharacter;
+    saveToLocal();
 };
 
 const openCharSettings = (char) => {
@@ -501,11 +539,10 @@ const saveCharSettings = () => {
     }
 };
 
-// --- 원본 로직 (휴게/ Siblings/일정) 완전 복구 ---
 const getAccountKey = () => `hw_chars_${localStorage.getItem('current_main_name') || 'default'}`;
 const getBlacklistKey = () => `hw_blacklist_${localStorage.getItem('current_main_name') || 'default'}`;
 const saveToLocal = () => { localStorage.setItem(getAccountKey(), JSON.stringify(characters.value)); };
-const getTotalGold = () => characters.value.reduce((sum, char) => sum + getCharGold(char), 0);
+const getTotalGold = () => characters.value.filter(c => c.isGoldCharacter).reduce((sum, char) => sum + getCharGold(char), 0);
 
 const deleteCharacter = (name) => {
     if (confirm(`${name} 삭제?`)) {
@@ -522,31 +559,18 @@ const updateDailyRestGauges = () => {
     const today6AM = new Date(now);
     if (now.getHours() < 6) today6AM.setDate(today6AM.getDate() - 1);
     today6AM.setHours(6, 0, 0, 0);
-
     characters.value.forEach(char => {
         if (!char.restGauges) char.restGauges = { chaos: 0, guardian: 0 };
         if (!char.lastDailyUpdate) { char.lastDailyUpdate = today6AM.getTime(); return; }
-
         const daysDiff = Math.floor((today6AM.getTime() - new Date(char.lastDailyUpdate).getTime()) / (1000 * 60 * 60 * 24));
-
         if (daysDiff > 0) {
             dailyTasks.forEach(task => {
                 let currentRest = char.restGauges[task.id] || 0;
-                // 체크 여부에 따른 휴게 계산 (수요일 초기화 시에도 이 로직은 안전함)
-                if ((char.completedTasks || []).includes(task.id)) {
-                    if (currentRest >= 40) currentRest -= 40;
-                } else {
-                    currentRest = Math.min(200, currentRest + 20);
-                }
-
-                // 1일 이상 미접속 시 추가 휴게 부여
-                if (daysDiff > 1) {
-                    for (let i = 1; i < daysDiff; i++) currentRest = Math.min(200, currentRest + 20);
-                }
+                if ((char.completedTasks || []).includes(task.id)) { if (currentRest >= 40) currentRest -= 40; }
+                else { currentRest = Math.min(200, currentRest + 20); }
+                if (daysDiff > 1) for (let i = 1; i < daysDiff; i++) currentRest = Math.min(200, currentRest + 20);
                 char.restGauges[task.id] = currentRest;
             });
-
-            // [중요] 일일 숙제만 초기화 (주간 레이드는 App.vue의 수요일 로직이 담당)
             char.completedTasks = (char.completedTasks || []).filter(id => !['chaos', 'guardian'].includes(id));
             char.lastDailyUpdate = today6AM.getTime();
         }
@@ -562,30 +586,20 @@ const fetchMyExpedition = async (charName) => {
         if (res.data && Array.isArray(res.data)) {
             const blacklist = JSON.parse(localStorage.getItem(getBlacklistKey()) || '[]');
             const savedData = JSON.parse(localStorage.getItem(getAccountKey()) || '[]');
-
-            characters.value = res.data
+            const newList = res.data
                 .filter(char => !blacklist.includes(char.CharacterName))
                 .sort((a, b) => parseFloat(b.ItemAvgLevel.replace(',', '')) - parseFloat(a.ItemAvgLevel.replace(',', '')))
-                .map(char => {
+                .map((char, index) => {
                     const existing = savedData.find(c => c.name === char.CharacterName);
                     return {
-                        name: char.CharacterName,
-                        className: char.CharacterClassName,
-                        level: char.ItemAvgLevel,
-                        img: existing?.img || '',
-                        completedTasks: existing?.completedTasks || [],
-                        restGauges: existing?.restGauges || { chaos: 0, guardian: 0 },
+                        name: char.CharacterName, className: char.CharacterClassName, level: char.ItemAvgLevel, img: existing?.img || '',
+                        completedTasks: existing?.completedTasks || [], restGauges: existing?.restGauges || { chaos: 0, guardian: 0 },
                         lastDailyUpdate: existing?.lastDailyUpdate || null,
-                        // [UI 유지 핵심] 기존 설정이 있으면 그대로 가져오고, 없으면 기본값 부여
-                        settings: existing?.settings || {
-                            visibleGroups: [],
-                            selectedGateIds: [],
-                            groupOrder: raidGroups.value,
-                            hiddenTaskIds: [],
-                            showWeekly: true
-                        }
+                        settings: existing?.settings || { visibleGroups: [], selectedGateIds: [], groupOrder: raidGroups.value, hiddenTaskIds: [], showWeekly: true },
+                        isGoldCharacter: existing?.isGoldCharacter !== undefined ? existing.isGoldCharacter : index < 6
                     };
                 });
+            characters.value = newList;
             updateDailyRestGauges();
             characters.value.forEach((c, i) => { if (!c.img) updateCharImage(c.name, i); });
         }
@@ -600,25 +614,13 @@ const updateCharImage = async (name, index) => {
 };
 
 const fetchSchedules = () => {
-    // 저장 페이지에서 사용한 컬렉션 이름과 매칭
-    const collections = [
-        { name: 'schedules', defaultHomework: false },
-        { name: 'homeworks', defaultHomework: true }
-    ];
-
+    const collections = [{ name: 'schedules', defaultHomework: false }, { name: 'homeworks', defaultHomework: true }];
     collections.forEach(conf => {
         onSnapshot(collection(db, conf.name), (snap) => {
             const data = snap.docs.map(doc => {
                 const d = doc.data();
-                return {
-                    id: doc.id,
-                    ...d,
-                    // 저장된 isHomework가 없으면 컬렉션 성격에 따라 기본값 부여
-                    isHomework: d.isHomework !== undefined ? d.isHomework : conf.defaultHomework,
-                    colName: conf.name
-                };
+                return { id: doc.id, ...d, isHomework: d.isHomework !== undefined ? d.isHomework : conf.defaultHomework, colName: conf.name };
             });
-            // 리스트 업데이트
             allSchedules.value = [...allSchedules.value.filter(s => s.colName !== conf.name), ...data];
         });
     });
@@ -627,20 +629,8 @@ const getCharSchedules = (name) => allSchedules.value.filter(r => (r.members || 
 const openScheduleModal = (name) => { activeCharName.value = name; activeSchedules.value = getCharSchedules(name); scheduleDialog.value = true; };
 const formatScheduleTime = (t) => t ? new Date(t).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : "시간 미정";
 
-onMounted(() => {
-    const main = localStorage.getItem('current_main_name');
-    if (main) fetchMyExpedition(main);
-    fetchSchedules();
-    window.addEventListener('main-char-changed', (e) => fetchMyExpedition(e.detail));
-});
-
-// --- script setup 내부에 추가 ---
-
 const getGoldRaidCount = (char) => {
     const visibleGroups = char.settings?.visibleGroups || [];
-    let activeRaidGroups = 0;
-
-    // 골드가 발생하는 그룹들만 필터링
     const raidGoldList = [];
     visibleGroups.forEach(groupName => {
         let goldSum = 0;
@@ -651,10 +641,15 @@ const getGoldRaidCount = (char) => {
         });
         if (goldSum > 0) raidGoldList.push({ name: groupName, gold: goldSum });
     });
-
-    // 골드 합산 우선순위(상위 3개) 안에 드는 레이드 수 반환
     return raidGoldList.sort((a, b) => b.gold - a.gold).slice(0, 3).length;
 };
+
+onMounted(() => {
+    const main = localStorage.getItem('current_main_name');
+    if (main) fetchMyExpedition(main);
+    fetchSchedules();
+    window.addEventListener('main-char-changed', (e) => fetchMyExpedition(e.detail));
+});
 </script>
 
 <style scoped>
@@ -709,17 +704,6 @@ const getGoldRaidCount = (char) => {
     background: transparent;
     color: #fb8c00;
     outline: none;
-}
-
-.difficulty-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 18px;
-    font-size: 0.65rem !important;
-    font-weight: 800;
-    color: white;
 }
 
 .custom-chk :deep(.v-label) {

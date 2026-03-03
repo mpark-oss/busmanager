@@ -151,7 +151,8 @@
                                                                     {{ gate.g }} 관문
                                                                     <span class="ms-1"
                                                                         style="font-size: 0.6rem; opacity: 0.7">
-                                                                        ({{ (gate.gold / 1000).toFixed(1) }}k)
+                                                                        ({{ (gate.gold / 1000).toFixed(1) }}k{{
+                                                                        raid.name.includes('싱글') ? ' 귀속' : '' }})
                                                                     </span>
                                                                 </span>
                                                             </div>
@@ -176,7 +177,8 @@
                 </v-card-title>
                 <v-divider></v-divider>
                 <v-card-text class="pa-4" style="height: 600px;">
-                    <div class="text-subtitle-2 font-weight-bold mb-3 text-grey-darken-3">숙제 표시 여부</div>
+                    
+                    <div class="text-subtitle-2 font-weight-bold mb-3 text-high-emphasis">숙제 표시 여부</div>
                     <div class="bg-grey-lighten-4 rounded-lg pa-3 mb-4">
                         <div class="text-caption font-weight-bold mb-2">일일 숙제</div>
                         <div class="d-flex flex-wrap gap-2 mb-3">
@@ -184,7 +186,7 @@
                                 :color="isTaskVisibleInSettings(task.id) ? 'orange' : 'grey-darken-2'"
                                 class="text-white px-3" @click="toggleTaskVisibility(task.id)">
                                 <v-icon start size="14">{{ isTaskVisibleInSettings(task.id) ? 'mdi-eye' : 'mdi-eye-off'
-                                    }}</v-icon>
+                                }}</v-icon>
                                 {{ task.name }}
                             </v-btn>
                         </div>
@@ -195,18 +197,18 @@
                                 :color="isTaskVisibleInSettings(task.id) ? 'cyan-darken-2' : 'grey-darken-2'"
                                 class="text-white px-3" @click="toggleTaskVisibility(task.id)">
                                 <v-icon start size="14">{{ isTaskVisibleInSettings(task.id) ? 'mdi-eye' : 'mdi-eye-off'
-                                    }}</v-icon>
+                                }}</v-icon>
                                 {{ task.label }}
                             </v-btn>
                         </div>
                     </div>
 
                     <v-divider class="mb-4"></v-divider>
-                    <div class="text-subtitle-2 font-weight-bold mb-1 text-grey-darken-3">레이드 설정 (드래그 순서 변경)</div>
+                    <div class="text-subtitle-2 font-weight-bold mb-1 text-high-emphasis">레이드 설정</div>
                     <v-list density="compact" class="pa-0">
                         <draggable v-model="tempSettings.allGroups" handle=".drag-handle" item-key="toString">
                             <template #item="{ element: group }">
-                                <div class="border rounded-lg mb-2 overflow-hidden bg-white shadow-sm">
+                                <div class="theme.global.current.value.dark ? 'bg-grey-darken-4' : 'bg-white'">
                                     <v-list-item class="bg-grey-lighten-4 py-1">
                                         <template v-slot:prepend>
                                             <v-icon class="drag-handle me-2 cursor-move"
@@ -245,7 +247,7 @@
                                                             []).includes(raid.name + '_G' + gate.g) ? 'mdi-eye' :
                                                             'mdi-eye-off'
                                                         }}</v-icon>
-                                                        {{ gate.g }}관 ({{ (gate.gold / 1000).toFixed(1) }}k)
+                                                        {{ gate.g }}관 ({{ (gate.gold/1000).toFixed(1) }}k{{ raid.name.includes('싱글') ? ' 귀속' : '' }})
                                                     </v-btn>
                                                 </div>
                                             </div>
@@ -280,7 +282,7 @@
                                 </v-chip>
                                 <span class="text-caption font-weight-bold text-primary">{{
                                     formatScheduleTime(item.dateTime)
-                                }}</span>
+                                    }}</span>
                             </div>
 
                             <div class="d-flex align-center mb-2">
@@ -294,7 +296,7 @@
                             <div class="text-caption text-medium-emphasis d-flex align-center">
                                 <v-icon size="16" class="me-1">mdi-account-group-outline</v-icon>
                                 <span class="font-weight-bold">멤버: {{(item.members || []).map(p => p.name).join(', ')
-                                }}</span>
+                                    }}</span>
                             </div>
                         </v-list-item>
                     </v-list>
@@ -339,12 +341,23 @@ const raidList = [
     { group: "종막", name: "종막: 카제로스(노말)", level: 1710, gold: 40000, gates: [{ g: 1, gold: 14000 }, { g: 2, gold: 26000 }] },
     { group: "4막", name: "4막: 아르모체(하드)", level: 1720, gold: 42000, gates: [{ g: 1, gold: 15000 }, { g: 2, gold: 27000 }] },
     { group: "4막", name: "4막: 아르모체(노말)", level: 1700, gold: 33000, gates: [{ g: 1, gold: 12500 }, { g: 2, gold: 20500 }] },
+
+
     { group: "3막", name: "3막: 모르둠(하드)", level: 1700, gold: 27000, gates: [{ g: 1, gold: 5000 }, { g: 2, gold: 8000 }, { g: 3, gold: 14000 }] },
     { group: "3막", name: "3막: 모르둠(노말)", level: 1680, gold: 21000, gates: [{ g: 1, gold: 4000 }, { g: 2, gold: 7000 }, { g: 3, gold: 10000 }] },
+    { group: "3막", name: "3막: 모르둠(싱글)", level: 1680, gold: 21000, gates: [{ g: 1, gold: 4000 }, { g: 2, gold: 7000 }, { g: 3, gold: 10000 }] },
+
+    // 2막 싱글 (1680, 1670 동일)
+
     { group: "2막", name: "2막: 아브렐슈드(하드)", level: 1690, gold: 23000, gates: [{ g: 1, gold: 7500 }, { g: 2, gold: 15500 }] },
     { group: "2막", name: "2막: 아브렐슈드(노말)", level: 1670, gold: 16500, gates: [{ g: 1, gold: 5500 }, { g: 2, gold: 11000 }] },
+    { group: "2막", name: "2막: 아브렐슈드(싱글)", level: 1670, gold: 16500, gates: [{ g: 1, gold: 5500 }, { g: 2, gold: 11000 }] },
+
+    // 1막 싱글 (1680, 1670, 1660 동일)
+
     { group: "1막", name: "1막: 에기르(하드)", level: 1680, gold: 18000, gates: [{ g: 1, gold: 5500 }, { g: 2, gold: 12500 }] },
-    { group: "1막", name: "1막: 에기르(노말)", level: 1660, gold: 11500, gates: [{ g: 1, gold: 3500 }, { g: 2, gold: 8000 }] }
+    { group: "1막", name: "1막: 에기르(노말)", level: 1660, gold: 11500, gates: [{ g: 1, gold: 3500 }, { g: 2, gold: 8000 }] },
+    { group: "1막", name: "1막: 에기르(싱글)", level: 1660, gold: 11500, gates: [{ g: 1, gold: 3500 }, { g: 2, gold: 8000 }] },
 ];
 
 const raidGroups = computed(() => [...new Set(raidList.map(r => r.group))]);
@@ -417,14 +430,15 @@ const isGoldExcluded = (char, groupName) => {
 };
 
 const getDifficulty = (difficultyText) => {
-    // 만약 전달받은 값이 없으면 안전하게 '노말' 처리
     const diff = difficultyText || "노말";
 
     if (diff.includes("나이트메어")) return { text: "나메", color: "purple-darken-1" };
     if (diff.includes("하드")) return { text: "하드", color: "orange-darken-1" };
     if (diff.includes("The First")) return { text: "퍼스트", color: "red-darken-4" };
 
-    // 그 외는 모두 노말(초록색)
+    // 싱글 난이도 추가
+    if (diff.includes("싱글")) return { text: "싱글", color: "light-blue-darken-1" };
+
     return { text: "노말", color: "green-darken-1" };
 };
 
@@ -514,17 +528,17 @@ const updateDailyRestGauges = () => {
         if (!char.lastDailyUpdate) { char.lastDailyUpdate = today6AM.getTime(); return; }
 
         const daysDiff = Math.floor((today6AM.getTime() - new Date(char.lastDailyUpdate).getTime()) / (1000 * 60 * 60 * 24));
-        
+
         if (daysDiff > 0) {
             dailyTasks.forEach(task => {
                 let currentRest = char.restGauges[task.id] || 0;
                 // 체크 여부에 따른 휴게 계산 (수요일 초기화 시에도 이 로직은 안전함)
-                if ((char.completedTasks || []).includes(task.id)) { 
-                    if (currentRest >= 40) currentRest -= 40; 
-                } else { 
-                    currentRest = Math.min(200, currentRest + 20); 
+                if ((char.completedTasks || []).includes(task.id)) {
+                    if (currentRest >= 40) currentRest -= 40;
+                } else {
+                    currentRest = Math.min(200, currentRest + 20);
                 }
-                
+
                 // 1일 이상 미접속 시 추가 휴게 부여
                 if (daysDiff > 1) {
                     for (let i = 1; i < daysDiff; i++) currentRest = Math.min(200, currentRest + 20);
@@ -548,27 +562,27 @@ const fetchMyExpedition = async (charName) => {
         if (res.data && Array.isArray(res.data)) {
             const blacklist = JSON.parse(localStorage.getItem(getBlacklistKey()) || '[]');
             const savedData = JSON.parse(localStorage.getItem(getAccountKey()) || '[]');
-            
+
             characters.value = res.data
                 .filter(char => !blacklist.includes(char.CharacterName))
                 .sort((a, b) => parseFloat(b.ItemAvgLevel.replace(',', '')) - parseFloat(a.ItemAvgLevel.replace(',', '')))
                 .map(char => {
                     const existing = savedData.find(c => c.name === char.CharacterName);
                     return {
-                        name: char.CharacterName, 
-                        className: char.CharacterClassName, 
-                        level: char.ItemAvgLevel, 
+                        name: char.CharacterName,
+                        className: char.CharacterClassName,
+                        level: char.ItemAvgLevel,
                         img: existing?.img || '',
-                        completedTasks: existing?.completedTasks || [], 
+                        completedTasks: existing?.completedTasks || [],
                         restGauges: existing?.restGauges || { chaos: 0, guardian: 0 },
                         lastDailyUpdate: existing?.lastDailyUpdate || null,
                         // [UI 유지 핵심] 기존 설정이 있으면 그대로 가져오고, 없으면 기본값 부여
-                        settings: existing?.settings || { 
-                            visibleGroups: [], 
-                            selectedGateIds: [], 
-                            groupOrder: raidGroups.value, 
-                            hiddenTaskIds: [], 
-                            showWeekly: true 
+                        settings: existing?.settings || {
+                            visibleGroups: [],
+                            selectedGateIds: [],
+                            groupOrder: raidGroups.value,
+                            hiddenTaskIds: [],
+                            showWeekly: true
                         }
                     };
                 });

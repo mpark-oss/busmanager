@@ -4,7 +4,7 @@
       
       <v-app-bar-title class="font-weight-black" style="flex: none !important; margin-right: 24px;">
         <div class="d-flex flex-row align-center">
-          <v-img src="/favicon.ico.png" alt="흐흣 로고" width="50" height="50" class="me-3 rounded-lg border border-opacity-25" cover></v-img>
+          <v-img src="/stamp_logo.png" alt="흐흣 로고" width="50" height="50" class="me-3 rounded-lg border border-opacity-25" cover></v-img>
           <span class="text-h6">흐흣 운수</span>
         </div>
       </v-app-bar-title>
@@ -90,8 +90,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, provide } from 'vue';
 import axios from 'axios';
+import { db } from './firebase';
+import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
 
 const theme = ref(localStorage.getItem('theme') || 'light');
 const mainCharSlots = ref([]);
@@ -100,6 +102,32 @@ const charSettingDialog = ref(false);
 const searchCharName = ref("");
 const isFetching = ref(false);
 const API_KEY = import.meta.env.VITE_LOSTARK_API_KEY || "";
+
+
+const topVillain = ref(null);
+
+onMounted(() => {
+  // 1. villains 컬렉션에서 신고 횟수(reportCount)가 가장 높은 1명만 실시간 감시
+  const q = query(
+    collection(db, "villains"), 
+    orderBy("reportCount", "desc"), 
+    limit(1)
+  );
+
+  onSnapshot(q, (snapshot) => {
+    if (!snapshot.empty) {
+      const doc = snapshot.docs[0];
+      topVillain.value = {
+        name: doc.id,
+        count: doc.data().reportCount
+      };
+      console.log("현재 원정대 공공의 적:", topVillain.value.name);
+    }
+  });
+});
+
+// 모든 하위 컴포넌트에서 'topVillain'이라는 이름으로 이 데이터를 사용할 수 있게 주입
+provide('topVillain', topVillain);
 
 // 현재 선택된 슬롯의 전체 데이터 반환
 const getCurrentSlot = computed(() => {

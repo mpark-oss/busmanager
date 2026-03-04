@@ -58,6 +58,18 @@
                                             </v-btn>
                                             <span class="text-subtitle-1 font-weight-black text-truncate"
                                                 style="max-width: 130px;">{{ char.name }}</span>
+                                            <v-tooltip v-if="topVillain && char.name === topVillain.name"
+                                                location="top">
+                                                <template v-slot:activator="{ props }">
+                                                    <v-chip v-bind="props" size="x-small" color="yellow" variant="flat"
+                                                        class="ms-2 px-1 pulse-badge">
+                                                        <v-icon size="12" color="red">mdi-alarm-light</v-icon>
+                                                        <span class="ms-1 font-weight-bold"
+                                                            style="font-size: 0.6rem !important;">흐사게스타</span>
+                                                    </v-chip>
+                                                </template>
+                                                <span>누적 신고 {{ topVillain.count }}회 !</span>
+                                            </v-tooltip>
                                         </div>
                                     </template>
                                     <template v-slot:append>
@@ -75,7 +87,7 @@
                                                 @click.stop="openScheduleModal(char.name)">
                                                 <v-icon>mdi-bell-outline</v-icon>
                                                 <span class="bell-badge-count">{{ getCharSchedules(char.name).length
-                                                    }}</span>
+                                                }}</span>
                                             </v-btn>
 
                                             <v-btn icon="mdi-cog-outline" variant="text" color="grey-darken-1"
@@ -252,7 +264,7 @@
                                 :color="isTaskVisibleInSettings(task.id) ? 'orange' : 'grey-darken-2'"
                                 class="text-white px-3" @click="toggleTaskVisibility(task.id)">
                                 <v-icon start size="14">{{ isTaskVisibleInSettings(task.id) ? 'mdi-eye' : 'mdi-eye-off'
-                                    }}</v-icon>
+                                }}</v-icon>
                                 {{ task.name }}
                             </v-btn>
                         </div>
@@ -263,7 +275,7 @@
                                 :color="isTaskVisibleInSettings(task.id) ? 'cyan-darken-2' : 'grey-darken-2'"
                                 class="text-white px-3" @click="toggleTaskVisibility(task.id)">
                                 <v-icon start size="14">{{ isTaskVisibleInSettings(task.id) ? 'mdi-eye' : 'mdi-eye-off'
-                                    }}</v-icon>
+                                }}</v-icon>
                                 {{ task.label }}
                             </v-btn>
                         </div>
@@ -387,6 +399,9 @@ import axios from 'axios';
 import draggable from 'vuedraggable';
 import { db } from '../firebase';
 import { collection, onSnapshot } from "firebase/firestore";
+
+import { inject } from 'vue';
+const topVillain = inject('topVillain'); // App.vue에서 보낸 데이터 받기
 
 const API_KEY = import.meta.env.VITE_LOSTARK_API_KEY || "";
 const characters = ref([]);

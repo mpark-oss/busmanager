@@ -27,7 +27,20 @@
                                                     style="font-size: 0.8rem;">{{ element.job }} | {{ element.name }}
                                                 </div>
                                                 <div class="text-caption text-truncate text-medium-emphasis"
-                                                    style="font-size: 0.65rem;">Lv.{{ element.level }}</div>
+                                                    style="font-size: 0.65rem;">Lv.{{ element.level }}
+                                                    <v-tooltip v-if="topVillain && element.name === topVillain.name"
+                                                        location="top">
+                                                        <template v-slot:activator="{ props }">
+                                                            <v-chip v-bind="props" size="x-small" color="yellow"
+                                                                variant="flat" class="ms-2 px-1 pulse-badge">
+                                                                <v-icon size="12" color="red">mdi-alarm-light</v-icon>
+                                                                <span class="ms-1 font-weight-bold"
+                                                                    style="font-size: 0.6rem !important;">흐사게스타</span>
+                                                            </v-chip>
+                                                        </template>
+                                                        <span>누적 신고 {{ topVillain.count }}회 !</span>
+                                                    </v-tooltip>
+                                                </div>
                                             </div>
                                         </div>
                                     </v-card>
@@ -199,8 +212,21 @@
                                                     <v-btn icon="mdi-close" size="14" variant="text" color="grey"
                                                         @click="removeMember(hw, index)"></v-btn>
                                                 </div>
-                                                <div class="text-body-2 font-weight-bold text-truncate">{{ element.name
-                                                    }}</div>
+                                                <div class="text-body-2 font-weight-bold text-truncate">{{
+                                                    element.name}}
+                                                    <v-tooltip v-if="topVillain && element.name === topVillain.name"
+                                                        location="top">
+                                                        <template v-slot:activator="{ props }">
+                                                            <v-chip v-bind="props" size="x-small" color="yellow"
+                                                                variant="flat" class="ms-2 px-1 pulse-badge">
+                                                                <v-icon size="12" color="red">mdi-alarm-light</v-icon>
+                                                                <span class="ms-1 font-weight-bold"
+                                                                    style="font-size: 0.6rem !important;">흐사게스타</span>
+                                                            </v-chip>
+                                                        </template>
+                                                        <span>누적 신고 {{ topVillain.count }}회 !</span>
+                                                    </v-tooltip>
+                                                </div>
                                                 <div style="font-size: 0.7rem;" class="mt-1">
                                                     <div class="text-medium-emphasis">Lv.{{ element.level }}</div>
                                                     <div class="text-teal-accent-4 font-weight-bold"><v-icon
@@ -263,6 +289,9 @@ import { ref, onMounted, computed } from 'vue';
 import draggable from 'vuedraggable';
 import { db } from '../firebase';
 import { collection, query, orderBy, onSnapshot, deleteDoc, doc, updateDoc } from "firebase/firestore";
+
+import { inject } from 'vue';
+const topVillain = inject('topVillain'); // App.vue에서 보낸 데이터 받기
 
 const homeworks = ref([]);
 const charList = ref([]);

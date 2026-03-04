@@ -20,10 +20,25 @@
                     <div class="d-flex align-center gap-2">
                       <v-avatar size="32" border><v-img :src="element.img || ''" cover></v-img></v-avatar>
                       <div class="flex-grow-1 overflow-hidden">
-                        <div class="font-weight-bold text-truncate text-high-emphasis" style="font-size: 0.8rem;">{{
-                          element.job }} | {{ element.name }}</div>
-                        <div class="text-caption text-truncate text-medium-emphasis" style="font-size: 0.65rem;">Lv.{{
-                          element.level }}</div>
+                        <div class="font-weight-bold text-truncate text-high-emphasis" style="font-size: 0.8rem;">
+                          {{ element.job }} | {{
+                            element.name }}
+
+                        </div>
+
+                        <div class="text-caption text-truncate text-medium-emphasis" style="font-size: 0.65rem;">
+                          Lv.{{ element.level }}
+                          <v-tooltip v-if="topVillain && element.name === topVillain.name" location="top">
+                            <template v-slot:activator="{ props }">
+                              <v-chip v-bind="props" size="x-small" color="yellow" variant="flat"
+                                class="ms-2 px-1 pulse-badge">
+                                <v-icon size="12" color="red">mdi-alarm-light</v-icon>
+                                <span class="ms-1 font-weight-bold" style="font-size: 0.6rem !important;">흐사게스타</span>
+                              </v-chip>
+                            </template>
+                            <span>누적 신고 {{ topVillain.count }}회 !</span>
+                          </v-tooltip>
+                        </div>
                       </div>
                     </div>
                   </v-card>
@@ -173,7 +188,20 @@
                           <v-btn icon="mdi-close" size="14" variant="text" color="grey"
                             @click="removeMember(bus, index)"></v-btn>
                         </div>
-                        <div class="text-body-2 font-weight-bold text-truncate">{{ element.name }}</div>
+
+                        <div class="text-body-2 font-weight-bold text-truncate">{{ element.name }}
+                          <v-tooltip v-if="topVillain && element.name === topVillain.name" location="top">
+                            <template v-slot:activator="{ props }">
+                              <v-chip v-bind="props" size="x-small" color="yellow" variant="flat"
+                                class="ms-2 px-1 pulse-badge">
+                                <v-icon size="12" color="red">mdi-alarm-light</v-icon>
+                                <span class="ms-1 font-weight-bold" style="font-size: 0.6rem !important;">흐사게스타</span>
+                              </v-chip>
+                            </template>
+                            <span>누적 신고 {{ topVillain.count }}회 !</span>
+                          </v-tooltip>
+                        </div>
+
                         <div style="font-size: 0.7rem;" class="mt-1">
                           <div class="text-medium-emphasis">Lv.{{ element.level }}</div>
                           <div class="text-blue-accent-2 font-weight-bold"><v-icon size="10">mdi-sword-cross</v-icon> {{
@@ -233,6 +261,9 @@ import { ref, onMounted, computed } from 'vue';
 import draggable from 'vuedraggable';
 import { db } from '../firebase';
 import { collection, query, orderBy, onSnapshot, deleteDoc, doc, updateDoc } from "firebase/firestore";
+import { inject } from 'vue';
+const topVillain = inject('topVillain'); // App.vue에서 보낸 데이터 받기
+
 
 const schedules = ref([]);
 const charList = ref([]);

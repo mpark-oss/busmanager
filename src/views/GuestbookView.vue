@@ -7,14 +7,8 @@
       </div>
       <v-row dense>
         <v-col v-for="link in quickLinks" :key="link.title" cols="6" sm="4" md="2.4">
-          <v-btn
-            block
-            variant="tonal"
-            :color="link.color"
-            class="rounded-lg font-weight-bold"
-            height="48"
-            @click="openLink(link.url)"
-          >
+          <v-btn block variant="tonal" :color="link.color" class="rounded-lg font-weight-bold" height="48"
+            @click="openLink(link.url)">
             <v-icon start size="small">{{ link.icon }}</v-icon>
             {{ link.title }}
           </v-btn>
@@ -41,28 +35,13 @@
           <v-form @submit.prevent="addMessage" class="mb-8">
             <v-row dense>
               <v-col cols="12" sm="3">
-                <v-text-field 
-                  v-model="newName" 
-                  label="닉네임" 
-                  variant="outlined" 
-                  density="compact" 
-                  hide-details
-                  readonly 
-                  :placeholder="!newName ? '캐릭터 미설정' : ''"
-                  class="mb-2 font-weight-bold"
-                ></v-text-field>
+                <v-text-field v-model="newName" label="닉네임" variant="outlined" density="compact" hide-details readonly
+                  :placeholder="!newName ? '캐릭터 미설정' : ''" class="mb-2 font-weight-bold"></v-text-field>
               </v-col>
               <v-col cols="12" sm="9">
-                <v-text-field 
-                  v-model="newMessage" 
-                  :label="!newName ? '상단 메뉴에서 대표 캐릭터를 먼저 설정해주세요!' : '자유롭게 한마디 남겨주세요!'" 
-                  variant="outlined" 
-                  density="compact"
-                  :disabled="!newName"
-                  append-inner-icon="mdi-send" 
-                  @click:append-inner="addMessage" 
-                  hide-details
-                ></v-text-field>
+                <v-text-field v-model="newMessage" :label="!newName ? '상단 메뉴에서 대표 캐릭터를 먼저 설정해주세요!' : '자유롭게 한마디 남겨주세요!'"
+                  variant="outlined" density="compact" :disabled="!newName" append-inner-icon="mdi-send"
+                  @click:append-inner="addMessage" hide-details></v-text-field>
               </v-col>
             </v-row>
           </v-form>
@@ -112,37 +91,26 @@
 
           <v-form @submit.prevent="submitReport" class="mb-8">
             <v-row dense>
-              <v-col cols="12" sm="6">
-                <v-text-field 
-                  v-model="reportForm.targetName" 
-                  label="신고 대상 캐릭터명" 
-                  variant="outlined" 
-                  density="compact" 
-                  append-inner-icon="mdi-magnify"
-                  @click:append-inner="searchTarget"
-                  placeholder="정확한 캐릭터명을 입력하세요"
-                ></v-text-field>
+              <v-col cols="12" sm="5">
+                <v-text-field v-model="reportForm.targetName" label="신고 대상 캐릭터명" variant="outlined" density="compact"
+                  append-inner-icon="mdi-magnify" @click:append-inner="searchTarget" placeholder="정확한 캐릭터명"
+                  hide-details></v-text-field>
               </v-col>
-              <v-col cols="12" sm="6">
-                <v-text-field 
-                  v-model="reportForm.incidentTime" 
-                  label="사건 발생 시간" 
-                  type="datetime-local"
-                  variant="outlined" 
-                  density="compact"
-                ></v-text-field>
+              <v-col cols="12" sm="4">
+                <v-text-field v-model="reportForm.incidentTime" label="사건 발생 시간" type="datetime-local"
+                  variant="outlined" density="compact" hide-details></v-text-field>
               </v-col>
-              <v-col cols="12">
-                <v-textarea 
-                  v-model="reportForm.reason" 
-                  label="신고 사유" 
-                  variant="outlined" 
-                  rows="3"
-                  placeholder="신고 사유를 상세히 적어주세요 (작성자는 익명으로 등록됩니다)"
-                ></v-textarea>
+              <v-col cols="12" sm="3">
+                <v-text-field v-model="reportForm.password" label="삭제 비번(4자리)" type="password" variant="outlined"
+                  density="compact" maxlength="4" placeholder="숫자 4자리" hide-details></v-text-field>
+              </v-col>
+              <v-col cols="12" class="mt-2">
+                <v-textarea v-model="reportForm.reason" label="신고 사유" variant="outlined" rows="3"
+                  placeholder="신고 사유를 상세히 적어주세요 (작성자는 익명으로 등록됩니다)" hide-details></v-textarea>
               </v-col>
               <v-col cols="12" class="text-right mt-2">
-                <v-btn color="error" variant="flat" rounded="lg" prepend-icon="mdi-bullhorn" @click="submitReport" :loading="isReporting">
+                <v-btn color="error" variant="flat" rounded="lg" prepend-icon="mdi-bullhorn" @click="submitReport"
+                  :loading="isReporting">
                   신고 등록
                 </v-btn>
               </v-col>
@@ -161,10 +129,14 @@
                 </div>
                 <div class="text-subtitle-2 mb-2"><b>발생 시각:</b> {{ report.incidentTime.replace('T', ' ') }}</div>
                 <div class="text-body-1 mb-2">{{ report.reason }}</div>
-                <div class="text-caption text-medium-emphasis">올바른 길드 생활을 위해 노력합시다.</div>
+                <div class="text-caption font-weight-bold"
+                  :class="theme.global.current.value.dark ? 'text-red-lighten-3' : 'text-red-darken-2'">
+                  올바른 길드 생활을 위해 반성하세요.
+                </div>
+
                 <template v-slot:append>
-                  <v-btn icon="mdi-delete-outline" size="small" variant="text" color="error"
-                    @click="deleteReport(report.id)"></v-btn>
+                  <v-btn icon="mdi-delete-outline" size="small" variant="elevated" color="bg-red-darken-4"
+                    style="opacity: 1 !important;" @click="deleteReport(report)"></v-btn>
                 </template>
               </v-list-item>
             </v-fade-transition>
@@ -192,11 +164,11 @@ const messages = ref([]);
 const newName = ref('');
 const newMessage = ref('');
 
-// [추가] 탭 및 신고 관련 상태
+// [수정] reportForm에 password 추가
 const activeTab = ref('guestbook');
 const reports = ref([]);
 const isReporting = ref(false);
-const reportForm = ref({ targetName: '', incidentTime: '', reason: '' });
+const reportForm = ref({ targetName: '', incidentTime: '', reason: '', password: '' });
 
 // [기존] 바로가기 링크 데이터
 const quickLinks = [
@@ -229,17 +201,20 @@ const searchTarget = async () => {
   }
 };
 
-// [추가] 신고 등록 기능
+// [수정] 신고 등록 기능 (비밀번호 저장 포함)
 const submitReport = async () => {
-  if (!reportForm.value.targetName || !reportForm.value.reason) return alert('대상 캐릭터와 사유를 입력해주세요!');
-  
+  if (!reportForm.value.targetName || !reportForm.value.reason || !reportForm.value.password) {
+    return alert('대상, 사유, 그리고 삭제 비밀번호를 모두 입력해주세요!');
+  }
+
   isReporting.value = true;
   try {
-    // 1. 신고 기록 저장
+    // 1. 신고 기록 저장 (비밀번호 포함)
     await addDoc(collection(db, "reports"), {
       targetName: reportForm.value.targetName,
       incidentTime: reportForm.value.incidentTime,
       reason: reportForm.value.reason,
+      password: reportForm.value.password,
       createdAt: serverTimestamp()
     });
 
@@ -251,7 +226,7 @@ const submitReport = async () => {
     }, { merge: true });
 
     alert('신고가 등록되었습니다. 해당 유저는 빌런 포인트가 누적됩니다.');
-    reportForm.value = { targetName: '', incidentTime: '', reason: '' };
+    reportForm.value = { targetName: '', incidentTime: '', reason: '', password: '' };
   } catch (e) {
     console.error(e);
   } finally {
@@ -259,10 +234,45 @@ const submitReport = async () => {
   }
 };
 
-// [추가] 신고 삭제
-const deleteReport = async (id) => {
-  if (confirm('이 신고 기록을 삭제하시겠습니까?')) {
-    await deleteDoc(doc(db, "reports", id));
+// [수정] 신고 삭제 및 빌런 데이터 관리 (0점 시 완전 삭제)
+const deleteReport = async (report) => {
+  const inputPw = prompt('이 신고를 삭제하려면 비밀번호 4자리를 입력하세요.');
+  
+  if (inputPw === null) return;
+
+  if (inputPw === report.password) {
+    if (confirm('정말로 이 신고 기록을 삭제하시겠습니까?\n삭제 시 해당 유저의 빌런 포인트도 1점 차감됩니다.')) {
+      try {
+        // 1. 신고 내역 삭제
+        await deleteDoc(doc(db, "reports", report.id));
+
+        // 2. 빌런 포인트 업데이트 로직
+        const villainRef = doc(db, "villains", report.targetName);
+        
+        // 현재 점수를 먼저 확인하기 위해 값을 계산 (안전하게 처리)
+        // 만약 실시간 동기화가 되고 있다면 reportCount를 체크합니다.
+        const currentCount = (report.reportCount || 1) - 1; 
+
+        if (currentCount <= 0) {
+          // [추가] 점수가 0점 이하가 되면 빌런 목록에서 아예 삭제
+          await deleteDoc(villainRef);
+          console.log(`${report.targetName} 유저는 더 이상 빌런이 아닙니다. 삭제 완료.`);
+        } else {
+          // 점수가 남아있다면 차감만 진행
+          await setDoc(villainRef, {
+            reportCount: increment(-1),
+            lastUpdated: serverTimestamp()
+          }, { merge: true });
+        }
+
+        alert('신고가 삭제되었습니다.');
+      } catch (e) {
+        console.error("삭제 중 오류:", e);
+        alert('삭제 중 오류가 발생했습니다. 권한을 확인해주세요.');
+      }
+    }
+  } else {
+    alert('비밀번호가 일치하지 않습니다!');
   }
 };
 
@@ -280,7 +290,6 @@ onMounted(() => {
   loadCurrentMainName();
   window.addEventListener('main-char-changed', handleMainCharChange);
 
-  // 기존 낙서장 구독
   const q = query(collection(db, "guestbook"), orderBy("createdAt", "desc"));
   onSnapshot(q, (snapshot) => {
     messages.value = snapshot.docs.map(doc => ({
@@ -289,7 +298,6 @@ onMounted(() => {
     }));
   });
 
-  // [추가] 신고 게시판 구독
   const reportQ = query(collection(db, "reports"), orderBy("createdAt", "desc"));
   onSnapshot(reportQ, (snapshot) => {
     reports.value = snapshot.docs.map(doc => ({
@@ -343,7 +351,6 @@ const formatDate = (timestamp) => {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* [추가] 신고 아이템 스타일 */
 .incident-item {
   border-left: 4px solid #F44336 !important;
 }

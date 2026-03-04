@@ -233,41 +233,39 @@ const submitReport = async () => {
   }
 };
 
-// [수정] 신고 삭제 및 빌런 데이터 관리 (0점 시 완전 삭제)
+// [수정] 마스터 비밀번호 기능이 포함된 삭제 로직
 const deleteReport = async (report) => {
-  const inputPw = prompt('이 신고를 삭제하려면 비밀번호 4자리를 입력하세요.');
+  const inputPw = prompt('이 신고를 삭제하려면 비밀번호를 입력하세요.');
   
-  if (inputPw === null) return;
+  if (inputPw === null) return; // 취소 클릭
 
-  if (inputPw === report.password) {
-    if (confirm('정말로 이 신고 기록을 삭제하시겠습니까?')) {
+  // 마스터 비밀번호 설정 (예: 9999)
+  const MASTER_PW = "0210"; 
+
+  // 입력한 비번이 작성자 비번과 일치하거나, 마스터 비번과 일치할 경우 삭제 허용
+  if (inputPw === report.password || inputPw === MASTER_PW) {
+    if (confirm('정말로 삭제하시겠습니까?')) {
       try {
         // 1. 신고 내역 삭제
         await deleteDoc(doc(db, "reports", report.id));
 
-        // 2. 빌런 포인트 업데이트 로직
+        // 2. 빌런 포인트 업데이트 (0점 체크 포함)
         const villainRef = doc(db, "villains", report.targetName);
-        
-        // 현재 점수를 먼저 확인하기 위해 값을 계산 (안전하게 처리)
-        // 만약 실시간 동기화가 되고 있다면 reportCount를 체크합니다.
         const currentCount = (report.reportCount || 1) - 1; 
 
         if (currentCount <= 0) {
-          // [추가] 점수가 0점 이하가 되면 빌런 목록에서 아예 삭제
           await deleteDoc(villainRef);
-          console.log(`${report.targetName} 유저는 더 이상 빌런이 아닙니다. 삭제 완료.`);
         } else {
-          // 점수가 남아있다면 차감만 진행
           await setDoc(villainRef, {
             reportCount: increment(-1),
             lastUpdated: serverTimestamp()
           }, { merge: true });
         }
 
-        alert('신고가 삭제되었습니다.');
+        alert('삭제 완료');
       } catch (e) {
         console.error("삭제 중 오류:", e);
-        alert('삭제 중 오류가 발생했습니다. 권한을 확인해주세요.');
+        alert('삭제 중 오류가 발생했습니다.');
       }
     }
   } else {

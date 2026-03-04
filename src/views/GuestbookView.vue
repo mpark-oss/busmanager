@@ -27,7 +27,7 @@
         <v-icon start>mdi-message-draw</v-icon>흐흣 낙서장
       </v-tab>
       <v-tab value="incident" class="font-weight-black text-error">
-        <v-icon start>mdi-alert-octagon</v-icon>사건/사고 게시판
+        <v-icon start>mdi-alert-octagon</v-icon>흐흣 사건/사고
       </v-tab>
     </v-tabs>
 
@@ -107,7 +107,7 @@
       <v-window-item value="incident">
         <v-card variant="flat" border class="rounded-xl pa-6">
           <h2 class="text-h4 font-weight-black text-error mb-6">
-            <v-icon size="large" class="me-2">mdi-alert-octagon</v-icon> 사건/사고 게시판
+            <v-icon size="large" class="me-2">mdi-alert-octagon</v-icon> 흐흣 사건/사고
           </h2>
 
           <v-form @submit.prevent="submitReport" class="mb-8">
@@ -161,7 +161,7 @@
                 </div>
                 <div class="text-subtitle-2 mb-2"><b>발생 시각:</b> {{ report.incidentTime.replace('T', ' ') }}</div>
                 <div class="text-body-1 mb-2">{{ report.reason }}</div>
-                <div class="text-caption text-medium-emphasis">신고 상태: 조사 중</div>
+                <div class="text-caption text-medium-emphasis">올바른 길드 생활을 위해 노력합시다.</div>
                 <template v-slot:append>
                   <v-btn icon="mdi-delete-outline" size="small" variant="text" color="error"
                     @click="deleteReport(report.id)"></v-btn>

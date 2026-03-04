@@ -12,7 +12,7 @@
       <div class="d-flex align-center">
         <v-menu v-if="mainCharSlots.length > 0" offset-y transition="scale-transition">
           <template v-slot:activator="{ props }">
-            <v-btn v-bind="props" variant="flat" color="orange-darken-3" class="rounded-pill px-4" size="small">
+            <v-btn v-bind="props" variant="flat" color="blue-darken-2" class="rounded-pill px-4" size="small">
               <v-avatar size="24" class="me-2" v-if="getCurrentSlot">
                 <v-img :src="getCurrentSlot.img" cover></v-img>
               </v-avatar>

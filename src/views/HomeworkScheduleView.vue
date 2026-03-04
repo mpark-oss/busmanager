@@ -8,8 +8,20 @@
                     </v-avatar>
                     <div>
                         <h2 class="text-h4 font-weight-black text-primary">개인 숙제 관리</h2>
-                        <div class="text-caption text-medium-emphasis font-weight-bold">
-                            상위 3개 레이드 골드가 자동으로 합산됩니다. (현재 {{ getTotalGold().toLocaleString() }}G 획득)
+                        <div
+                            class="text-caption text-medium-emphasis font-weight-bold d-flex align-center flex-wrap gap-2">
+                            <span>주간 수익 현황:</span>
+                            <span class="text-primary">{{ getTotalGrossGold().toLocaleString() }}G</span>
+                            <span class="text-grey">/</span>
+                            <span class="text-grey-darken-1">{{ getMaxPossibleGold().toLocaleString() }}G</span>
+
+                            <v-chip size="x-small"
+                                :color="getMaxPossibleGold() - getTotalGrossGold() > 0 ? 'error' : 'success'"
+                                variant="flat" class="font-weight-black">
+                                {{ getMaxPossibleGold() - getTotalGrossGold() > 0 ? '남은 수익: ' + (getMaxPossibleGold() -
+                                    getTotalGrossGold()).toLocaleString() + 'G' : '주간 숙제 완료' }}
+                            </v-chip>
+                            <span class="text-grey-lighten-1" style="font-size: 0.7rem;">(더보기 지출 제외 순수 보상 기준)</span>
                         </div>
                     </div>
                     <v-spacer></v-spacer>
@@ -24,176 +36,202 @@
 
                 <v-row v-else>
                     <v-col v-for="char in characters" :key="char.name" cols="12" sm="6" md="4" lg="4" xl="3">
-                        <v-card border variant="flat" class="rounded-xl overflow-hidden shadow-sm bg-card"
-                            :style="char.isGoldCharacter ? 'border: 2px solid #FFB300 !important' : ''">
-                            <v-list-item class="pa-3 bg-profile-header"
-                                :subtitle="`Lv. ${char.level} ${char.className}`">
-                                <template v-slot:prepend>
-                                    <v-avatar size="60" border class="elevation-3 bg-grey-lighten-4">
-                                        <v-img :src="char.img" cover position="top center"></v-img>
-                                    </v-avatar>
-                                </template>
-                                <template v-slot:title>
-                                    <div class="d-flex align-center">
-                                        <v-btn icon variant="text" size="x-small"
-                                            :color="char.isGoldCharacter ? 'amber-darken-3' : 'grey-lighten-1'"
-                                            @click.stop="toggleGoldCharacter(char)" class="me-1">
-                                            <v-icon size="18">{{ char.isGoldCharacter ? 'mdi-database-check' :
-                                                'mdi-database-outline' }}</v-icon>
-                                        </v-btn>
-                                        <span class="text-subtitle-1 font-weight-black">{{ char.name }}</span>
-                                        <v-chip v-if="getCharSchedules(char.name).length > 0" size="x-small"
-                                            color="error" variant="flat" class="ms-2 font-weight-black pulse-badge"
-                                            style="cursor: pointer;" @click.stop="openScheduleModal(char.name)">
-                                            일정 {{ getCharSchedules(char.name).length }}
-                                        </v-chip>
-                                    </div>
-                                </template>
-                                <template v-slot:append>
-                                    <div class="text-right mr-1">
-                                        <div class="text-caption font-weight-bold"
-                                            :class="char.isGoldCharacter ? 'text-amber-darken-4' : 'text-grey-lighten-1'">
-                                            {{ (char.isGoldCharacter ? getCharGold(char) : 0).toLocaleString() }} G
+                        <v-hover v-slot="{ isHovering, props }">
+                            <v-card v-bind="props" border variant="flat"
+                                class="character-card rounded-xl overflow-hidden shadow-sm bg-card position-relative"
+                                :style="char.isGoldCharacter ? 'border: 2px solid #FFB300 !important' : ''">
+
+                                <v-list-item class="pa-3 bg-profile-header"
+                                    :subtitle="`Lv. ${char.level} ${char.className}`">
+                                    <template v-slot:prepend>
+                                        <v-avatar size="60" border class="elevation-3 bg-grey-lighten-4">
+                                            <v-img :src="char.img" cover position="top center"></v-img>
+                                        </v-avatar>
+                                    </template>
+                                    <template v-slot:title>
+                                        <div class="d-flex align-center">
+                                            <v-btn icon variant="text" size="x-small"
+                                                :color="char.isGoldCharacter ? 'amber-darken-3' : 'grey-lighten-1'"
+                                                @click.stop="toggleGoldCharacter(char)" class="me-1">
+                                                <v-icon size="18">{{ char.isGoldCharacter ? 'mdi-database-check' :
+                                                    'mdi-database-outline' }}</v-icon>
+                                            </v-btn>
+                                            <span class="text-subtitle-1 font-weight-black text-truncate"
+                                                style="max-width: 130px;">{{ char.name }}</span>
                                         </div>
-                                    </div>
-                                    <v-btn icon="mdi-cog-outline" variant="text" color="grey-darken-1" size="small"
-                                        @click="openCharSettings(char)"></v-btn>
-                                    <v-btn icon="mdi-delete-outline" variant="text" color="error" size="small"
-                                        @click="deleteCharacter(char.name)"></v-btn>
-                                </template>
-                            </v-list-item>
-
-                            <v-divider></v-divider>
-
-                            <v-card-text class="pa-3">
-                                <div v-if="hasVisibleDaily(char)">
-                                    <div class="d-flex align-center mb-2">
-                                        <v-chip size="x-small" color="orange" variant="flat"
-                                            class="me-2 font-weight-bold">DAILY</v-chip>
-                                        <span class="text-caption font-weight-black text-medium-emphasis">일일 숙제</span>
-                                    </div>
-                                    <div class="d-flex flex-column gap-3 mb-3">
-                                        <template v-for="task in dailyTasks" :key="task.id">
-                                            <div v-if="isTaskVisible(char, task.id)" class="task-container">
-                                                <div class="d-flex align-center justify-space-between mb-1">
-                                                    <v-checkbox v-model="char.completedTasks" :value="task.id"
-                                                        :label="task.name" hide-details density="compact" color="orange"
-                                                        @change="saveToLocal"
-                                                        class="custom-chk flex-grow-1"></v-checkbox>
-                                                    <div class="rest-input-wrapper">
-                                                        <span
-                                                            class="text-caption font-weight-bold grey--text mr-1">휴게</span>
-                                                        <input type="number" v-model.number="char.restGauges[task.id]"
-                                                            class="rest-input text-caption font-weight-black"
-                                                            @change="validateAndSaveRest(char)" min="0" max="200"
-                                                            step="10" />
-                                                    </div>
+                                    </template>
+                                    <template v-slot:append>
+                                        <div class="d-flex align-center">
+                                            <div class="text-right mr-1">
+                                                <div class="text-caption font-weight-bold"
+                                                    :class="char.isGoldCharacter ? 'text-amber-darken-4' : 'text-grey-lighten-1'">
+                                                    {{ (char.isGoldCharacter ? getCharGold(char) : 0).toLocaleString()
+                                                    }} G
                                                 </div>
-                                                <div class="rest-gauge-bar">
-                                                    <div v-for="n in 10" :key="n" class="gauge-segment"
-                                                        :class="getSegmentClass(char, task.id, n)">
-                                                        <div class="gauge-fill" :style="getFillStyle(char, task.id, n)">
+                                            </div>
+
+                                            <v-btn v-if="getCharSchedules(char.name).length > 0" icon variant="text"
+                                                size="small" color="error" class="position-relative pulse-badge"
+                                                @click.stop="openScheduleModal(char.name)">
+                                                <v-icon>mdi-bell-outline</v-icon>
+                                                <span class="bell-badge-count">{{ getCharSchedules(char.name).length
+                                                    }}</span>
+                                            </v-btn>
+
+                                            <v-btn icon="mdi-cog-outline" variant="text" color="grey-darken-1"
+                                                size="small" @click="openCharSettings(char)"></v-btn>
+
+                                            <v-fade-transition>
+                                                <v-btn v-if="isHovering" icon="mdi-delete-outline" variant="text"
+                                                    color="error" size="small"
+                                                    @click.stop="deleteCharacter(char.name)"></v-btn>
+                                            </v-fade-transition>
+                                        </div>
+                                    </template>
+                                </v-list-item>
+
+                                <v-divider></v-divider>
+
+                                <v-card-text class="pa-3">
+                                    <div v-if="hasVisibleDaily(char)">
+                                        <div class="d-flex align-center mb-2">
+                                            <v-chip size="x-small" color="orange" variant="flat"
+                                                class="me-2 font-weight-bold">DAILY</v-chip>
+                                            <span class="text-caption font-weight-black text-medium-emphasis">일일
+                                                숙제</span>
+                                        </div>
+                                        <div class="d-flex flex-column gap-3 mb-3">
+                                            <template v-for="task in dailyTasks" :key="task.id">
+                                                <div v-if="isTaskVisible(char, task.id)" class="task-container">
+                                                    <div class="d-flex align-center justify-space-between mb-1">
+                                                        <v-checkbox v-model="char.completedTasks" :value="task.id"
+                                                            :label="task.name" hide-details density="compact"
+                                                            color="orange" @change="saveToLocal"
+                                                            class="custom-chk flex-grow-1"></v-checkbox>
+                                                        <div class="rest-input-wrapper">
+                                                            <span
+                                                                class="text-caption font-weight-bold grey--text mr-1">휴게</span>
+                                                            <input type="number"
+                                                                v-model.number="char.restGauges[task.id]"
+                                                                class="rest-input text-caption font-weight-black"
+                                                                @change="validateAndSaveRest(char)" min="0" max="200"
+                                                                step="20" />
+                                                        </div>
+                                                    </div>
+                                                    <div class="rest-gauge-bar">
+                                                        <div v-for="n in 10" :key="n" class="gauge-segment"
+                                                            :class="getSegmentClass(char, task.id, n)">
+                                                            <div class="gauge-fill"
+                                                                :style="getFillStyle(char, task.id, n)">
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        </template>
-                                    </div>
-                                    <v-divider class="my-3 border-opacity-25"></v-divider>
-                                </div>
-
-                                <div v-if="hasVisibleSpecial(char)">
-                                    <div class="d-flex align-center mb-2">
-                                        <v-chip size="x-small" color="cyan-darken-1" variant="flat"
-                                            class="me-2 font-weight-bold text-white">SPECIAL</v-chip>
-                                        <span class="text-caption font-weight-black text-medium-emphasis">주간 숙제</span>
-                                    </div>
-                                    <div class="d-flex flex-row flex-wrap mb-3" style="gap: 4px;">
-                                        <template v-for="task in specialTasks" :key="task.id">
-                                            <v-checkbox v-if="isTaskVisible(char, task.id)"
-                                                v-model="char.completedTasks" :value="task.id" :label="task.label"
-                                                hide-details density="compact" color="cyan-darken-2"
-                                                @change="saveToLocal" class="custom-chk-horizontal"></v-checkbox>
-                                        </template>
-                                    </div>
-                                    <v-divider class="my-3 border-opacity-25"></v-divider>
-                                </div>
-
-                                <template v-if="char.settings?.showWeekly">
-                                    <div class="d-flex align-center mb-2">
-                                        <v-chip size="x-small" color="primary" variant="flat"
-                                            class="me-2 font-weight-bold">WEEKLY</v-chip>
-                                        <span class="text-caption font-weight-black text-medium-emphasis">주간 레이드</span>
-                                        <v-chip size="x-small"
-                                            :color="getGoldRaidCount(char) >= 3 ? 'success' : 'grey-darken-1'"
-                                            variant="tonal" class="ms-2 font-weight-black">
-                                            {{ getGoldRaidCount(char) }} / 3
-                                        </v-chip>
+                                            </template>
+                                        </div>
+                                        <v-divider class="my-3 border-opacity-25"></v-divider>
                                     </div>
 
-                                    <div class="d-flex flex-column gap-2">
-                                        <div v-for="groupName in (char.settings?.visibleGroups || [])" :key="groupName"
-                                            class="raid-group-container border rounded-lg pa-1">
-                                            <div class="d-flex align-center px-2 mb-1">
-                                                <span class="text-caption font-weight-black text-primary flex-grow-1"
-                                                    :style="isGoldExcluded(char, groupName) ? 'text-decoration: line-through; opacity: 0.5' : ''">
-                                                    {{ groupName }}
-                                                </span>
-                                            </div>
-                                            <div class="d-flex flex-column px-1">
-                                                <template v-for="raid in getRaidsByGroup(groupName)" :key="raid.name">
-                                                    <template v-for="gate in (raid.gates || [])" :key="gate.g">
-                                                        <div v-if="gate && (char.settings?.selectedGateIds || []).includes(raid.name + '_G' + gate.g)"
-                                                            class="d-flex align-center mb-n1">
-                                                            <v-checkbox v-model="char.completedTasks"
-                                                                :value="raid.name + '_G' + gate.g"
-                                                                :disabled="isGateDisabled(char, raid, gate)"
-                                                                @change="toggleGate(char, raid, gate)" hide-details
-                                                                density="compact" color="primary"
-                                                                class="gate-chk flex-grow-1">
-                                                                <template v-slot:label>
-                                                                    <div class="d-flex align-center">
-                                                                        <v-chip size="x-small"
-                                                                            :color="getDifficulty(raid.name).color"
-                                                                            label
-                                                                            class="me-1 text-white font-weight-black px-1"
-                                                                            style="min-width: 24px; justify-content: center; height: 16px;">
-                                                                            {{ getDifficulty(raid.name).text[0] }}
-                                                                        </v-chip>
-                                                                        <span class="text-overline font-weight-black">
-                                                                            {{ gate.g }} 관문
-                                                                            <span class="ms-1"
-                                                                                style="font-size: 0.6rem; opacity: 0.7">({{
-                                                                                (gate.gold / 1000).toFixed(1) }}k{{
-                                                                                raid.name.includes('싱글') ? ' 귀속' : ''
-                                                                                }})</span>
-                                                                        </span>
-                                                                    </div>
-                                                                </template>
-                                                            </v-checkbox>
+                                    <div v-if="hasVisibleSpecial(char)">
+                                        <div class="d-flex align-center mb-2">
+                                            <v-chip size="x-small" color="cyan-darken-1" variant="flat"
+                                                class="me-2 font-weight-bold text-white">SPECIAL</v-chip>
+                                            <span class="text-caption font-weight-black text-medium-emphasis">주간
+                                                숙제</span>
+                                        </div>
+                                        <div class="d-flex flex-row flex-wrap mb-3" style="gap: 4px;">
+                                            <template v-for="task in specialTasks" :key="task.id">
+                                                <v-checkbox v-if="isTaskVisible(char, task.id)"
+                                                    v-model="char.completedTasks" :value="task.id" :label="task.label"
+                                                    hide-details density="compact" color="cyan-darken-2"
+                                                    @change="saveToLocal" class="custom-chk-horizontal"></v-checkbox>
+                                            </template>
+                                        </div>
+                                        <v-divider class="my-3 border-opacity-25"></v-divider>
+                                    </div>
 
-                                                            <v-btn icon variant="text" size="x-small"
-                                                                :color="(char.moreTasks || []).includes(raid.name + '_G' + gate.g + '_More') ? 'indigo-accent-2' : 'grey-lighten-1'"
-                                                                @click.stop="toggleMoreReward(char, raid.name, gate.g)"
-                                                                class="ms-1">
-                                                                <v-icon size="18">{{ (char.moreTasks ||
-                                                                    []).includes(raid.name + '_G' + gate.g + '_More') ?
-                                                                    'mdi-plus-box' :
-                                                                    'mdi-plus-box-outline' }}</v-icon>
-                                                                <v-tooltip activator="parent" location="top"
-                                                                    open-delay="300">
-                                                                    더보기 비용: {{ gate.moreGold?.toLocaleString() }}G
-                                                                </v-tooltip>
-                                                            </v-btn>
-                                                        </div>
+                                    <template v-if="char.settings?.showWeekly">
+                                        <div class="d-flex align-center mb-2">
+                                            <v-chip size="x-small" color="primary" variant="flat"
+                                                class="me-2 font-weight-bold">WEEKLY</v-chip>
+                                            <span class="text-caption font-weight-black text-medium-emphasis">주간
+                                                레이드</span>
+                                            <v-chip size="x-small"
+                                                :color="getGoldRaidCount(char) >= 3 ? 'success' : 'grey-darken-1'"
+                                                variant="tonal" class="ms-2 font-weight-black">
+                                                {{ getGoldRaidCount(char) }} / 3
+                                            </v-chip>
+                                        </div>
+
+                                        <div class="d-flex flex-column gap-2">
+                                            <div v-for="groupName in (char.settings?.visibleGroups || [])"
+                                                :key="groupName" class="raid-group-container border rounded-lg pa-1">
+                                                <div class="d-flex align-center px-2 mb-1">
+                                                    <span
+                                                        class="text-caption font-weight-black text-primary flex-grow-1"
+                                                        :style="isGoldExcluded(char, groupName) ? 'text-decoration: line-through; opacity: 0.5' : ''">
+                                                        {{ groupName }}
+                                                    </span>
+                                                </div>
+                                                <div class="d-flex flex-column px-1">
+                                                    <template v-for="raid in getRaidsByGroup(groupName)"
+                                                        :key="raid.name">
+                                                        <template v-for="gate in (raid.gates || [])" :key="gate.g">
+                                                            <div v-if="gate && (char.settings?.selectedGateIds || []).includes(raid.name + '_G' + gate.g)"
+                                                                class="d-flex align-center mb-n1">
+                                                                <v-checkbox v-model="char.completedTasks"
+                                                                    :value="raid.name + '_G' + gate.g"
+                                                                    :disabled="isGateDisabled(char, raid, gate)"
+                                                                    @change="toggleGate(char, raid, gate)" hide-details
+                                                                    density="compact" color="primary"
+                                                                    class="gate-chk flex-grow-1">
+                                                                    <template v-slot:label>
+                                                                        <div class="d-flex align-center">
+                                                                            <v-chip size="x-small"
+                                                                                :color="getDifficulty(raid.name).color"
+                                                                                label
+                                                                                class="me-1 text-white font-weight-black px-1"
+                                                                                style="min-width: 24px; justify-content: center; height: 16px;">
+                                                                                {{ getDifficulty(raid.name).text[0] }}
+                                                                            </v-chip>
+                                                                            <span
+                                                                                class="text-overline font-weight-black">
+                                                                                {{ gate.g }} 관문
+                                                                                <span class="ms-1"
+                                                                                    style="font-size: 0.6rem; opacity: 0.7">({{
+                                                                                        (gate.gold / 1000).toFixed(1) }}k{{
+                                                                                        raid.name.includes('싱글') ? ' 귀속' :
+                                                                                            ''
+                                                                                    }})</span>
+                                                                            </span>
+                                                                        </div>
+                                                                    </template>
+                                                                </v-checkbox>
+
+                                                                <v-btn icon variant="text" size="x-small"
+                                                                    :color="(char.moreTasks || []).includes(raid.name + '_G' + gate.g + '_More') ? 'indigo-accent-2' : 'grey-lighten-1'"
+                                                                    @click.stop="toggleMoreReward(char, raid.name, gate.g)"
+                                                                    class="ms-1">
+                                                                    <v-icon size="18">{{ (char.moreTasks ||
+                                                                        []).includes(raid.name + '_G' + gate.g +
+                                                                            '_More') ?
+                                                                        'mdi-plus-box' :
+                                                                        'mdi-plus-box-outline' }}</v-icon>
+                                                                    <v-tooltip activator="parent" location="top"
+                                                                        open-delay="300">
+                                                                        더보기 비용: {{ gate.moreGold?.toLocaleString() }}G
+                                                                    </v-tooltip>
+                                                                </v-btn>
+                                                            </div>
+                                                        </template>
                                                     </template>
-                                                </template>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </template>
-                            </v-card-text>
-                        </v-card>
+                                    </template>
+                                </v-card-text>
+                            </v-card>
+                        </v-hover>
                     </v-col>
                 </v-row>
             </v-col>
@@ -305,23 +343,32 @@
                 <v-card-text class="pa-4">
                     <v-list v-if="activeSchedules.length > 0">
                         <v-list-item v-for="item in activeSchedules" :key="item.id" border class="rounded-lg mb-3 pa-3">
-                            <div class="d-flex justify-space-between align-center mb-2">
-                                <v-chip :color="item.isHomework ? 'success' : 'error'" size="x-small" label
-                                    class="font-weight-black text-white">{{ item.isHomework ? '숙제' : '버스' }}</v-chip>
-                                <span class="text-caption font-weight-bold text-primary">{{
-                                    formatScheduleTime(item.dateTime)
-                                    }}</span>
+                            <div class="d-flex align-center justify-space-between mb-2 flex-wrap" style="gap: 8px;">
+
+                                <div class="d-flex align-center" style="gap: 6px;">
+                                    <v-chip :color="item.isHomework ? 'success' : 'error'" size="x-small" label
+                                        class="font-weight-black text-white px-2">
+                                        {{ item.isHomework ? '숙제' : '버스' }}
+                                    </v-chip>
+
+                                    <v-chip size="x-small" :color="getDifficulty(item.difficulty).color" label
+                                        class="text-white font-weight-black px-2">
+                                        {{ getDifficulty(item.difficulty).text }}
+                                    </v-chip>
+
+                                    <span class="text-subtitle-1 font-weight-black">{{ item.raid }}</span>
+                                </div>
+
+                                <span class="text-caption font-weight-bold text-primary">
+                                    {{ formatScheduleTime(item.dateTime) }}
+                                </span>
                             </div>
-                            <div class="d-flex align-center mb-2">
-                                <v-chip size="x-small" :color="getDifficulty(item.difficulty).color" label
-                                    class="me-2 text-white font-weight-black">{{ getDifficulty(item.difficulty).text
-                                    }}</v-chip>
-                                <span class="text-subtitle-1 font-weight-black">{{ item.raid }}</span>
-                            </div>
-                            <div class="text-caption text-medium-emphasis d-flex align-center">
+
+                            <div class="text-caption text-medium-emphasis d-flex align-center mt-1">
                                 <v-icon size="16" class="me-1">mdi-account-group-outline</v-icon>
-                                <span class="font-weight-bold">멤버: {{(item.members || []).map(p => p.name).join(', ')
-                                    }}</span>
+                                <span class="font-weight-bold">
+                                    멤버: {{(item.members || []).map(p => p.name).join(', ')}}
+                                </span>
                             </div>
                         </v-list-item>
                     </v-list>
@@ -375,8 +422,7 @@ const raidList = [
     { group: "2막", name: "2막: 아브렐슈드(싱글)", level: 1670, gold: 16500, gates: [{ g: 1, gold: 5500, moreGold: 1820 }, { g: 2, gold: 11000, moreGold: 3720 }] },
     { group: "1막", name: "1막: 에기르(하드)", level: 1680, gold: 18000, gates: [{ g: 1, gold: 5500, moreGold: 1820 }, { g: 2, gold: 12500, moreGold: 4150 }] },
     { group: "1막", name: "1막: 에기르(노말)", level: 1660, gold: 11500, gates: [{ g: 1, gold: 3500, moreGold: 750 }, { g: 2, gold: 8000, moreGold: 1780 }] },
-    { group: "1막", name: "1막: 에기르(싱글)", level: 1660, gold: 11500, gates: [{ g: 1, gold: 3500, moreGold: 750 }, { g: 2, gold: 8000, moreGold: 1780 }] },
-    { group: "서막", name: "서막: 바르칸(싱글)", level: 1620, gold: 6100, gates: [{ g: 1, gold: 2000, moreGold: 0 }, { g: 2, gold: 4100, moreGold: 0 }] }
+    { group: "1막", name: "1막: 에기르(싱글)", level: 1660, gold: 11500, gates: [{ g: 1, gold: 3500, moreGold: 750 }, { g: 2, gold: 8000, moreGold: 1780 }] }
 ];
 
 const raidGroups = computed(() => [...new Set(raidList.map(r => r.group))]);
@@ -428,9 +474,47 @@ const toggleMoreReward = (char, raidName, gateG) => {
     saveToLocal();
 };
 
-// [수정] 골드 계산 로직: (상위 3개 수익) - (모든 더보기 지출)
+// [수정] 주간 최대 가능 골드 계산 (레벨 기준 상위 3개 자동 합산)
+const getMaxPossibleGold = () => {
+    let totalMax = 0;
+
+    characters.value.filter(c => c.isGoldCharacter).forEach(char => {
+        // 캐릭터 레벨 숫자 변환 (1,680.00 -> 1680)
+        const charLevel = parseFloat(char.level.replace(/,/g, '')) || 0;
+
+        // 1. 해당 캐릭터 레벨에서 입장 가능한 모든 레이드 그룹의 최대 골드 추출
+        const availableGroupGolds = [];
+
+        // 레이드 그룹별로 순회
+        raidGroups.value.forEach(groupName => {
+            const raidsInGroup = getRaidsByGroup(groupName);
+
+            // 해당 그룹 내에서 캐릭터 레벨로 입장 가능한 레이드들 중 가장 높은 골드 찾기
+            const maxGoldInGroup = raidsInGroup
+                .filter(r => r.level <= charLevel) // 레벨 제한 필터
+                .reduce((max, r) => {
+                    const raidTotal = r.gates.reduce((sum, g) => sum + g.gold, 0);
+                    return raidTotal > max ? raidTotal : max;
+                }, 0);
+
+            if (maxGoldInGroup > 0) {
+                availableGroupGolds.push(maxGoldInGroup);
+            }
+        });
+
+        // 2. 입장 가능한 그룹 골드 중 상위 3개를 합산
+        const charMaxGold = availableGroupGolds
+            .sort((a, b) => b - a)
+            .slice(0, 3)
+            .reduce((sum, g) => sum + g, 0);
+
+        totalMax += charMaxGold;
+    });
+
+    return totalMax;
+};
+
 const getCharGold = (char) => {
-    // 1. 수익 계산 (골드 캐릭터인 경우만 상위 3개 그룹 합산)
     let grossGold = 0;
     if (char.isGoldCharacter) {
         const visibleGroups = char.settings?.visibleGroups || [];
@@ -541,7 +625,18 @@ const saveCharSettings = () => {
 
 const getAccountKey = () => `hw_chars_${localStorage.getItem('current_main_name') || 'default'}`;
 const getBlacklistKey = () => `hw_blacklist_${localStorage.getItem('current_main_name') || 'default'}`;
-const saveToLocal = () => { localStorage.setItem(getAccountKey(), JSON.stringify(characters.value)); };
+
+// [수정] 3. 데이터 저장 로직 보강 (moreTasks가 확실히 저장되도록 처리)
+const saveToLocal = () => {
+    const dataToSave = characters.value.map(char => ({
+        ...char,
+        completedTasks: char.completedTasks || [],
+        moreTasks: char.moreTasks || [], // 더보기 데이터 명시적 포함
+        settings: char.settings || {}
+    }));
+    localStorage.setItem(getAccountKey(), JSON.stringify(dataToSave));
+};
+
 const getTotalGold = () => characters.value.filter(c => c.isGoldCharacter).reduce((sum, char) => sum + getCharGold(char), 0);
 
 const deleteCharacter = (name) => {
@@ -593,7 +688,9 @@ const fetchMyExpedition = async (charName) => {
                     const existing = savedData.find(c => c.name === char.CharacterName);
                     return {
                         name: char.CharacterName, className: char.CharacterClassName, level: char.ItemAvgLevel, img: existing?.img || '',
-                        completedTasks: existing?.completedTasks || [], restGauges: existing?.restGauges || { chaos: 0, guardian: 0 },
+                        completedTasks: existing?.completedTasks || [],
+                        moreTasks: existing?.moreTasks || [], // [버그수정] 불러올 때 더보기 리스트 할당
+                        restGauges: existing?.restGauges || { chaos: 0, guardian: 0 },
                         lastDailyUpdate: existing?.lastDailyUpdate || null,
                         settings: existing?.settings || { visibleGroups: [], selectedGateIds: [], groupOrder: raidGroups.value, hiddenTaskIds: [], showWeekly: true },
                         isGoldCharacter: existing?.isGoldCharacter !== undefined ? existing.isGoldCharacter : index < 6
@@ -650,9 +747,62 @@ onMounted(() => {
     fetchSchedules();
     window.addEventListener('main-char-changed', (e) => fetchMyExpedition(e.detail));
 });
+
+// [추가] 캐릭터별 더보기 차감 전 '순수 획득 골드' 계산 (상단 대시보드용)
+const getCharGrossGold = (char) => {
+    if (!char.isGoldCharacter) return 0;
+
+    const visibleGroups = char.settings?.visibleGroups || [];
+    let raidGoldList = [];
+
+    visibleGroups.forEach(groupName => {
+        let goldSum = 0;
+        getRaidsByGroup(groupName).forEach(raid => {
+            (raid.gates || []).forEach(gate => {
+                // 더보기 여부와 상관없이 '클리어 체크'된 골드만 합산
+                if ((char.completedTasks || []).includes(raid.name + '_G' + gate.g)) {
+                    goldSum += gate.gold;
+                }
+            });
+        });
+        if (goldSum > 0) raidGoldList.push({ gold: goldSum });
+    });
+
+    // 상위 3개 레이드 수익 합산
+    return raidGoldList.sort((a, b) => b.gold - a.gold).slice(0, 3).reduce((sum, r) => sum + r.gold, 0);
+};
+
+// [수정] 상단 대시보드용 전체 합산 함수
+const getTotalGrossGold = () => {
+    return characters.value
+        .filter(c => c.isGoldCharacter)
+        .reduce((sum, char) => sum + getCharGrossGold(char), 0);
+};
 </script>
 
 <style scoped>
+/* [추가] 1. 알림 벨 스타일 */
+.notify-bell-btn {
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+    width: 24px !important;
+    height: 24px !important;
+}
+
+.bell-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: #ff5252;
+    color: white;
+    font-size: 0.6rem;
+    padding: 0 4px;
+    border-radius: 10px;
+    font-weight: bold;
+    border: 1px solid white;
+}
+
 .task-container {
     background: rgba(var(--v-theme-surface-variant), 0.03);
     padding: 8px;
@@ -789,5 +939,32 @@ onMounted(() => {
 
 .border-t {
     border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.bell-badge-count {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    background-color: #ff5252;
+    color: white;
+    font-size: 0.65rem;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border: 1.5px solid white;
+    padding: 0 2px;
+    z-index: 1;
+}
+
+.character-card {
+    transition: transform 0.2s ease;
+}
+
+.character-card:hover {
+    transform: translateY(-2px);
 }
 </style>

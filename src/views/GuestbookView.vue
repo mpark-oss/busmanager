@@ -241,7 +241,7 @@ const deleteReport = async (report) => {
   if (inputPw === null) return;
 
   if (inputPw === report.password) {
-    if (confirm('정말로 이 신고 기록을 삭제하시겠습니까?\n삭제 시 해당 유저의 빌런 포인트도 1점 차감됩니다.')) {
+    if (confirm('정말로 이 신고 기록을 삭제하시겠습니까?')) {
       try {
         // 1. 신고 내역 삭제
         await deleteDoc(doc(db, "reports", report.id));

@@ -126,11 +126,11 @@ onMounted(() => {
         name: doc.id,
         count: doc.data().reportCount
       };
-      console.log("현재 원정대 공공의 적:", topVillain.value.name);
+      
     } else {
       // [중요] 빌런 데이터가 없거나 모두 삭제된 경우 전역 변수를 초기화
       topVillain.value = null;
-      console.log("현재 등록된 빌런이 없습니다.");
+     
     }
   });
 });

@@ -108,35 +108,37 @@ const isFetching = ref(false);
 const API_KEY = import.meta.env.VITE_LOSTARK_API_KEY || "";
 
 
-const topVillain = ref(null);
+const topVillains = ref([]); // 단일 객체에서 배열로 변경
 
 onMounted(() => {
-  // 1. villains 컬렉션에서 신고 횟수(reportCount)가 가장 높은 1명만 실시간 감시
+  // 상위 빌런들을 넉넉히 가져옴 (예: 최대 10명까지 동점자 체크 가능)
   const q = query(
-    collection(db, "villains"),
-    orderBy("reportCount", "desc"),
-    limit(1)
+    collection(db, "villains"), 
+    orderBy("reportCount", "desc"), 
+    limit(10) 
   );
 
-  // App.vue
   onSnapshot(q, (snapshot) => {
     if (!snapshot.empty) {
-      const doc = snapshot.docs[0];
-      topVillain.value = {
-        name: doc.id,
-        count: doc.data().reportCount
-      };
+      // 1. 최상위 점수 확인
+      const maxCount = snapshot.docs[0].data().reportCount;
       
+      // 2. 최상위 점수와 동일한 점수를 가진 모든 빌런을 배열에 담기
+      topVillains.value = snapshot.docs
+        .filter(doc => doc.data().reportCount === maxCount)
+        .map(doc => ({
+          name: doc.id,
+          count: doc.data().reportCount
+        }));
+        
+      console.log("현재 공동 1위 빌런들:", topVillains.value);
     } else {
-      // [중요] 빌런 데이터가 없거나 모두 삭제된 경우 전역 변수를 초기화
-      topVillain.value = null;
-     
+      topVillains.value = []; // 데이터가 없으면 빈 배열
     }
   });
 });
 
-// 모든 하위 컴포넌트에서 'topVillain'이라는 이름으로 이 데이터를 사용할 수 있게 주입
-provide('topVillain', topVillain);
+provide('topVillains', topVillains); // 이름을 topVillains로 변경하여 전달
 
 // 현재 선택된 슬롯의 전체 데이터 반환
 const getCurrentSlot = computed(() => {

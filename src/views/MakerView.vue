@@ -38,7 +38,7 @@
                   <div class="flex-grow-1 overflow-hidden">
                     <div class="font-weight-black text-body-2 text-truncate mb-1 text-name-fix">
                       {{ element.name }}
-                      <v-tooltip v-if="topVillain && element.name === topVillain.name" location="top">
+                      <v-tooltip v-if="topVillains.some(v => v.name === element.name)" location="top">
                       <template v-slot:activator="{ props }">
                         <v-chip v-bind="props" size="x-small" color="yellow" variant="flat"
                           class="ms-2 px-1 pulse-badge">
@@ -46,7 +46,7 @@
                           <span class="ms-1 font-weight-bold" style="font-size: 0.6rem !important;">흐사게스타</span>
                         </v-chip>
                       </template>
-                      <span>누적 신고 {{ topVillain.count }}회 !</span>
+                      <span>누적 신고 {{ topVillains.find(v => v.name === element.name)?.count }}회!</span>
                     </v-tooltip>
                     </div>
                     
@@ -301,7 +301,7 @@
                         <v-chip closable size="small" color="primary" class="ma-1 font-weight-bold text-white" label
                           @click:close="bus.members.splice(index, 1)">
                           {{ element.job }} | {{ element.name }} | Lv.{{ element.level }} | ⚔ {{ element.combatPower }}
-                          <v-tooltip v-if="topVillain && element.name === topVillain.name" location="top">
+                          <v-tooltip v-if="topVillains.some(v => v.name === element.name)" location="top">
                             <template v-slot:activator="{ props }">
                               <v-chip v-bind="props" size="x-small" color="yellow" variant="flat"
                                 class="ms-2 px-1 pulse-badge">
@@ -309,7 +309,7 @@
                                 <span class="ms-1 font-weight-bold" style="font-size: 0.6rem !important;">흐사게스타</span>
                               </v-chip>
                             </template>
-                            <span>누적 신고 {{ topVillain.count }}회 !</span>
+                            <span>누적 신고 {{ topVillains.find(v => v.name === element.name)?.count }}회!</span>
                           </v-tooltip>
                         </v-chip>
                       </template>
@@ -346,7 +346,8 @@ import { collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc } from "
 import { useTheme } from 'vuetify';
 
 import { inject } from 'vue';
-const topVillain = inject('topVillain'); // App.vue에서 보낸 데이터 받기
+// App.vue에서 제공한 빌런 리스트 주입
+const topVillains = inject('topVillains', []);
 
 
 const theme = useTheme();

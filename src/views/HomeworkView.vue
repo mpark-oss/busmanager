@@ -28,7 +28,7 @@
                                                 </div>
                                                 <div class="text-caption text-truncate text-medium-emphasis"
                                                     style="font-size: 0.65rem;">Lv.{{ element.level }}
-                                                    <v-tooltip v-if="topVillain && element.name === topVillain.name"
+                                                    <v-tooltip v-if="topVillains.some(v => v.name === element.name)" location="top">
                                                         location="top">
                                                         <template v-slot:activator="{ props }">
                                                             <v-chip v-bind="props" size="x-small" color="yellow"
@@ -38,7 +38,7 @@
                                                                     style="font-size: 0.6rem !important;">흐사게스타</span>
                                                             </v-chip>
                                                         </template>
-                                                        <span>누적 신고 {{ topVillain.count }}회 !</span>
+                                                        <span>누적 신고 {{ topVillains.find(v => v.name === element.name)?.count }}회!</span>
                                                     </v-tooltip>
                                                 </div>
                                             </div>
@@ -214,7 +214,7 @@
                                                 </div>
                                                 <div class="text-body-2 font-weight-bold text-truncate">{{
                                                     element.name}}
-                                                    <v-tooltip v-if="topVillain && element.name === topVillain.name"
+                                                    <v-tooltip v-if="topVillains.some(v => v.name === element.name)" location="top">
                                                         location="top">
                                                         <template v-slot:activator="{ props }">
                                                             <v-chip v-bind="props" size="x-small" color="yellow"
@@ -224,7 +224,7 @@
                                                                     style="font-size: 0.6rem !important;">흐사게스타</span>
                                                             </v-chip>
                                                         </template>
-                                                        <span>누적 신고 {{ topVillain.count }}회 !</span>
+                                                        <span>누적 신고 {{ topVillains.find(v => v.name === element.name)?.count }}회!</span>
                                                     </v-tooltip>
                                                 </div>
                                                 <div style="font-size: 0.7rem;" class="mt-1">
@@ -291,7 +291,8 @@ import { db } from '../firebase';
 import { collection, query, orderBy, onSnapshot, deleteDoc, doc, updateDoc } from "firebase/firestore";
 
 import { inject } from 'vue';
-const topVillain = inject('topVillain'); // App.vue에서 보낸 데이터 받기
+// App.vue에서 제공한 빌런 리스트 주입
+const topVillains = inject('topVillains', []);
 
 const homeworks = ref([]);
 const charList = ref([]);

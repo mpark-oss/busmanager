@@ -225,7 +225,6 @@ const submitReport = async () => {
       lastReported: serverTimestamp()
     }, { merge: true });
 
-    alert('신고가 등록되었습니다. 해당 유저는 빌런 포인트가 누적됩니다.');
     reportForm.value = { targetName: '', incidentTime: '', reason: '', password: '' };
   } catch (e) {
     console.error(e);

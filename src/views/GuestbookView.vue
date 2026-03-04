@@ -1,5 +1,27 @@
 <template>
   <v-container class="py-8" max-width="800">
+    <v-card variant="flat" border class="rounded-xl pa-6 mb-6">
+      <div class="d-flex align-center mb-4">
+        <v-icon color="primary" class="me-2">mdi-link-variant</v-icon>
+        <span class="text-h6 font-weight-black">바로가기 링크</span>
+      </div>
+      <v-row dense>
+        <v-col v-for="link in quickLinks" :key="link.title" cols="6" sm="4" md="2.4">
+          <v-btn
+            block
+            variant="tonal"
+            :color="link.color"
+            class="rounded-lg font-weight-bold"
+            height="48"
+            @click="openLink(link.url)"
+          >
+            <v-icon start size="small">{{ link.icon }}</v-icon>
+            {{ link.title }}
+          </v-btn>
+        </v-col>
+      </v-row>
+    </v-card>
+
     <v-card variant="flat" border class="rounded-xl pa-6">
       <h2 class="text-h4 font-weight-black text-primary mb-6">
         <v-icon size="large" class="me-2">mdi-message-draw</v-icon> 흐흣 낙서장
@@ -83,21 +105,33 @@ const messages = ref([]);
 const newName = ref('');
 const newMessage = ref('');
 
-// 대표 캐릭터 정보를 로컬스토리지에서 가져오는 함수
+// [추가] 바로가기 링크 데이터
+const quickLinks = [
+  { title: '로아공홈', icon: 'mdi-home', url: 'https://lostark.game.onstove.com/Main', color: 'blue-darken-2' },
+  { title: '로펙', icon: 'mdi-chart-box', url: 'https://lopec.kr/', color: 'cyan-darken-2' },
+  { title: '로아와', icon: 'mdi-magnify', url: 'https://loawa.com/', color: 'deep-orange-darken-1' },
+  { title: '로아인벤', icon: 'mdi-forum', url: 'https://lostark.inven.co.kr/', color: 'green-darken-2' },
+  { title: '지옥/나락 효율', icon: 'mdi-calculator', url: 'https://loatto.kr/efficiency/hell-rewards/', color: 'indigo-darken-1' },
+  { title: '영영소', icon: 'mdi-video-wireless', url: 'https://m.chzzk.naver.com/34ed30da91a4a278966346bac7b1075a/', color: 'green-accent-3' },
+];
+
+const openLink = (url) => {
+  window.open(url, '_blank');
+};
+
+// --- 기존 로직 ---
 const loadCurrentMainName = () => {
   const savedName = localStorage.getItem('current_main_name');
   newName.value = savedName || '';
 };
 
-// 계정 변경 이벤트를 처리하는 함수
 const handleMainCharChange = (e) => {
   newName.value = e.detail;
 };
 
-// 1. 메시지 실시간 읽기 및 초기 설정
 onMounted(() => {
-  loadCurrentMainName(); // 초기 이름 로드
-  window.addEventListener('main-char-changed', handleMainCharChange); // 계정 변경 감지 리스너 등록
+  loadCurrentMainName();
+  window.addEventListener('main-char-changed', handleMainCharChange);
 
   const q = query(collection(db, "guestbook"), orderBy("createdAt", "desc"));
   onSnapshot(q, (snapshot) => {
@@ -108,18 +142,12 @@ onMounted(() => {
   });
 });
 
-// 컴포넌트 해제 시 이벤트 리스너 제거
 onUnmounted(() => {
   window.removeEventListener('main-char-changed', handleMainCharChange);
 });
 
-// 2. 메시지 추가
 const addMessage = async () => {
-  // 대표 캐릭터가 설정되지 않았을 경우 안내
-  if (!newName.value) {
-    return alert('상단 메뉴에서 대표 캐릭터를 먼저 설정해야 작성이 가능합니다!');
-  }
-  
+  if (!newName.value) return alert('상단 메뉴에서 대표 캐릭터를 먼저 설정해야 작성이 가능합니다!');
   if (!newMessage.value) return alert('내용을 입력해주세요!');
 
   try {
@@ -128,20 +156,18 @@ const addMessage = async () => {
       content: newMessage.value,
       createdAt: serverTimestamp()
     });
-    newMessage.value = ''; // 입력창 비우기
+    newMessage.value = '';
   } catch (e) {
     console.error(e);
   }
 };
 
-// 3. 메시지 삭제
 const deleteMessage = async (id) => {
   if (confirm('이 낙서를 지울까요?')) {
     await deleteDoc(doc(db, "guestbook", id));
   }
 };
 
-// 날짜 포맷팅 함수
 const formatDate = (timestamp) => {
   if (!timestamp) return '';
   const date = timestamp.toDate();

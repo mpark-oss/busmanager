@@ -89,12 +89,19 @@
       </v-card>
     </v-dialog>
 
-    <v-main><router-view></router-view></v-main>
+    <v-main>
+      <router-view></router-view>
+
+      <v-fade-transition>
+        <v-btn v-show="showFab" icon="mdi-chevron-up" color="primary" size="large" elevation="8" class="scroll-to-top"
+          @click="scrollToTop"></v-btn>
+      </v-fade-transition>
+    </v-main>
   </v-app>
 </template>
 
 <script setup>
-import { ref, onMounted, computed, provide } from 'vue';
+import { ref, onMounted, computed, provide, onUnmounted } from 'vue';
 import axios from 'axios';
 import { db } from './firebase';
 import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
@@ -113,16 +120,16 @@ const topVillains = ref([]); // 단일 객체에서 배열로 변경
 onMounted(() => {
   // 상위 빌런들을 넉넉히 가져옴 (예: 최대 10명까지 동점자 체크 가능)
   const q = query(
-    collection(db, "villains"), 
-    orderBy("reportCount", "desc"), 
-    limit(10) 
+    collection(db, "villains"),
+    orderBy("reportCount", "desc"),
+    limit(10)
   );
 
   onSnapshot(q, (snapshot) => {
     if (!snapshot.empty) {
       // 1. 최상위 점수 확인
       const maxCount = snapshot.docs[0].data().reportCount;
-      
+
       // 2. 최상위 점수와 동일한 점수를 가진 모든 빌런을 배열에 담기
       topVillains.value = snapshot.docs
         .filter(doc => doc.data().reportCount === maxCount)
@@ -130,7 +137,7 @@ onMounted(() => {
           name: doc.id,
           count: doc.data().reportCount
         }));
-        
+
       console.log("현재 공동 1위 빌런들:", topVillains.value);
     } else {
       topVillains.value = []; // 데이터가 없으면 빈 배열
@@ -237,6 +244,30 @@ onMounted(() => {
   if (!currentMainName.value && mainCharSlots.value.length > 0) switchAccount(mainCharSlots.value[0].name);
   checkWeeklyReset();
 });
+
+
+// App.vue <script setup> 내부에 추가
+const showFab = ref(false);
+
+const handleScroll = () => {
+  // 300px 이상 스크롤 시 버튼 표시
+  showFab.value = window.scrollY > 300;
+};
+
+const scrollToTop = () => {
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth' // 부드럽게 이동
+  });
+};
+
+onMounted(() => {
+  window.addEventListener('scroll', handleScroll);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll);
+});
 </script>
 
 <style>
@@ -267,5 +298,13 @@ body {
 
 .cursor-pointer {
   cursor: pointer;
+}
+
+/* App.vue <style> 내부에 추가 */
+.scroll-to-top {
+  position: fixed !important;
+  bottom: 32px;
+  right: 32px;
+  z-index: 99;
 }
 </style>

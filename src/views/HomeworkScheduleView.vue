@@ -1030,12 +1030,20 @@ const getCharGold = (char) => {
     // 3. 버스 수지 합산 (getCharBusNetGold 활용)
     return current - moreCost + getCharBusNetGold(char);
 };
+
+
+// [수정] 캐릭터별 버스 순수익 계산 (기사 수입 5% 수수료 차감 반영)
 const getCharBusNetGold = (char) => {
     if (!char.busTasks) return 0;
     return Object.values(char.busTasks).reduce((sum, bus) => {
-        // 골드 값이 문자열로 들어올 경우를 대비해 Number로 변환
         const goldVal = Number(bus.gold) || 0;
-        return sum + (bus.isDriver ? goldVal : -goldVal);
+        if (bus.isDriver) {
+            // 기사(수입)일 경우: 5% 우편 수수료 차감 후 95%만 합산
+            return sum + (goldVal * 0.95);
+        } else {
+            // 승객(지출)일 경우: 입력한 금액 그대로 차감
+            return sum - goldVal;
+        }
     }, 0);
 };
 

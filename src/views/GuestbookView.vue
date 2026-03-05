@@ -93,27 +93,44 @@
             <v-row dense>
               <v-col cols="12" sm="5">
                 <v-text-field v-model="reportForm.targetName" label="신고 대상 캐릭터명" variant="outlined" density="compact"
-                  append-inner-icon="mdi-magnify" @click:append-inner="searchTarget" placeholder="정확한 캐릭터명"
-                  hide-details></v-text-field>
+                  append-inner-icon="mdi-magnify" placeholder="정확한 캐릭터명" hide-details
+                  @update:model-value="isSearched = false" @keyup.enter="searchTarget"></v-text-field>
               </v-col>
+
               <v-col cols="12" sm="4">
                 <v-text-field v-model="reportForm.incidentTime" label="사건 발생 시간" type="datetime-local"
                   variant="outlined" density="compact" hide-details></v-text-field>
               </v-col>
+
               <v-col cols="12" sm="3">
                 <v-text-field v-model="reportForm.password" label="삭제 비번(4자리)" type="password" variant="outlined"
                   density="compact" maxlength="4" placeholder="숫자 4자리" hide-details></v-text-field>
               </v-col>
-              <v-col cols="12" class="mt-2">
-                <v-textarea v-model="reportForm.reason" label="신고 사유" variant="outlined" rows="3"
-                  placeholder="신고 사유를 상세히 적어주세요 (작성자는 익명으로 등록됩니다)" hide-details></v-textarea>
-              </v-col>
+
               <v-col cols="12" class="text-right mt-2">
-                <v-btn color="error" variant="flat" rounded="lg" prepend-icon="mdi-bullhorn" @click="submitReport"
-                  :loading="isReporting">
-                  신고 등록
+                <v-btn color="primary" variant="tonal" rounded="lg" class="me-2" prepend-icon="mdi-magnify"
+                  @click="searchTarget">
+                  캐릭터 검색/확인
+                </v-btn>
+
+                <v-btn :color="isSearched ? 'error' : 'grey'" variant="flat" rounded="lg"
+                  :prepend-icon="isSearched ? 'mdi-bullhorn' : 'mdi-lock'" @click="submitReport" :loading="isReporting"
+                  :disabled="!isSearched">
+                  {{ isSearched ? '신고 등록' : '캐릭터 검색 필요' }}
                 </v-btn>
               </v-col>
+
+              
+              <v-col cols="12" class="mt-2">
+                <v-textarea v-model="reportForm.reason" label="신고 사유" variant="outlined" rows="3"
+                  placeholder="신고 사유를 상세히 적어주세요" hide-details></v-textarea>
+              </v-col>
+
+              <v-col cols="12" class="mt-2">
+                <v-file-input v-model="reportForm.imageFile" label="증거 스크린샷" variant="outlined" density="compact"
+                  prepend-icon="mdi-camera" accept="image/*" hide-details></v-file-input>
+              </v-col>
+
             </v-row>
           </v-form>
 
@@ -127,8 +144,19 @@
                   <span class="text-h6 font-weight-black text-error">🚨 대상: {{ report.targetName }}</span>
                   <span class="text-caption font-weight-bold">{{ formatDate(report.createdAt) }}</span>
                 </div>
-                <div class="text-subtitle-2 mb-2"><b>발생 시각:</b> {{ report.incidentTime.replace('T', ' ') }}</div>
+                <div class="text-subtitle-2 mb-2">
+                  <b>발생 시각:</b> {{ report.incidentTime ? report.incidentTime.replace('T', ' ') : '정보 없음' }}
+                </div>
                 <div class="text-body-1 mb-2">{{ report.reason }}</div>
+                <v-img v-if="report.imageUrl" :src="report.imageUrl" aspect-ratio="16/9" cover max-width="200"
+                  height="120" class="rounded-lg mb-3 cursor-pointer thumbnail-hover border"
+                  @click="openImage(report.imageUrl)">
+                  <template v-slot:placeholder>
+                    <v-row class="fill-height ma-0" align="center" justify="center">
+                      <v-progress-circular indeterminate color="grey-lighten-5"></v-progress-circular>
+                    </v-row>
+                  </template>
+                </v-img>
                 <div class="text-caption font-weight-bold"
                   :class="theme.global.current.value.dark ? 'text-red-lighten-3' : 'text-red-darken-2'">
                   올바른 길드 생활을 위해 반성하세요.
@@ -149,14 +177,25 @@
       </v-window-item>
     </v-window>
   </v-container>
+  <v-dialog v-model="imageDialog" max-width="90vw">
+    <v-card class="bg-transparent shadow-none text-right">
+      <v-btn icon="mdi-close" color="white" variant="text" @click="imageDialog = false"></v-btn>
+      <v-img :src="selectedImage" max-height="85vh" contain class="rounded-lg shadow-lg"></v-img>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
 import { db } from '../firebase';
-import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, deleteDoc, doc, setDoc, increment } from 'firebase/firestore';
+import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, deleteDoc, doc, setDoc, increment, getDocs } from 'firebase/firestore';
 import { useTheme } from 'vuetify';
 import axios from 'axios';
+import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
+import { storage } from "../firebase";
+
+// reportForm 초기 상태에 imageFile 추가
+const reportForm = ref({ targetName: '', incidentTime: '', reason: '', password: '', imageFile: null });
 
 const theme = useTheme();
 const API_KEY = import.meta.env.VITE_LOSTARK_API_KEY || "";
@@ -168,7 +207,20 @@ const newMessage = ref('');
 const activeTab = ref('guestbook');
 const reports = ref([]);
 const isReporting = ref(false);
-const reportForm = ref({ targetName: '', incidentTime: '', reason: '', password: '' });
+
+// GuestbookView.vue <script setup>
+const imageDialog = ref(false);
+const selectedImage = ref("");
+
+// 이미지 클릭 시 호출할 함수
+const openImage = (url) => {
+  selectedImage.value = url;
+  imageDialog.value = true;
+};
+
+// GuestbookView.vue <script setup>
+const isSearched = ref(false); // 검색 완료 여부
+const tempRosterList = ref([]); // 검색으로 가져온 원정대 명단
 
 // [기존] 바로가기 링크 데이터
 const quickLinks = [
@@ -177,92 +229,135 @@ const quickLinks = [
   { title: '로아와', icon: 'mdi-magnify', url: 'https://loawa.com/', color: 'deep-orange-darken-1' },
   { title: '로아인벤', icon: 'mdi-forum', url: 'https://lostark.inven.co.kr/', color: 'green-darken-2' },
   { title: '지옥/나락 효율', icon: 'mdi-calculator', url: 'https://loatto.kr/efficiency/hell-rewards/', color: 'indigo-darken-1' },
-  { title: '영영소', icon: 'mdi-video-wireless', url: 'https://m.chzzk.naver.com/34ed30da91a4a278966346bac7b1075a/', color: 'green-accent-3' },
+  { title: '영영소', icon: 'mdi-video-wireless', url: 'https://chzzk.naver.com/34ed30da91a4a278966346bac7b1075a/', color: 'green-accent-3' },
 ];
 
 const openLink = (url) => {
   window.open(url, '_blank');
 };
 
-// [추가] 캐릭터 검색 API
 const searchTarget = async () => {
   if (!reportForm.value.targetName) return alert('검색할 캐릭터명을 입력하세요.');
+
+  isSearched.value = false; // 검색 시작 시 초기화
   try {
-    const res = await axios.get(`/api/armories/characters/${encodeURIComponent(reportForm.value.targetName)}/profiles`, {
+    // 원정대 정보(siblings)를 바로 가져옵니다.
+    const res = await axios.get(`/api/characters/${encodeURIComponent(reportForm.value.targetName)}/siblings`, {
       headers: { 'authorization': `bearer ${API_KEY.trim()}` }
     });
-    if (res.data) {
-      alert(`확인된 대상: [${res.data.CharacterClassName}] Lv.${res.data.ItemAvgLevel}`);
+
+    if (res.data && Array.isArray(res.data)) {
+      tempRosterList.value = res.data.map(c => typeof c === 'string' ? c : (c.CharacterName || c.name));
+      isSearched.value = true; // 검색 성공 확정
+      alert(`확인 완료`);
     } else {
-      alert('캐릭터를 찾을 수 없습니다.');
+      alert('캐릭터를 찾을 수 없습니다. 정확한 이름을 입력해주세요.');
     }
   } catch (e) {
+    console.error(e);
     alert('API 조회 중 오류가 발생했습니다.');
   }
 };
 
-// [수정] 신고 등록 기능 (비밀번호 저장 포함)
 const submitReport = async () => {
-  if (!reportForm.value.targetName || !reportForm.value.reason || !reportForm.value.password) {
-    return alert('대상, 사유, 그리고 삭제 비밀번호를 모두 입력해주세요!');
+  // 1. 사전 유효성 검사
+  if (!isSearched.value) {
+    return alert('먼저 캐릭터 검색 버튼을 눌러 대상을 확인해주세요!');
+  }
+  if (!reportForm.value.reason || !reportForm.value.password) {
+    return alert('신고 사유와 삭제 비밀번호를 입력해주세요!');
   }
 
   isReporting.value = true;
+
   try {
-    // 1. 신고 기록 저장 (비밀번호 포함)
+    // 2. 이미지 업로드 처리 (선택 사항)
+    let imageUrl = "";
+    if (reportForm.value.imageFile) {
+      const file = Array.isArray(reportForm.value.imageFile)
+        ? reportForm.value.imageFile[0]
+        : reportForm.value.imageFile;
+
+      if (file) {
+        const fileRef = storageRef(storage, `reports/${Date.now()}_${file.name}`);
+        const snapshot = await uploadBytes(fileRef, file);
+        imageUrl = await getDownloadURL(snapshot.ref);
+      }
+    }
+
+    // 3. 원정대 키 생성 (searchTarget에서 미리 받아온 리스트 활용)
+    // 중복 제거 후 가나다순 정렬하여 고유한 키 생성
+    const rosterList = tempRosterList.value;
+    const rosterKey = [...new Set(rosterList)].sort().join(',');
+
+    // 4. 개별 신고 내역 저장 (imageUrl 포함)
     await addDoc(collection(db, "reports"), {
       targetName: reportForm.value.targetName,
-      incidentTime: reportForm.value.incidentTime,
+      rosterKey: rosterKey,
+      rosterList: rosterList,
       reason: reportForm.value.reason,
       password: reportForm.value.password,
+      imageUrl: imageUrl,
+      incidentTime: reportForm.value.incidentTime || new Date().toISOString(),
       createdAt: serverTimestamp()
     });
 
-    // 2. [빌런 집계] villains 컬렉션에 누적 포인트 합산
-    const villainRef = doc(db, "villains", reportForm.value.targetName);
-    await setDoc(villainRef, {
-      reportCount: increment(1),
-      lastReported: serverTimestamp()
+    // 5. 원정대 통합 통계 업데이트
+    const rosterRef = doc(db, "roster_stats", rosterKey);
+    await setDoc(rosterRef, {
+      totalCount: increment(1),
+      members: rosterList,
+      lastUpdated: serverTimestamp()
     }, { merge: true });
 
-    reportForm.value = { targetName: '', incidentTime: '', reason: '', password: '' };
+    // 6. 성공 알림 및 폼 초기화
+
+    // 상태 초기화 (다음 신고를 위해 검색 상태도 리셋)
+    isSearched.value = false;
+    tempRosterList.value = [];
+    reportForm.value = {
+      targetName: '',
+      incidentTime: '',
+      reason: '',
+      password: '',
+      imageFile: null
+    };
+
   } catch (e) {
-    console.error(e);
+    console.error("신고 저장 중 오류 발생:", e);
+    alert('신고 등록 중 오류가 발생했습니다. 콘솔을 확인하세요.');
   } finally {
     isReporting.value = false;
   }
 };
 
-// [수정] 마스터 비밀번호 기능이 포함된 삭제 로직
 const deleteReport = async (report) => {
   const inputPw = prompt('이 신고를 삭제하려면 비밀번호를 입력하세요.');
-  
-  if (inputPw === null) return; // 취소 클릭
+  if (inputPw === null) return;
 
-  // 마스터 비밀번호 설정 (예: 9999)
-  const MASTER_PW = "0210"; 
+  const MASTER_PW = "0210";
 
-  // 입력한 비번이 작성자 비번과 일치하거나, 마스터 비번과 일치할 경우 삭제 허용
   if (inputPw === report.password || inputPw === MASTER_PW) {
-    if (confirm('정말로 삭제하시겠습니까?')) {
+    if (confirm('정말로 삭제하시겠습니까? 원정대 통합 점수도 함께 차감됩니다.')) {
       try {
-        // 1. 신고 내역 삭제
+        // 1. 신고 내역 문서 삭제
         await deleteDoc(doc(db, "reports", report.id));
 
-        // 2. 빌런 포인트 업데이트 (0점 체크 포함)
-        const villainRef = doc(db, "villains", report.targetName);
-        const currentCount = (report.reportCount || 1) - 1; 
+        // 2. roster_stats 테이블의 통합 점수 차감
+        if (report.rosterKey) {
+          const rosterRef = doc(db, "roster_stats", report.rosterKey);
 
-        if (currentCount <= 0) {
-          await deleteDoc(villainRef);
-        } else {
-          await setDoc(villainRef, {
-            reportCount: increment(-1),
+          // Firestore의 increment(-1)을 사용하여 안전하게 차감
+          await setDoc(rosterRef, {
+            totalCount: increment(-1),
             lastUpdated: serverTimestamp()
           }, { merge: true });
+
+          // (선택사항) 만약 점수가 0이 되면 문서를 지우고 싶다면 추가 로직이 필요하지만, 
+          // 랭킹 시스템을 위해 마이너스만 되지 않게 관리하는 것이 좋습니다.
         }
 
-        alert('삭제 완료');
+
       } catch (e) {
         console.error("삭제 중 오류:", e);
         alert('삭제 중 오류가 발생했습니다.');
@@ -335,6 +430,75 @@ const formatDate = (timestamp) => {
   const date = timestamp.toDate();
   return `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
 };
+
+const rebuildRosterStats = async () => {
+  if (!confirm("기존 리포트를 분석하여 원정대별로 점수를 합산하시겠습니까? (roster_stats 재구축)")) return;
+
+  try {
+    const reportSnap = await getDocs(collection(db, "reports"));
+    const rosterGroups = {}; // { rosterKey: { members: [], count: 0 } }
+
+    console.log("1. 기존 신고 데이터 분석 시작...");
+
+    for (const reportDoc of reportSnap.docs) {
+      const data = reportDoc.data();
+      let rosterList = data.rosterList;
+      const targetName = data.targetName;
+
+      // 원정대 정보가 없거나 부족한 데이터 보정
+      if (!rosterList || rosterList.length <= 1) {
+        try {
+          const res = await axios.get(`/api/characters/${encodeURIComponent(targetName)}/siblings`, { headers: { 'authorization': `bearer ${API_KEY.trim()}` } });
+
+          console.log(res);
+
+          if (res.data && Array.isArray(res.data)) {
+            rosterList = res.data.map(c => c.CharacterName);
+          } else {
+            rosterList = [targetName];
+          }
+
+          // 리포트 문서에도 나중을 위해 rosterList 업데이트
+          await setDoc(doc(db, "reports", reportDoc.id), { rosterList }, { merge: true });
+        } catch (e) {
+          console.error(`${targetName} 정보 획득 실패:`, e);
+          rosterList = [targetName];
+        }
+      }
+
+      // [핵심] 원정대 고유 키 생성 (정렬 후 결합)
+      const rosterKey = [...rosterList].sort().join(',');
+
+      if (!rosterGroups[rosterKey]) {
+        rosterGroups[rosterKey] = { members: rosterList, count: 0 };
+      }
+      rosterGroups[rosterKey].count += 1;
+    }
+
+    console.log("2. 기존 roster_stats 컬렉션 초기화...");
+    const oldRosterSnap = await getDocs(collection(db, "roster_stats"));
+    for (const d of oldRosterSnap.docs) {
+      await deleteDoc(doc(db, "roster_stats", d.id));
+    }
+
+    console.log("3. 통합된 원정대 통계 데이터 저장 중...");
+    for (const [rosterKey, info] of Object.entries(rosterGroups)) {
+      // 문서 ID를 rosterKey로 사용하여 중복 방지
+      await setDoc(doc(db, "roster_stats", rosterKey), {
+        totalCount: info.count,
+        members: info.members,
+        lastUpdated: serverTimestamp()
+      });
+    }
+
+    alert("원정대 통합 데이터 구축이 완료되었습니다!");
+    //window.location.reload(); // App.vue의 실시간 감시를 갱신하기 위해 새로고침
+  } catch (error) {
+    console.error("오류 발생:", error);
+    alert("보정 중 오류가 발생했습니다. 콘솔을 확인하세요.");
+  }
+};
+
 </script>
 
 <style scoped>
@@ -350,5 +514,19 @@ const formatDate = (timestamp) => {
 
 .incident-item {
   border-left: 4px solid #F44336 !important;
+}
+
+.thumbnail-hover {
+  transition: transform 0.2s ease-in-out, filter 0.2s ease;
+}
+
+.thumbnail-hover:hover {
+  transform: scale(1.05);
+  filter: brightness(0.8);
+}
+
+/* 맥락 상 맥스 사이즈 고정 (사이즈 통일) */
+.v-img.thumbnail-hover {
+  border-color: rgba(var(--v-theme-on-surface), 0.12) !important;
 }
 </style>

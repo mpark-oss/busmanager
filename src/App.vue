@@ -147,6 +147,29 @@ onMounted(() => {
 
 provide('topVillains', topVillains); // 이름을 topVillains로 변경하여 전달
 
+// App.vue <script setup>
+const topRosterMembers = ref([]);
+const topRosterCount = ref(0); // [추가] 1위 신고 횟수를 담을 변수
+
+onMounted(() => {
+  const q = query(collection(db, "roster_stats"), orderBy("totalCount", "desc"), limit(1));
+
+  onSnapshot(q, (snapshot) => {
+    if (!snapshot.empty) {
+      const topData = snapshot.docs[0].data();
+      topRosterMembers.value = topData.members || [];
+      topRosterCount.value = topData.totalCount || 0; // [추가] 신고 횟수 저장
+    } else {
+      topRosterMembers.value = [];
+      topRosterCount.value = 0;
+    }
+  });
+});
+
+// 두 정보 모두 하위 컴포넌트에서 쓸 수 있게 제공
+provide('topRosterMembers', topRosterMembers);
+provide('topRosterCount', topRosterCount); // [추가]
+
 // 현재 선택된 슬롯의 전체 데이터 반환
 const getCurrentSlot = computed(() => {
   return mainCharSlots.value.find(c => c.name === currentMainName.value);

@@ -28,15 +28,15 @@
 
                         <div class="text-caption text-truncate text-medium-emphasis" style="font-size: 0.65rem;">
                           Lv.{{ element.level }}
-                          <v-tooltip v-if="topVillains.some(v => v.name === element.name)" location="top">
+                          <v-tooltip v-if="topRosterMembers.includes(element.name)" location="top">
                             <template v-slot:activator="{ props }">
-                              <v-chip v-bind="props" size="x-small" color="yellow" variant="flat"
+                              <v-chip v-bind="props" size="x-small" color="lime" variant="flat"
                                 class="ms-2 px-1 pulse-badge">
-                                <v-icon size="12" color="red">mdi-alarm-light</v-icon>
-                                <span class="ms-1 font-weight-bold" style="font-size: 0.6rem !important;">흐사게스타</span>
+                                <v-icon size="14" color="red">mdi-alarm-light</v-icon>
+                                <span class="ms-1 font-weight-bold" style="font-size: 0.7rem !important;">흐사게스타</span>
                               </v-chip>
                             </template>
-                            <span>누적 신고 {{ topVillains.find(v => v.name === element.name)?.count }}회!</span>
+                            <span>원정대 누적 신고 {{ topRosterCount }}회!</span>
                           </v-tooltip>
                         </div>
                       </div>
@@ -190,15 +190,15 @@
                         </div>
 
                         <div class="text-body-2 font-weight-bold text-truncate">{{ element.name }}
-                          <v-tooltip v-if="topVillains.some(v => v.name === element.name)" location="top">
+                          <v-tooltip v-if="topRosterMembers.includes(element.name)" location="top">
                             <template v-slot:activator="{ props }">
-                              <v-chip v-bind="props" size="x-small" color="yellow" variant="flat"
+                              <v-chip v-bind="props" size="x-small" color="lime" variant="flat"
                                 class="ms-2 px-1 pulse-badge">
-                                <v-icon size="12" color="red">mdi-alarm-light</v-icon>
-                                <span class="ms-1 font-weight-bold" style="font-size: 0.6rem !important;">흐사게스타</span>
+                                <v-icon size="14" color="red">mdi-alarm-light</v-icon>
+                                <span class="ms-1 font-weight-bold" style="font-size: 0.7rem !important;">흐사게스타</span>
                               </v-chip>
                             </template>
-                            <span>누적 신고 {{ topVillains.find(v => v.name === element.name)?.count }}회!</span>
+                            <span>원정대 누적 신고 {{ topRosterCount }}회!</span>
                           </v-tooltip>
                         </div>
 
@@ -263,7 +263,10 @@ import { db } from '../firebase';
 import { collection, query, orderBy, onSnapshot, deleteDoc, doc, updateDoc } from "firebase/firestore";
 import { inject } from 'vue';
 // App.vue에서 제공한 빌런 리스트 주입
+
 const topVillains = inject('topVillains', []);
+const topRosterMembers = inject('topRosterMembers', ref([]));
+const topRosterCount = inject('topRosterCount', ref(0)); // [추가]
 
 
 const schedules = ref([]);

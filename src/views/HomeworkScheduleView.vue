@@ -27,7 +27,7 @@
                                         <div class="d-flex justify-space-between align-center">
                                             <div class="d-flex align-center text-grey-lighten-2">
                                                 <v-icon size="16" color="amber" class="me-2">mdi-sword-cross</v-icon>
-                                                <span>기본 레이드</span>
+                                                <span>레이드</span>
                                             </div>
                                             <span class="text-amber-accent-2 font-weight-bold">+{{
                                                 getPureRaidGold().toLocaleString() }}G</span>
@@ -37,7 +37,7 @@
                                             <div class="d-flex align-center text-grey-lighten-2">
                                                 <v-icon size="16" color="light-blue-accent-2"
                                                     class="me-2">mdi-bus-side</v-icon>
-                                                <span>버스 수입/지출</span>
+                                                <span>버스</span>
                                             </div>
                                             <span
                                                 :class="['font-weight-bold', getTotalBusGold() >= 0 ? 'text-light-blue-accent-2' : 'text-red-accent-2']">
@@ -50,7 +50,7 @@
                                             <div class="d-flex align-center text-grey-lighten-2">
                                                 <v-icon size="16" color="red-accent-2"
                                                     class="me-2">mdi-minus-box</v-icon>
-                                                <span>더보기 비용</span>
+                                                <span>더보기</span>
                                             </div>
                                             <span class="text-red-accent-2 font-weight-bold">-{{
                                                 getTotalMoreCost().toLocaleString() }}G</span>

@@ -11,7 +11,53 @@
                         <div
                             class="text-caption text-medium-emphasis font-weight-bold d-flex align-center flex-wrap gap-2">
                             <span>주간 수익 현황:</span>
-                            <span class="text-primary">{{ getTotalGrossGold().toLocaleString() }}G</span>
+                            <v-tooltip location="bottom" offset="10" transition="fade-transition">
+                                <template v-slot:activator="{ props }">
+                                    <span v-bind="props" class="text-primary cursor-help font-weight-black"
+                                        style="border-bottom: 2px dotted currentColor; font-size: 1.1rem;">
+                                        {{ getTotalGrossGold().toLocaleString() }}G
+                                    </span>
+                                </template>
+
+                                <v-card variant="flat" color="grey-darken-4" class="pa-3 rounded-lg border">
+                                    <div class="text-subtitle-2 font-weight-black mb-2 text-grey-lighten-1">💰 주간 수익 상세
+                                        내역</div>
+
+                                    <div class="d-flex flex-column gap-2" style="min-width: 180px;">
+                                        <div class="d-flex justify-space-between align-center">
+                                            <div class="d-flex align-center text-grey-lighten-2">
+                                                <v-icon size="16" color="amber" class="me-2">mdi-sword-cross</v-icon>
+                                                <span>기본 레이드</span>
+                                            </div>
+                                            <span class="text-amber-accent-2 font-weight-bold">+{{
+                                                getPureRaidGold().toLocaleString() }}G</span>
+                                        </div>
+
+                                        <div class="d-flex justify-space-between align-center">
+                                            <div class="d-flex align-center text-grey-lighten-2">
+                                                <v-icon size="16" color="light-blue-accent-2"
+                                                    class="me-2">mdi-bus-side</v-icon>
+                                                <span>버스 수입/지출</span>
+                                            </div>
+                                            <span
+                                                :class="['font-weight-bold', getTotalBusGold() >= 0 ? 'text-light-blue-accent-2' : 'text-red-accent-2']">
+                                                {{ getTotalBusGold() >= 0 ? '+' : '' }}{{
+                                                getTotalBusGold().toLocaleString() }}G
+                                            </span>
+                                        </div>
+
+                                        <div class="d-flex justify-space-between align-center">
+                                            <div class="d-flex align-center text-grey-lighten-2">
+                                                <v-icon size="16" color="red-accent-2"
+                                                    class="me-2">mdi-minus-box</v-icon>
+                                                <span>더보기 비용</span>
+                                            </div>
+                                            <span class="text-red-accent-2 font-weight-bold">-{{
+                                                getTotalMoreCost().toLocaleString() }}G</span>
+                                        </div>
+                                    </div>
+                                </v-card>
+                            </v-tooltip>
                             <span class="text-grey">/</span>
                             <span class="text-grey-darken-1">{{ getMaxPossibleGold().toLocaleString() }}G</span>
 
@@ -19,9 +65,9 @@
                                 :color="getMaxPossibleGold() - getTotalGrossGold() > 0 ? 'error' : 'success'"
                                 variant="flat" class="font-weight-black">
                                 {{ getMaxPossibleGold() - getTotalGrossGold() > 0 ? '남은 수익: ' + (getMaxPossibleGold() -
-                                    getTotalGrossGold()).toLocaleString() + 'G' : '주간 숙제 완료' }}
+                                    getTotalGrossGold()).toLocaleString() + 'G' : '주간 수입 목표 완료' }}
                             </v-chip>
-                            <span class="text-grey-lighten-1" style="font-size: 0.7rem;">(더보기 지출 제외 순수 보상 기준)</span>
+
                         </div>
                     </div>
                     <v-spacer></v-spacer>
@@ -182,7 +228,16 @@
                                                         class="text-caption font-weight-black text-primary flex-grow-1"
                                                         :style="isGoldExcluded(char, groupName) ? 'text-decoration: line-through; opacity: 0.5' : ''">
                                                         {{ groupName }}
+                                                        <v-btn icon variant="text" size="x-small"
+                                                            :class="['ms-1', { 'bus-active-glow': hasBusSetting(char, groupName) }]"
+                                                            :color="hasBusSetting(char, groupName) ? 'light-blue-accent-2' : 'grey-lighten-1'"
+                                                            @click.stop="openBusDialog(char, groupName)">
+                                                            <v-icon size="18">mdi-bus-side</v-icon>
+                                                            <v-tooltip activator="parent" location="top">{{ groupName }}
+                                                                버스 설정</v-tooltip>
+                                                        </v-btn>
                                                     </span>
+
                                                 </div>
                                                 <div class="d-flex flex-column px-1">
                                                     <template v-for="raid in getRaidsByGroup(groupName)"
@@ -215,6 +270,21 @@
                                                                                             ''
                                                                                     }})</span>
                                                                             </span>
+                                                                            <v-btn icon variant="text" size="x-small"
+                                                                                :class="[
+                                                                                    'me-1 gold-toggle-btn',
+                                                                                    { 'is-active': isGoldGateSelected(char, raid.name, gate.g) }
+                                                                                ]"
+                                                                                :color="isGoldGateSelected(char, raid.name, gate.g) ? 'amber-accent-3' : 'grey-lighten-1'"
+                                                                                @click.stop="toggleGoldGate(char, raid.name, gate.g)">
+                                                                                <v-icon size="18">
+                                                                                    {{ isGoldGateSelected(char,
+                                                                                        raid.name, gate.g) ?
+                                                                                        'mdi-sack-percent' : 'mdi-sack' }}
+                                                                                </v-icon>
+                                                                                <v-tooltip activator="parent"
+                                                                                    location="top">골드 보상 지정</v-tooltip>
+                                                                            </v-btn>
                                                                         </div>
                                                                     </template>
                                                                 </v-checkbox>
@@ -389,6 +459,33 @@
                         class="font-weight-bold">닫기</v-btn></v-card-actions>
             </v-card>
         </v-dialog>
+        <v-dialog v-model="busDialog" max-width="350">
+            <v-card class="rounded-xl pa-4">
+                <v-card-title class="font-weight-black d-flex align-center px-0">
+                    <v-icon color="light-blue-accent-3" class="me-2">mdi-bus-clock</v-icon> 버스 수입/지출 설정
+                </v-card-title>
+
+                <v-card-text class="pa-0 mt-4">
+                    <div class="d-flex justify-center mb-6">
+                        <v-btn-toggle v-model="busForm.isDriver" mandatory color="light-blue-accent-4" variant="flat"
+                            rounded="lg">
+                            <v-btn :value="true" class="px-6">기사 (수입)</v-btn>
+                            <v-btn :value="false" class="px-6">승객 (지출)</v-btn>
+                        </v-btn-toggle>
+                    </div>
+
+                    <v-text-field v-model.number="busForm.gold" :label="busForm.isDriver ? '수입 골드' : '지출 골드'" suffix="G"
+                        variant="outlined" type="number" hide-details class="font-weight-bold"></v-text-field>
+                </v-card-text>
+
+                <v-card-actions class="px-0 mt-6">
+                    <v-spacer></v-spacer>
+                    <v-btn variant="text" @click="busDialog = false">취소</v-btn>
+                    <v-btn color="light-blue-accent-4" variant="flat" rounded="lg" @click="saveBusSetting">설정 완료</v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
+
     </v-container>
 </template>
 
@@ -488,79 +585,17 @@ const toggleMoreReward = (char, raidName, gateG) => {
     } else {
         char.moreTasks.push(taskId);
     }
-    saveToLocal();
+    saveToLocal(); // 여기서 반응형 시스템에 의해 상단 UI가 자동 업데이트됩니다.
 };
 
-// [수정] 주간 최대 가능 골드 계산 (레벨 기준 상위 3개 자동 합산)
+
 const getMaxPossibleGold = () => {
-    let totalMax = 0;
-
-    characters.value.filter(c => c.isGoldCharacter).forEach(char => {
-        // 캐릭터 레벨 숫자 변환 (1,680.00 -> 1680)
-        const charLevel = parseFloat(char.level.replace(/,/g, '')) || 0;
-
-        // 1. 해당 캐릭터 레벨에서 입장 가능한 모든 레이드 그룹의 최대 골드 추출
-        const availableGroupGolds = [];
-
-        // 레이드 그룹별로 순회
-        raidGroups.value.forEach(groupName => {
-            const raidsInGroup = getRaidsByGroup(groupName);
-
-            // 해당 그룹 내에서 캐릭터 레벨로 입장 가능한 레이드들 중 가장 높은 골드 찾기
-            const maxGoldInGroup = raidsInGroup
-                .filter(r => r.level <= charLevel) // 레벨 제한 필터
-                .reduce((max, r) => {
-                    const raidTotal = r.gates.reduce((sum, g) => sum + g.gold, 0);
-                    return raidTotal > max ? raidTotal : max;
-                }, 0);
-
-            if (maxGoldInGroup > 0) {
-                availableGroupGolds.push(maxGoldInGroup);
-            }
-        });
-
-        // 2. 입장 가능한 그룹 골드 중 상위 3개를 합산
-        const charMaxGold = availableGroupGolds
-            .sort((a, b) => b - a)
-            .slice(0, 3)
-            .reduce((sum, g) => sum + g, 0);
-
-        totalMax += charMaxGold;
-    });
-
-    return totalMax;
+    return characters.value
+        .filter(c => c.isGoldCharacter)
+        .reduce((sum, char) => sum + getCharMaxPossibleGold(char), 0);
 };
 
-const getCharGold = (char) => {
-    let grossGold = 0;
-    if (char.isGoldCharacter) {
-        const visibleGroups = char.settings?.visibleGroups || [];
-        let raidGoldList = [];
-        visibleGroups.forEach(groupName => {
-            let goldSum = 0;
-            getRaidsByGroup(groupName).forEach(raid => {
-                (raid.gates || []).forEach(gate => {
-                    if ((char.completedTasks || []).includes(raid.name + '_G' + gate.g)) goldSum += gate.gold;
-                });
-            });
-            if (goldSum > 0) raidGoldList.push({ name: groupName, gold: goldSum });
-        });
-        grossGold = raidGoldList.sort((a, b) => b.gold - a.gold).slice(0, 3).reduce((sum, r) => sum + r.gold, 0);
-    }
 
-    // 2. 지출 계산 (체크된 모든 관문의 더보기 비용 합산)
-    let totalMoreCost = 0;
-    raidList.forEach(raid => {
-        raid.gates.forEach(gate => {
-            const moreId = raid.name + '_G' + gate.g + '_More';
-            if ((char.moreTasks || []).includes(moreId)) {
-                totalMoreCost += gate.moreGold || 0;
-            }
-        });
-    });
-
-    return grossGold - totalMoreCost;
-};
 
 const isGoldExcluded = (char, groupName) => {
     let raidGoldList = [];
@@ -690,34 +725,87 @@ const updateDailyRestGauges = () => {
     saveToLocal();
 };
 
+const getCurrentWeekId = () => {
+    const now = new Date();
+    const day = now.getDay(); // 0(일) ~ 6(토)
+    const hours = now.getHours();
+
+    // 로직 설명: 
+    // 오늘이 수요일(3)인데 아직 오전 6시 전이거나, 월(1)/화(2)/일(0)이라면 
+    // 지난주 수요일이 이번 주차의 시작점입니다.
+    const diff = (day < 3 || (day === 3 && hours < 6)) ? (day + 4) : (day - 3);
+
+    const lastWednesday = new Date(now);
+    lastWednesday.setDate(now.getDate() - diff);
+    lastWednesday.setHours(6, 0, 0, 0); // 시간을 정확히 오전 6시로 고정
+
+    // 이 시간값을 문자열 ID로 반환 (예: "1709110800000")
+    return lastWednesday.getTime().toString();
+};
+
 const fetchMyExpedition = async (charName) => {
     if (!charName) return;
     isFetching.value = true;
+
     try {
-        const res = await axios.get(`/api/characters/${encodeURIComponent(charName)}/siblings`, { headers: { 'authorization': `bearer ${API_KEY.trim()}` } });
+        const res = await axios.get(`/api/characters/${encodeURIComponent(charName)}/siblings`, {
+            headers: { 'authorization': `bearer ${API_KEY.trim()}` }
+        });
+
         if (res.data && Array.isArray(res.data)) {
             const blacklist = JSON.parse(localStorage.getItem(getBlacklistKey()) || '[]');
             const savedData = JSON.parse(localStorage.getItem(getAccountKey()) || '[]');
+
+            // [추가] 주간 초기화 체크 로직 (수요일 06시 기준)
+            const currentWeek = getCurrentWeekId();
+            const lastSavedWeek = localStorage.getItem(`last_week_id_${localStorage.getItem('current_main_name')}`);
+            const isNewWeek = lastSavedWeek !== currentWeek;
+
             const newList = res.data
                 .filter(char => !blacklist.includes(char.CharacterName))
                 .sort((a, b) => parseFloat(b.ItemAvgLevel.replace(',', '')) - parseFloat(a.ItemAvgLevel.replace(',', '')))
                 .map((char, index) => {
                     const existing = savedData.find(c => c.name === char.CharacterName);
+
                     return {
-                        name: char.CharacterName, className: char.CharacterClassName, level: char.ItemAvgLevel, img: existing?.img || '',
-                        completedTasks: existing?.completedTasks || [],
-                        moreTasks: existing?.moreTasks || [], // [버그수정] 불러올 때 더보기 리스트 할당
+                        name: char.CharacterName,
+                        className: char.CharacterClassName,
+                        level: char.ItemAvgLevel,
+                        img: existing?.img || '',
+                        // [수정] 새 주차라면 비우고, 아니면 기존 데이터 로드
+                        completedTasks: isNewWeek ? [] : (existing?.completedTasks || []),
+                        moreTasks: isNewWeek ? [] : (existing?.moreTasks || []),
+                        busTasks: isNewWeek ? {} : (existing?.busTasks || {}), // 버스 데이터 보존 및 초기화
                         restGauges: existing?.restGauges || { chaos: 0, guardian: 0 },
                         lastDailyUpdate: existing?.lastDailyUpdate || null,
-                        settings: existing?.settings || { visibleGroups: [], selectedGateIds: [], groupOrder: raidGroups.value, hiddenTaskIds: [], showWeekly: true },
+                        settings: existing?.settings || {
+                            visibleGroups: [],
+                            selectedGateIds: [],
+                            groupOrder: raidGroups.value,
+                            hiddenTaskIds: [],
+                            showWeekly: true,
+                            goldSelectedGates: [] // 골드 지정 관문 리스트 보존
+                        },
                         isGoldCharacter: existing?.isGoldCharacter !== undefined ? existing.isGoldCharacter : index < 6
                     };
                 });
+
             characters.value = newList;
+
+            // [추가] 초기화가 발생했다면 주차 정보 업데이트 및 저장
+            if (isNewWeek) {
+                localStorage.setItem(`last_week_id_${localStorage.getItem('current_main_name')}`, currentWeek);
+                saveToLocal();
+            }
+
             updateDailyRestGauges();
             characters.value.forEach((c, i) => { if (!c.img) updateCharImage(c.name, i); });
         }
-    } catch (e) { console.error(e); } finally { isFetching.value = false; }
+    } catch (e) {
+        console.error("원정대 정보 로드 실패:", e);
+    } finally {
+        isFetching.value = false;
+    }
 };
 
 const updateCharImage = async (name, index) => {
@@ -789,11 +877,206 @@ const getCharGrossGold = (char) => {
     return raidGoldList.sort((a, b) => b.gold - a.gold).slice(0, 3).reduce((sum, r) => sum + r.gold, 0);
 };
 
-// [수정] 상단 대시보드용 전체 합산 함수
 const getTotalGrossGold = () => {
-    return characters.value
-        .filter(c => c.isGoldCharacter)
-        .reduce((sum, char) => sum + getCharGrossGold(char), 0);
+    if (!characters.value.length) return 0;
+    return characters.value.reduce((sum, c) => sum + getCharGold(c), 0);
+};
+
+// [신규] 특정 관문이 골드 보상 대상으로 선택되었는지 확인 (UI 아이콘 색상 결정)
+const isGoldGateSelected = (char, raidName, gateG) => {
+    // 캐릭터 설정 내 goldSelectedGates 배열에 해당 관문 ID가 있는지 확인
+    const taskId = raidName + '_G' + gateG;
+    return char.settings?.goldSelectedGates?.includes(taskId);
+};
+
+// [보조] 현재 이 캐릭터가 몇 종류의 레이드에서 골드를 얻기로 했는지 카운트 (3개 제한용)
+const getSelectedRaidTypeCount = (char) => {
+    const selected = char.settings?.goldSelectedGates || [];
+    // 관문 ID(예: '에기르_G1')에서 레이드 이름만 추출하여 중복 제거
+    const raidNames = selected.map(id => id.split('_G')[0]);
+    return new Set(raidNames).size;
+};
+
+// [신규] 골드 획득 관문 토글 함수 (캐릭터당 최대 3개 레이드 제한 로직 포함)
+const toggleGoldGate = (char, raidName, gateG) => {
+    // 1. 설정 데이터가 없을 경우를 대비한 초기화
+    if (!char.settings) {
+        char.settings = {
+            goldSelectedGates: [],
+            visibleGroups: [],
+            selectedGateIds: [],
+            groupOrder: raidGroups.value,
+            hiddenTaskIds: [],
+            showWeekly: true
+        };
+    }
+    if (!char.settings.goldSelectedGates) char.settings.goldSelectedGates = [];
+
+    const taskId = raidName + '_G' + gateG;
+    const idx = char.settings.goldSelectedGates.indexOf(taskId);
+
+    if (idx > -1) {
+        // 2. 이미 지정된 경우: 리스트에서 제거 (해제)
+        char.settings.goldSelectedGates.splice(idx, 1);
+    } else {
+        // 3. 새로 지정할 경우: 캐릭터당 '레이드 종류' 기준 3개 제한 체크
+        // 현재 지정된 모든 관문 ID에서 레이드 이름만 추출하여 중복을 제거한 집합 생성
+        const selectedRaidNames = new Set(
+            char.settings.goldSelectedGates.map(id => id.split('_G')[0])
+        );
+
+        // 클릭한 레이드가 새로운 종류인데 이미 3종류를 선택했다면 경고 후 차단
+        if (!selectedRaidNames.has(raidName) && selectedRaidNames.size >= 3) {
+            alert("골드 보상은 캐릭터당 최대 3개의 레이드까지만 지정 가능합니다.");
+            return;
+        }
+
+        // 제한에 걸리지 않으면 리스트에 추가
+        char.settings.goldSelectedGates.push(taskId);
+    }
+
+    // 4. 변경된 데이터를 로컬 스토리지에 즉시 반영
+    saveToLocal();
+};
+const getCharMaxPossibleGold = (char) => {
+    if (!char.isGoldCharacter) return 0; // 골드 획득 캐릭터가 아니면 0원
+
+    let totalMax = 0;
+    const selectedGates = char.settings?.goldSelectedGates || [];
+
+    // [핵심] 유저가 돈주머니를 켠 관문들의 골드만 합산
+    selectedGates.forEach(gateId => {
+        const [rName, gNum] = gateId.split('_G');
+        const raid = raidList.find(r => r.name === rName);
+        const gate = raid?.gates.find(g => g.g === parseInt(gNum));
+        if (gate) totalMax += gate.gold;
+    });
+
+    // 현재 이 캐릭터가 체크(활성화)한 모든 '더보기' 비용 합산하여 차감
+    let moreCost = 0;
+    (char.moreTasks || []).forEach(moreId => {
+        const [rName, gPart] = moreId.split('_G');
+        const gNum = parseInt(gPart.replace('_More', ''));
+        const raid = raidList.find(r => r.name === rName);
+        const gate = raid?.gates.find(g => g.g === gNum);
+        if (gate) moreCost += (gate.moreGold || 0);
+    });
+
+    return Math.max(0, totalMax - moreCost); // 지출이 더 크더라도 음수가 나오지 않게 방어
+};
+
+// 버스 팝업 관련 상태
+const busDialog = ref(false);
+const busTarget = ref({ char: null, groupName: '' }); // gateG 제거
+const busForm = ref({ isDriver: true, gold: 0 });
+
+const openBusDialog = (char, groupName) => {
+    if (!char) return;
+    busTarget.value = { char, groupName };
+    // groupName을 키로 사용하여 기존 설정 불러오기
+    const existing = char.busTasks?.[groupName] || { isDriver: true, gold: 0 };
+    busForm.value = { ...existing };
+    busDialog.value = true;
+};
+
+const saveBusSetting = () => {
+    const { char, groupName } = busTarget.value;
+    if (!char) return;
+    if (!char.busTasks) char.busTasks = {};
+
+    // 골드 입력 시 groupName을 키로 저장
+    if (busForm.value.gold <= 0) {
+        delete char.busTasks[groupName];
+    } else {
+        char.busTasks[groupName] = { ...busForm.value };
+    }
+
+    saveToLocal();
+    busDialog.value = false;
+};
+
+const hasBusSetting = (char, groupName) => {
+    return !!char.busTasks?.[groupName];
+};
+
+
+const getCharGold = (char) => {
+    let current = 0;
+
+    // 1. 지정된 관문 기본 골드 합산
+    if (char.isGoldCharacter) {
+        const selected = char.settings?.goldSelectedGates || [];
+        const completed = char.completedTasks || [];
+        selected.forEach(id => {
+            if (completed.includes(id)) {
+                const [rName, gNum] = id.split('_G');
+                const raid = raidList.find(r => r.name === rName);
+                const gate = raid?.gates.find(g => g.g === parseInt(gNum));
+                if (gate) current += Number(gate.gold);
+            }
+        });
+    }
+
+    // 2. 더보기 지출 비용 차감
+    let moreCost = 0;
+    (char.moreTasks || []).forEach(id => {
+        const [rName, gPart] = id.split('_G');
+        const gNum = parseInt(gPart.replace('_More', ''));
+        const raid = raidList.find(r => r.name === rName);
+        const gate = raid?.gates.find(g => g.g === gNum);
+        if (gate) moreCost += Number(gate.moreGold || 0);
+    });
+
+    // 3. 버스 수지 합산 (getCharBusNetGold 활용)
+    return current - moreCost + getCharBusNetGold(char);
+};
+const getCharBusNetGold = (char) => {
+    if (!char.busTasks) return 0;
+    return Object.values(char.busTasks).reduce((sum, bus) => {
+        // 골드 값이 문자열로 들어올 경우를 대비해 Number로 변환
+        const goldVal = Number(bus.gold) || 0;
+        return sum + (bus.isDriver ? goldVal : -goldVal);
+    }, 0);
+};
+
+
+// 1. 원정대 전체 순수 레이드 클리어 골드 합산
+const getPureRaidGold = () => {
+    return characters.value.reduce((sum, char) => {
+        if (!char.isGoldCharacter) return sum;
+        let charRaidGold = 0;
+        const selected = char.settings?.goldSelectedGates || [];
+        const completed = char.completedTasks || [];
+        selected.forEach(id => {
+            if (completed.includes(id)) {
+                const [rName, gNum] = id.split('_G');
+                const raid = raidList.find(r => r.name === rName);
+                const gate = raid?.gates.find(g => g.g === parseInt(gNum));
+                if (gate) charRaidGold += Number(gate.gold);
+            }
+        });
+        return sum + charRaidGold;
+    }, 0);
+};
+
+// 2. 원정대 전체 버스 수지 합산
+const getTotalBusGold = () => {
+    return characters.value.reduce((sum, char) => sum + getCharBusNetGold(char), 0);
+};
+
+// 3. 원정대 전체 더보기 지출 합산
+const getTotalMoreCost = () => {
+    return characters.value.reduce((sum, char) => {
+        let charMoreCost = 0;
+        (char.moreTasks || []).forEach(id => {
+            const [rName, gPart] = id.split('_G');
+            const gNum = parseInt(gPart.replace('_More', ''));
+            const raid = raidList.find(r => r.name === rName);
+            const gate = raid?.gates.find(g => g.g === gNum);
+            if (gate) charMoreCost += Number(gate.moreGold || 0);
+        });
+        return sum + charMoreCost;
+    }, 0);
 };
 </script>
 
@@ -983,5 +1266,72 @@ const getTotalGrossGold = () => {
 
 .character-card:hover {
     transform: translateY(-2px);
+}
+
+/* 기본 토글 버튼 스타일 */
+.gold-toggle-btn {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    opacity: 0.6;
+}
+
+/* 활성화 상태 (돈주머니 켜짐) */
+.gold-toggle-btn.is-active {
+    opacity: 1 !important;
+    transform: scale(1.1);
+    /* 다크모드에서 눈에 띄는 네온 효과 */
+    filter: drop-shadow(0 0 5px rgba(255, 193, 7, 0.6));
+}
+
+/* 다크모드 전용 보정 */
+.v-theme--dark .gold-toggle-btn.is-active {
+    color: #FFD740 !important;
+    /* 더 밝은 노란색 */
+    filter: drop-shadow(0 0 8px rgba(255, 215, 64, 0.8));
+}
+
+/* 비활성화 상태 (돈주머니 꺼짐) */
+.gold-toggle-btn:not(.is-active) {
+    filter: grayscale(100%);
+}
+
+/* 마우스 호버 시 효과 */
+.gold-toggle-btn:hover {
+    background-color: rgba(255, 193, 7, 0.1) !important;
+    opacity: 1;
+}
+
+/* [추가] 골드 미지정 시 레이드 텍스트 가독성 처리 */
+.gold-excluded-text {
+    opacity: 0.4;
+    filter: blur(0.2px);
+    transition: all 0.3s ease;
+}
+
+/* 버스 설정 완료 시 푸른빛 글로우 효과 */
+.bus-active-glow {
+    filter: drop-shadow(0 0 5px rgba(0, 176, 255, 0.8));
+    animation: bus-pulse 2s infinite ease-in-out;
+}
+
+@keyframes bus-pulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+
+    50% {
+        transform: scale(1.15);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+}
+
+/* 다크모드 대응 강조 */
+.v-theme--dark .bus-active-glow {
+    filter: drop-shadow(0 0 8px rgba(0, 176, 255, 1));
 }
 </style>

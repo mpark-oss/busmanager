@@ -338,7 +338,7 @@ const deleteReport = async (report) => {
   const MASTER_PW = "0210";
 
   if (inputPw === report.password || inputPw === MASTER_PW) {
-    if (confirm('정말로 삭제하시겠습니까? 원정대 통합 점수도 함께 차감됩니다.')) {
+    if (confirm('정말로 삭제하시겠습니까?')) {
       try {
         // 1. 신고 내역 문서 삭제
         await deleteDoc(doc(db, "reports", report.id));

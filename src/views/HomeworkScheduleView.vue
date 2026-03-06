@@ -605,7 +605,7 @@ const activeCharName = ref("");
 const activeSchedules = ref([]);
 
 const dailyTasks = [{ id: 'chaos', name: '카오스 던전' }, { id: 'guardian', name: '가디언 토벌' }];
-const specialTasks = [{ id: 'sky', label: '천상' }, { id: 'hell', label: '지옥' }, { id: 'hall', label: '할' }];
+const specialTasks = [{ id: 'sky', label: '천상' }, { id: 'show', label: '증명' }, { id: 'hell', label: '지옥' }, { id: 'hall', label: '할' }];
 
 const raidList = [
     { group: "세르카", name: "그림자: 세르카(나이트메어)", level: 1740, gold: 54000, gates: [{ g: 1, gold: 21000, moreGold: 6720 }, { g: 2, gold: 33000, moreGold: 10560 }] },

@@ -83,8 +83,7 @@
                             <v-card-title class="pa-4 font-weight-black d-flex align-center">
                                 <v-icon class="me-2">mdi-account-group</v-icon> 원정대 캐릭터 관리
                             </v-card-title>
-                            <v-divider></v-divider>
-                            <v-divider class="my-4"></v-divider>
+                        
 
                             <div class="pa-4 bg-grey-lighten-4 rounded-lg mb-4">
                                 <div class="text-subtitle-2 font-weight-bold mb-2">
@@ -582,7 +581,7 @@ import { ref, onMounted, computed } from 'vue';
 import axios from 'axios';
 import draggable from 'vuedraggable';
 import { db } from '../firebase';
-import { collection, onSnapshot, getDoc, serverTimestamp } from "firebase/firestore";
+import { collection, onSnapshot, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 
 import { inject } from 'vue';
 // App.vue에서 제공한 빌런 리스트 주입

@@ -164,7 +164,7 @@
               :loading="isMoreMsgLoading"
               @click="fetchMoreMessages"
             >
-              <v-icon start>mdi-chevron-double-down</v-icon> 이전 낙서 더보기
+              <v-icon start>mdi-history</v-icon> 이전 낙서 더보기
             </v-btn>
           </div>
           <div

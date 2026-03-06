@@ -52,7 +52,7 @@
       <v-btn to="/schedule" prepend-icon="mdi-calendar-check">버스 스케줄</v-btn>
       <v-btn prepend-icon="mdi-clipboard-list" to="/homework">숙제 스케줄</v-btn>
       <v-btn to="/homework-schedule" prepend-icon="mdi-format-list-checks">개인 숙제 관리</v-btn>
-      <v-btn to="/board" prepend-icon="mdi-clipboard-text-outline">쌀산기</v-btn>
+      <v-btn to="/board" prepend-icon="mdi-calculator">쌀산기</v-btn>
       <v-btn to="/guestbook" prepend-icon="mdi-message-draw">커뮤니티</v-btn>
 
       <v-btn icon @click="toggleTheme" class="ms-2">

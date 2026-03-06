@@ -1295,7 +1295,7 @@ const saveToCloud = async () => {
   }
 };
 
-// 2. 클라우드 불러오기 함수
+// 2. 클라우드 불러오기 함수 수정
 const loadFromCloud = async () => {
   const mainName = localStorage.getItem('current_main_name');
   
@@ -1303,7 +1303,7 @@ const loadFromCloud = async () => {
     return alert('대표 캐릭터를 먼저 설정해주세요!');
   }
 
-  const confirmLoad = confirm('클라우드에서 데이터를 불러오시겠습니까?\n(현재 화면의 내용이 서버 데이터로 교체됩니다.)');
+  const confirmLoad = confirm('클라우드에서 데이터를 불러오시겠습니까?\n(현재 기기의 로컬 설정이 서버 데이터로 교체됩니다.)');
   if (!confirmLoad) return;
 
   isSyncing.value = true;
@@ -1314,17 +1314,26 @@ const loadFromCloud = async () => {
     if (docSnap.exists()) {
       const data = docSnap.data();
       
-      // 1. 메모리 데이터 갱신
-      characters.value = data.characters;
+      // [핵심] 1. 메모리(반응형 변수)에 데이터 주입
+      // 서버 데이터가 최신 구조(moreTasks 등)를 포함하고 있는지 확인하며 할당합니다.
+      characters.value = data.characters.map(char => ({
+        ...char,
+        completedTasks: char.completedTasks || [],
+        moreTasks: char.moreTasks || [],
+        busTasks: char.busTasks || {},
+        settings: char.settings || {}
+      }));
       
-      // 2. 로컬 스토리지 갱신 (App.vue의 저장 방식과 동일하게)
-      // 숙제 관리 데이터 키값이 'homework_characters'라고 가정합니다.
-      localStorage.setItem('homework_characters', JSON.stringify(data.characters));
+      // [핵심] 2. 로컬 스토리지에 즉시 저장 (saveToLocal 함수 재활용)
+      // 이 함수가 실행되면서 localStorage.setItem(getAccountKey(), ...)이 수행됩니다.
+      saveToLocal();
       
-      // 3. 만약 페이지 내에 saveLocal() 함수가 있다면 실행
-      if (typeof saveLocal === 'function') saveLocal();
+      // [핵심] 3. 주간 초기화 로직 재검토 (선택 사항)
+      // 불러온 데이터가 너무 옛날 데이터일 수 있으므로 필요 시 휴게 게이지 등을 재계산합니다.
+      updateDailyRestGauges();
       
-      alert('성공적으로 데이터를 동기화했습니다!');
+      rosterDialog.value = false;
+      alert('☁️ 클라우드 동기화 완료! 현재 기기에 자동 저장되었습니다.');
     } else {
       alert('해당 캐릭터명으로 저장된 클라우드 데이터가 없습니다.');
     }

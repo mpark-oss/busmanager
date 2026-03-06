@@ -2073,6 +2073,7 @@ const restoreCharacter = async (name) => {
   }
 };
 
+
 // [추가] DB 동기화 로직
 const isSyncing = ref(false);
 

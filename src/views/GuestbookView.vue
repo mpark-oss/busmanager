@@ -156,6 +156,23 @@
               </v-list-item>
             </v-fade-transition>
           </v-list>
+          <div v-if="hasMoreMessages" class="text-center mt-6">
+            <v-btn
+              variant="tonal"
+              color="primary"
+              rounded="lg"
+              :loading="isMoreMsgLoading"
+              @click="fetchMoreMessages"
+            >
+              <v-icon start>mdi-chevron-double-down</v-icon> 이전 낙서 더보기
+            </v-btn>
+          </div>
+          <div
+            v-else-if="messages.length > 0"
+            class="text-center mt-6 text-grey text-caption"
+          >
+            마지막 낙서입니다.
+          </div>
 
           <div v-if="messages.length === 0" class="text-center py-10 text-grey">
             첫 번째 낙서의 주인공이 되어보세요!
@@ -387,6 +404,25 @@
               </v-list-item>
             </v-fade-transition>
           </v-list>
+
+          <div v-if="hasMoreReports" class="text-center mt-6">
+            <v-btn
+              variant="flat"
+              color="error"
+              rounded="lg"
+              :loading="isReportsLoading"
+              @click="fetchMoreReports"
+            >
+              <v-icon start>mdi-history</v-icon> 이전 신고 내역 더보기
+            </v-btn>
+          </div>
+          <div
+            v-else-if="reports.length > 0"
+            class="text-center mt-6 text-grey text-caption"
+          >
+            모든 신고 내역을 불러왔습니다.
+          </div>
+
           <div v-if="reports.length === 0" class="text-center py-10 text-grey">
             등록된 사건/사고 내역이 없습니다.
           </div>
@@ -576,6 +612,8 @@ import {
   setDoc,
   increment,
   getDocs,
+  limit,
+  startAfter,
 } from "firebase/firestore";
 import { useTheme } from "vuetify";
 import axios from "axios";
@@ -594,6 +632,14 @@ const reportForm = ref({
   password: "",
   imageFile: null,
 });
+
+const lastVisible = ref(null); // 마지막으로 불러온 문서 저장용
+const isMoreLoading = ref(false);
+const hasMoreReports = ref(true); // 더 가져올 데이터가 있는지 여부
+
+const lastVisibleMsg = ref(null);
+const isMoreMsgLoading = ref(false);
+const hasMoreMessages = ref(true);
 
 const theme = useTheme();
 const API_KEY = import.meta.env.VITE_LOSTARK_API_KEY || "";
@@ -650,6 +696,63 @@ const chanceMap = {
 };
 
 // GuestbookView.vue <script setup> 내부
+
+const fetchInitialReports = async () => {
+  const q = query(
+    collection(db, "reports"),
+    orderBy("createdAt", "desc"),
+    limit(20),
+  );
+
+  const documentSnapshots = await getDocs(q);
+
+  // 마지막 문서 저장 (다음 쿼리의 시작점)
+  lastVisible.value = documentSnapshots.docs[documentSnapshots.docs.length - 1];
+
+  reports.value = documentSnapshots.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  }));
+
+  if (documentSnapshots.docs.length < 10) hasMore.value = false;
+};
+
+const fetchMoreReports = async () => {
+  if (!lastVisible.value || isMoreLoading.value) return;
+
+  isMoreLoading.value = true;
+  try {
+    const nextQ = query(
+      collection(db, "reports"),
+      orderBy("createdAt", "desc"),
+      startAfter(lastVisible.value),
+      limit(10),
+    );
+
+    const snapshot = await getDocs(nextQ);
+
+    if (!snapshot.empty) {
+      const moreData = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      // 🔥 기존 10개 뒤에 찰떡같이 붙임
+      reports.value.push(...moreData);
+      lastVisible.value = snapshot.docs[snapshot.docs.length - 1];
+
+      if (snapshot.docs.length < 10) {
+        hasMoreReports.value = false;
+      }
+    } else {
+      hasMoreReports.value = false;
+    }
+  } catch (e) {
+    console.error("더보기 에러:", e);
+  } finally {
+    isMoreLoading.value = false;
+  }
+};
 
 // 강하+1 버튼 클릭 시 실행할 함수
 const addExtraChance = () => {
@@ -786,6 +889,38 @@ const searchTarget = async () => {
   }
 };
 
+const setupRealtimeReports = () => {
+  // 최신 10개만 실시간으로 감시
+  const q = query(
+    collection(db, "reports"),
+    orderBy("createdAt", "desc"),
+    limit(10),
+  );
+
+  // 이 리스너는 최신 10개만 관리합니다.
+  onSnapshot(q, (snapshot) => {
+    const latestReports = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    // 💡 중요: 현재 리스트가 10개 이하일 때만 실시간 업데이트를 반영하거나,
+    // 최신 글이 추가되었을 때 자연스럽게 상단에 끼워넣기 위해 처리
+    // 여기서는 간단하게 초기 로드 및 최신 상태 유지를 담당하게 합니다.
+    if (reports.value.length <= 10) {
+      reports.value = latestReports;
+    }
+
+    // 페이징을 위한 커서 설정 (최초 1회 및 실시간 최하단 기준)
+    if (snapshot.docs.length > 0) {
+      lastVisible.value = snapshot.docs[snapshot.docs.length - 1];
+    }
+
+    // 데이터가 10개 미만이면 더보기 버튼 비활성화
+    hasMoreReports.value = snapshot.docs.length === 10;
+  });
+};
+
 const submitReport = async () => {
   // 1. 사전 유효성 검사
   if (!isSearched.value) {
@@ -796,6 +931,7 @@ const submitReport = async () => {
   }
 
   isReporting.value = true;
+
 
   try {
     // 2. 이미지 업로드 처리 (선택 사항)
@@ -913,30 +1049,102 @@ const handleMainCharChange = (e) => {
   newName.value = e.detail;
 };
 
+const fetchMoreMessages = async () => {
+  if (!lastVisibleMsg.value || isMoreMsgLoading.value) return;
+  isMoreMsgLoading.value = true;
+  try {
+    const nextQ = query(
+      collection(db, "guestbook"),
+      orderBy("createdAt", "desc"),
+      startAfter(lastVisibleMsg.value),
+      limit(10)
+    );
+    const snapshot = await getDocs(nextQ);
+    if (!snapshot.empty) {
+      const newItems = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      messages.value.push(...newItems);
+      lastVisibleMsg.value = snapshot.docs[snapshot.docs.length - 1];
+      if (snapshot.docs.length < 10) hasMoreMessages.value = false;
+    } else {
+      hasMoreMessages.value = false;
+    }
+  } catch (e) { console.error(e); } finally { isMoreMsgLoading.value = false; }
+};
+
+const setupInitialGuestbook = () => {
+  const q = query(collection(db, "guestbook"), orderBy("createdAt", "desc"), limit(10));
+  onSnapshot(q, (snapshot) => {
+    const initialMsgs = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    if (messages.value.length <= 10) {
+      messages.value = initialMsgs;
+    } else {
+      const olderMsgs = messages.value.slice(10);
+      messages.value = [...initialMsgs, ...olderMsgs];
+    }
+    if (snapshot.docs.length > 0) {
+      lastVisibleMsg.value = snapshot.docs[snapshot.docs.length - 1];
+    }
+    hasMoreMessages.value = snapshot.docs.length === 10;
+  });
+};
+
 onMounted(() => {
   loadCurrentMainName();
-  window.addEventListener("main-char-changed", handleMainCharChange);
-  window.addEventListener("paste", handlePaste); // 붙여넣기 이벤트 리스너 등록
+  // 🔥 기존에 있던 reports 관련 onSnapshot은 모두 지우고 이것만 남기세요!
+  setupInitialReports();
+  setupInitialGuestbook();
 
-  const q = query(collection(db, "guestbook"), orderBy("createdAt", "desc"));
-  onSnapshot(q, (snapshot) => {
+  window.addEventListener("main-char-changed", handleMainCharChange);
+  window.addEventListener("paste", handlePaste);
+
+  // 낙서장(guestbook)도 limit를 걸어줘야 안 터집니다.
+  const guestbookQ = query(
+    collection(db, "guestbook"),
+    orderBy("createdAt", "desc"),
+    limit(10),
+  );
+  onSnapshot(guestbookQ, (snapshot) => {
     messages.value = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     }));
   });
+});
 
-  const reportQ = query(
+const setupInitialReports = () => {
+  const q = query(
     collection(db, "reports"),
     orderBy("createdAt", "desc"),
+    limit(10), // 🔥 여기서 10개로 꽉 잡습니다.
   );
-  onSnapshot(reportQ, (snapshot) => {
-    reports.value = snapshot.docs.map((doc) => ({
+
+  // 실시간 리스너 시작
+  onSnapshot(q, (snapshot) => {
+    // 실시간 업데이트는 최상단 10개에 대해서만 동작하게 함
+    const initialItems = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     }));
+
+    // 만약 이미 '더보기'를 눌러서 10개보다 많이 불러온 상태라면?
+    // 최신 데이터만 업데이트하고 기존에 불러온 데이터는 유지해야 함
+    if (reports.value.length <= 10) {
+      reports.value = initialItems;
+    } else {
+      // 이미 더보기를 눌러서 데이터가 많다면, 최신 10개만 갈아끼우고 나머지는 유지
+      const olderItems = reports.value.slice(10);
+      reports.value = [...initialItems, ...olderItems];
+    }
+
+    // 페이징용 커서(마지막 문서) 저장
+    if (snapshot.docs.length > 0) {
+      lastVisible.value = snapshot.docs[snapshot.docs.length - 1];
+    }
+
+    // 데이터가 딱 10개면 더보기 버튼을 보여줌
+    hasMoreReports.value = snapshot.docs.length === 10;
   });
-});
+};
 
 onUnmounted(() => {
   window.removeEventListener("main-char-changed", handleMainCharChange);

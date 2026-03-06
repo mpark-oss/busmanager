@@ -1,33 +1,68 @@
 <template>
   <v-container fluid class="fill-height align-start pa-0">
     <v-row no-gutters class="fill-height">
-      <v-col cols="12" md="3" lg="2" class="pa-4 border-end d-flex flex-column"
-        style="height: 100vh; max-height: 100vh;">
-
+      <v-col
+        cols="12"
+        md="3"
+        lg="2"
+        class="pa-4 border-end d-flex flex-column"
+        style="height: 100vh; max-height: 100vh"
+      >
         <div class="flex-shrink-0">
-          <div class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center">
-            <v-icon color="primary" class="me-2">mdi-account-multiple</v-icon> 캐릭터 명단
+          <div
+            class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center"
+          >
+            <v-icon color="primary" class="me-2">mdi-account-multiple</v-icon>
+            캐릭터 명단
           </div>
 
-          <v-text-field v-model="searchName" label="캐릭터 추가" append-inner-icon="mdi-magnify"
-            @click:append-inner="fetchCharacter" @keyup.enter="fetchCharacter" :loading="isLoading"
-            density="comfortable" variant="solo-filled" flat hide-details
-            class="mb-4 rounded-lg custom-search-field"></v-text-field>
+          <v-text-field
+            v-model="searchName"
+            label="캐릭터 추가"
+            append-inner-icon="mdi-magnify"
+            @click:append-inner="fetchCharacter"
+            @keyup.enter="fetchCharacter"
+            :loading="isLoading"
+            density="comfortable"
+            variant="solo-filled"
+            flat
+            hide-details
+            class="mb-4 rounded-lg custom-search-field"
+          ></v-text-field>
           <v-divider class="mb-4"></v-divider>
         </div>
 
-        <div class="character-list-scroll custom-scroll flex-grow-1" style="overflow-y: auto; min-height: 0;">
-          <draggable :model-value="rankedCharList" :group="{ name: 'pilots', pull: 'clone', put: false }"
-            :clone="cloneCharacter" item-key="id">
+        <div
+          class="character-list-scroll custom-scroll flex-grow-1"
+          style="overflow-y: auto; min-height: 0"
+        >
+          <draggable
+            :model-value="rankedCharList"
+            :group="{ name: 'pilots', pull: 'clone', put: false }"
+            :clone="cloneCharacter"
+            item-key="id"
+          >
             <template #item="{ element }">
-              <v-card class="mb-4 pa-3 cursor-pointer rounded-xl char-rank-card transition-swing overflow-hidden"
-                :class="element.rank <= 5 ? `rank-step-${element.rank}` : 'rank-normal'" variant="flat"
-                @click="selectCharacter(element.name)">
-
+              <v-card
+                class="mb-4 pa-3 cursor-pointer rounded-xl char-rank-card transition-swing overflow-hidden"
+                :class="
+                  element.rank <= 5
+                    ? `rank-step-${element.rank}`
+                    : 'rank-normal'
+                "
+                variant="flat"
+                @click="selectCharacter(element.name)"
+              >
                 <div v-if="element.rank <= 5" class="glow-overlay"></div>
 
-                <div class="d-flex align-center gap-3 position-relative" style="z-index: 2;">
-                  <div v-if="element.rank <= 5" class="rank-number font-weight-black">
+                <div
+                  class="d-flex align-center gap-3 position-relative"
+                  style="z-index: 2"
+                >
+                  <div
+                    v-if="element.rank <= 5"
+                    class="rank-number font-weight-black"
+                  >
                     #{{ element.rank }}
                   </div>
 
@@ -36,38 +71,70 @@
                   </v-avatar>
 
                   <div class="flex-grow-1 overflow-hidden">
-                    <div class="font-weight-black text-body-2 text-truncate mb-1 text-name-fix">
+                    <div
+                      class="font-weight-black text-body-2 text-truncate mb-1 text-name-fix"
+                    >
                       {{ element.name }}
-                      <v-tooltip v-if="topRosterMembers.includes(element.name)" location="top">
+                      <v-tooltip
+                        v-if="topRosterMembers.includes(element.name)"
+                        location="top"
+                      >
                         <template v-slot:activator="{ props }">
-                          <v-chip v-bind="props" size="x-small" color="lime" variant="flat"
-                            class="ms-2 px-1 pulse-badge">
-                            <v-icon size="14" color="red">mdi-alarm-light</v-icon>
-                            <span class="ms-1 font-weight-bold" style="font-size: 0.7rem !important;">흐사게스타</span>
+                          <v-chip
+                            v-bind="props"
+                            size="x-small"
+                            color="red"
+                            variant="flat"
+                            class="ms-2 px-1 pulse-badge"
+                          >
+                            <v-icon size="14" color="white">mdi-skull</v-icon>
+                            <span
+                              class="ms-1 font-weight-bold"
+                              style="font-size: 0.7rem !important"
+                              >흐사게스타</span
+                            >
                           </v-chip>
                         </template>
                         <span>원정대 누적 신고 {{ topRosterCount }}회!</span>
                       </v-tooltip>
                     </div>
 
-
                     <div class="d-flex flex-column gap-0">
-                      <div class="text-caption d-flex align-center" style="gap: 4px;">
+                      <div
+                        class="text-caption d-flex align-center"
+                        style="gap: 4px"
+                      >
                         <span class="level-badge">Lv.{{ element.level }}</span>
-                        <span class="opacity-90 text-truncate text-job-fix">{{ element.job }}</span>
+                        <span class="opacity-90 text-truncate text-job-fix">{{
+                          element.job
+                        }}</span>
                       </div>
 
-                      <div class="combat-power-text font-weight-black d-flex align-center mt-1"
-                        style="font-size: 0.75rem;">
-                        <v-icon size="12" class="me-1 text-name-fix">mdi-sword-cross</v-icon>
-                        <span class="text-name-fix">{{ element.combatPower }}</span>
+                      <div
+                        class="combat-power-text font-weight-black d-flex align-center mt-1"
+                        style="font-size: 0.75rem"
+                      >
+                        <v-icon size="12" class="me-1 text-name-fix"
+                          >mdi-sword-cross</v-icon
+                        >
+                        <span class="text-name-fix">{{
+                          element.combatPower
+                        }}</span>
                       </div>
                     </div>
                   </div>
 
-                  <v-btn icon="mdi-close-circle" size="18" variant="text"
-                    :color="(element.rank <= 3 || theme.global.current.value.dark) ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'"
-                    @click.stop="deleteChar(element.id)"></v-btn>
+                  <v-btn
+                    icon="mdi-close-circle"
+                    size="18"
+                    variant="text"
+                    :color="
+                      element.rank <= 3 || theme.global.current.value.dark
+                        ? 'rgba(255,255,255,0.3)'
+                        : 'rgba(0,0,0,0.3)'
+                    "
+                    @click.stop="deleteChar(element.id)"
+                  ></v-btn>
                 </div>
               </v-card>
             </template>
@@ -75,45 +142,98 @@
         </div>
       </v-col>
 
-      <v-col cols="12" md="9" lg="10" class="pa-6 d-flex flex-column"
-        style="height: 100vh; max-height: 100vh; overflow-y: auto;">
+      <v-col
+        cols="12"
+        md="9"
+        lg="10"
+        class="pa-6 d-flex flex-column"
+        style="height: 100vh; max-height: 100vh; overflow-y: auto"
+      >
         <div class="d-flex justify-space-between align-center mb-6">
           <h2 class="text-h5 font-weight-black d-flex align-center">
-            <v-icon class="me-2" color="primary">mdi-bus-school</v-icon> 캐릭터 정보 / 공격대 만들기
+            <v-icon class="me-2" color="primary">mdi-bus-school</v-icon> 캐릭터
+            정보 / 공격대 만들기
           </h2>
-          <v-btn color="primary" prepend-icon="mdi-plus" rounded="lg" size="large" elevation="2" @click="addBusSlot">
+          <v-btn
+            color="primary"
+            prepend-icon="mdi-plus"
+            rounded="lg"
+            size="large"
+            elevation="2"
+            @click="addBusSlot"
+          >
             새 공대 만들기
           </v-btn>
         </div>
 
-        <v-card variant="flat"
-          class="rounded-xl pa-6 d-flex flex-column flex-grow-1 elevation-1 overflow-y-auto custom-scroll" border
-          height="85vh">
-          <div v-if="localBuses.length === 0" class="flex-grow-1 d-flex flex-column">
+        <v-card
+          variant="flat"
+          class="rounded-xl pa-6 d-flex flex-column flex-grow-1 elevation-1 overflow-y-auto custom-scroll"
+          border
+          height="85vh"
+        >
+          <div
+            v-if="localBuses.length === 0"
+            class="flex-grow-1 d-flex flex-column"
+          >
             <v-fade-transition hide-on-leave>
-              <div v-if="selectedChar && !isDetailLoading" class="dashboard-container w-100">
+              <div
+                v-if="selectedChar && !isDetailLoading"
+                class="dashboard-container w-100"
+              >
                 <v-row class="mb-6" align="stretch">
                   <v-col cols="12" md="3">
-                    <div class="text-subtitle-2 font-weight-black mb-3 opacity-70">프로필 요약</div>
-                    <v-card class="profile-card rounded-xl overflow-hidden elevation-3 h-100 d-flex flex-column"
-                      theme="dark">
-                      <v-img :src="selectedChar.ArmoryProfile?.CharacterImage" cover class="align-end" height="300">
+                    <div
+                      class="text-subtitle-2 font-weight-black mb-3 opacity-70"
+                    >
+                      프로필 요약
+                    </div>
+                    <v-card
+                      class="profile-card rounded-xl overflow-hidden elevation-3 h-100 d-flex flex-column"
+                      theme="dark"
+                    >
+                      <v-img
+                        :src="selectedChar.ArmoryProfile?.CharacterImage"
+                        cover
+                        class="align-end"
+                        height="300"
+                      >
                         <div class="profile-gradient pa-4 w-100 text-white">
-                          <div class="text-h6 font-weight-black mb-1 text-truncate">{{
-                            selectedChar.ArmoryProfile?.CharacterName }}</div>
-                          <div class="text-caption font-weight-bold mb-3 d-flex align-center opacity-90">
-                            {{ selectedChar.ArmoryProfile?.CharacterClassName }}
-                            <v-divider vertical class="mx-2 my-1 border-white"
-                              v-if="selectedChar.ArkPassive?.Title"></v-divider>
-                            <span class="text-amber-accent-1" v-if="selectedChar.ArkPassive?.Title">{{
-                              selectedChar.ArkPassive.Title }}</span>
+                          <div
+                            class="text-h6 font-weight-black mb-1 text-truncate"
+                          >
+                            {{ selectedChar.ArmoryProfile?.CharacterName }}
                           </div>
-                          <div class="text-h5 font-weight-black text-amber-accent-2 mb-1">Lv.{{
-                            selectedChar.ArmoryProfile?.ItemAvgLevel }}</div>
+                          <div
+                            class="text-caption font-weight-bold mb-3 d-flex align-center opacity-90"
+                          >
+                            {{ selectedChar.ArmoryProfile?.CharacterClassName }}
+                            <v-divider
+                              vertical
+                              class="mx-2 my-1 border-white"
+                              v-if="selectedChar.ArkPassive?.Title"
+                            ></v-divider>
+                            <span
+                              class="text-amber-accent-1"
+                              v-if="selectedChar.ArkPassive?.Title"
+                              >{{ selectedChar.ArkPassive.Title }}</span
+                            >
+                          </div>
+                          <div
+                            class="text-h5 font-weight-black text-amber-accent-2 mb-1"
+                          >
+                            Lv.{{ selectedChar.ArmoryProfile?.ItemAvgLevel }}
+                          </div>
                           <div class="d-flex align-center gap-2">
-                            <v-icon color="red-accent-2" size="18">mdi-sword-cross</v-icon>
-                            <span class="text-h6 font-weight-black text-red-accent-1">{{
-                              selectedChar.ArmoryProfile?.CombatPower }}</span>
+                            <v-icon color="red-accent-2" size="18"
+                              >mdi-sword-cross</v-icon
+                            >
+                            <span
+                              class="text-h6 font-weight-black text-red-accent-1"
+                              >{{
+                                selectedChar.ArmoryProfile?.CombatPower
+                              }}</span
+                            >
                           </div>
                         </div>
                       </v-img>
@@ -123,21 +243,48 @@
                   <v-col cols="12" md="5">
                     <v-row no-gutters class="h-100">
                       <v-col cols="6" class="pe-1 d-flex flex-column">
-                        <div class="text-subtitle-2 font-weight-black mb-2 opacity-70">착용 장비</div>
+                        <div
+                          class="text-subtitle-2 font-weight-black mb-2 opacity-70"
+                        >
+                          착용 장비
+                        </div>
                         <div class="d-flex flex-column h-100">
-                          <v-card v-for="item in filteredEquipment" :key="item.Name" variant="flat" border
-                            class="pa-2 rounded-lg d-flex align-center mb-1 flex-grow-1">
-                            <v-avatar size="32" rounded="sm" class="me-2 border border-opacity-25"
-                              :style="{ backgroundColor: getEquipmentBgColor(item.Grade) }">
+                          <v-card
+                            v-for="item in filteredEquipment"
+                            :key="item.Name"
+                            variant="flat"
+                            border
+                            class="pa-2 rounded-lg d-flex align-center mb-1 flex-grow-1"
+                          >
+                            <v-avatar
+                              size="32"
+                              rounded="sm"
+                              class="me-2 border border-opacity-25"
+                              :style="{
+                                backgroundColor: getEquipmentBgColor(
+                                  item.Grade,
+                                ),
+                              }"
+                            >
                               <v-img :src="item.Icon"></v-img>
                             </v-avatar>
                             <div class="overflow-hidden">
-                              <div class="text-caption font-weight-black text-truncate"
-                                style="line-height: 1.1; font-size: 0.75rem !important;">
+                              <div
+                                class="text-caption font-weight-black text-truncate"
+                                style="
+                                  line-height: 1.1;
+                                  font-size: 0.75rem !important;
+                                "
+                              >
                                 {{ item.Name }}
                               </div>
-                              <div class="text-overline opacity-60"
-                                style="font-size: 0.5rem !important; line-height: 1;">
+                              <div
+                                class="text-overline opacity-60"
+                                style="
+                                  font-size: 0.5rem !important;
+                                  line-height: 1;
+                                "
+                              >
                                 {{ item.Grade }}
                               </div>
                             </div>
@@ -146,21 +293,47 @@
                       </v-col>
 
                       <v-col cols="6" class="ps-1 d-flex flex-column">
-                        <div class="text-subtitle-2 font-weight-black mb-2 opacity-70">악세서리 / 스톤</div>
+                        <div
+                          class="text-subtitle-2 font-weight-black mb-2 opacity-70"
+                        >
+                          악세서리 / 스톤
+                        </div>
                         <div class="d-flex flex-column h-100">
-                          <v-card v-for="acc in filteredAccessories" :key="acc.Name" variant="flat" border
+                          <v-card
+                            v-for="acc in filteredAccessories"
+                            :key="acc.Name"
+                            variant="flat"
+                            border
                             class="pa-2 rounded-lg mb-1 flex-grow-1 accessory-polish-card d-flex align-center"
-                            style="max-height: 100px; min-height: 60px;">
-                            <v-avatar size="30" rounded="sm" class="me-2 flex-shrink-0"
-                              :style="{ backgroundColor: getEquipmentBgColor(acc.Grade) }">
+                            style="max-height: 100px; min-height: 60px"
+                          >
+                            <v-avatar
+                              size="30"
+                              rounded="sm"
+                              class="me-2 flex-shrink-0"
+                              :style="{
+                                backgroundColor: getEquipmentBgColor(acc.Grade),
+                              }"
+                            >
                               <v-img :src="acc.Icon"></v-img>
                             </v-avatar>
 
-                            <div class="flex-grow-1 custom-scroll"
-                              style="font-size: 0.65rem; overflow-y: auto; max-height: 80px;">
-                              <div v-if="acc.displayInfo" v-html="acc.displayInfo" class="line-height-normal pe-1">
+                            <div
+                              class="flex-grow-1 custom-scroll"
+                              style="
+                                font-size: 0.65rem;
+                                overflow-y: auto;
+                                max-height: 80px;
+                              "
+                            >
+                              <div
+                                v-if="acc.displayInfo"
+                                v-html="acc.displayInfo"
+                                class="line-height-normal pe-1"
+                              ></div>
+                              <div v-else class="text-caption text-grey">
+                                {{ acc.Type }}
                               </div>
-                              <div v-else class="text-caption text-grey">{{ acc.Type }}</div>
                             </div>
                           </v-card>
                         </div>
@@ -169,24 +342,52 @@
                   </v-col>
 
                   <v-col cols="12" md="4" class="d-flex flex-column">
-                    <div class="text-subtitle-2 font-weight-black mb-3 opacity-70">아크그리드 정보</div>
+                    <div
+                      class="text-subtitle-2 font-weight-black mb-3 opacity-70"
+                    >
+                      아크그리드 정보
+                    </div>
                     <div class="d-flex flex-column mb-4">
-                      <v-card v-for="slot in selectedChar.ArkGrid?.Slots" :key="slot.Index" variant="flat"
+                      <v-card
+                        v-for="slot in selectedChar.ArkGrid?.Slots"
+                        :key="slot.Index"
+                        variant="flat"
                         class="pa-1 rounded-lg d-flex align-center mb-1 ark-slot-card"
-                        :style="{ backgroundColor: getArkGridBgColor(slot.Grade) }">
-
-                        <v-avatar size="30" rounded="sm" class="me-2 border border-opacity-25 shadow-sm flex-shrink-0"
-                          :style="{ backgroundColor: getEquipmentBgColor(slot.Grade) }">
+                        :style="{
+                          backgroundColor: getArkGridBgColor(slot.Grade),
+                        }"
+                      >
+                        <v-avatar
+                          size="30"
+                          rounded="sm"
+                          class="me-2 border border-opacity-25 shadow-sm flex-shrink-0"
+                          :style="{
+                            backgroundColor: getEquipmentBgColor(slot.Grade),
+                          }"
+                        >
                           <v-img :src="slot.Icon"></v-img>
                         </v-avatar>
 
                         <div class="flex-grow-1 overflow-hidden">
-                          <div class="text-caption font-weight-black text-truncate ark-slot-name"
-                            :class="{ 'text-white': theme.global.current.value.dark }"
-                            style="line-height: 1.2 !important; font-size: 0.7rem;">{{
-                              slot.Name }}</div>
-                          <div class="text-overline font-weight-bold d-flex justify-space-between opacity-70"
-                            style="line-height: 1 !important; font-size: 0.5rem !important;">
+                          <div
+                            class="text-caption font-weight-black text-truncate ark-slot-name"
+                            :class="{
+                              'text-white': theme.global.current.value.dark,
+                            }"
+                            style="
+                              line-height: 1.2 !important;
+                              font-size: 0.7rem;
+                            "
+                          >
+                            {{ slot.Name }}
+                          </div>
+                          <div
+                            class="text-overline font-weight-bold d-flex justify-space-between opacity-70"
+                            style="
+                              line-height: 1 !important;
+                              font-size: 0.5rem !important;
+                            "
+                          >
                             <span>{{ slot.Grade }}</span>
                             <span>{{ slot.Point }}PT</span>
                           </div>
@@ -194,14 +395,33 @@
                       </v-card>
                     </div>
 
-                    <div class="text-subtitle-2 font-weight-black mb-2 opacity-70">장착 젬 효과</div>
-                    <v-card variant="outlined" border class="pa-2 rounded-xl flex-grow-1"
-                      style="max-height: 240px; overflow-y: auto;">
-                      <div v-for="effect in selectedChar.ArkGrid?.Effects" :key="effect.Name"
-                        class="mb-1 d-flex align-center justify-space-between border-bottom border-opacity-10 pb-1">
-                        <span class="text-caption font-weight-bold text-medium-emphasis">{{ effect.Name }}</span>
-                        <v-chip size="x-small" color="primary" variant="flat" class="font-weight-black px-2">LV.{{
-                          effect.Level }}</v-chip>
+                    <div
+                      class="text-subtitle-2 font-weight-black mb-2 opacity-70"
+                    >
+                      장착 젬 효과
+                    </div>
+                    <v-card
+                      variant="outlined"
+                      border
+                      class="pa-2 rounded-xl flex-grow-1"
+                      style="max-height: 240px; overflow-y: auto"
+                    >
+                      <div
+                        v-for="effect in selectedChar.ArkGrid?.Effects"
+                        :key="effect.Name"
+                        class="mb-1 d-flex align-center justify-space-between border-bottom border-opacity-10 pb-1"
+                      >
+                        <span
+                          class="text-caption font-weight-bold text-medium-emphasis"
+                          >{{ effect.Name }}</span
+                        >
+                        <v-chip
+                          size="x-small"
+                          color="primary"
+                          variant="flat"
+                          class="font-weight-black px-2"
+                          >LV.{{ effect.Level }}</v-chip
+                        >
                       </div>
                     </v-card>
                   </v-col>
@@ -211,133 +431,306 @@
 
                 <v-row dense>
                   <v-col cols="12" md="6">
-                    <div class="text-subtitle-2 font-weight-black mb-4 opacity-70">장착 보석</div>
+                    <div
+                      class="text-subtitle-2 font-weight-black mb-4 opacity-70"
+                    >
+                      장착 보석
+                    </div>
 
-                    <div class="d-flex flex-nowrap align-center overflow-x-auto custom-scroll pb-2" style="gap: 8px;">
-                      <div v-for="(gem, index) in selectedChar.ArmoryGem?.Gems" :key="index"
-                        class="text-center gem-wrapper flex-shrink-0">
-
-                        <v-tooltip location="top" open-delay="50" color="#0a0a0a">
+                    <div
+                      class="d-flex flex-nowrap align-center overflow-x-auto custom-scroll pb-2"
+                      style="gap: 8px"
+                    >
+                      <div
+                        v-for="(gem, index) in selectedChar.ArmoryGem?.Gems"
+                        :key="index"
+                        class="text-center gem-wrapper flex-shrink-0"
+                      >
+                        <v-tooltip
+                          location="top"
+                          open-delay="50"
+                          color="#0a0a0a"
+                        >
                           <template v-slot:activator="{ props }">
-                            <v-avatar size="52" rounded="lg" class="elevation-2 mb-1 border" v-bind="props"
-                              style="cursor: help;">
+                            <v-avatar
+                              size="52"
+                              rounded="lg"
+                              class="elevation-2 mb-1 border"
+                              v-bind="props"
+                              style="cursor: help"
+                            >
                               <v-img :src="gem.Icon"></v-img>
                             </v-avatar>
                           </template>
 
                           <div class="text-center pa-2 gem-tooltip-content">
-                            <div class="text-caption font-weight-black mb-1 gem-name-text" v-html="gem.Name"></div>
-                            <v-divider class="mb-2 border-opacity-50"></v-divider>
-                            <div class="text-subtitle-2 font-weight-bold gem-effect-text"
-                              v-html="parseGemEffect(gem.Tooltip)"></div>
+                            <div
+                              class="text-caption font-weight-black mb-1 gem-name-text"
+                              v-html="gem.Name"
+                            ></div>
+                            <v-divider
+                              class="mb-2 border-opacity-50"
+                            ></v-divider>
+                            <div
+                              class="text-subtitle-2 font-weight-bold gem-effect-text"
+                              v-html="parseGemEffect(gem.Tooltip)"
+                            ></div>
                           </div>
                         </v-tooltip>
 
-                        <div class="text-caption font-weight-black" style="font-size: 0.7rem;">{{ gem.Level }}LV</div>
+                        <div
+                          class="text-caption font-weight-black"
+                          style="font-size: 0.7rem"
+                        >
+                          {{ gem.Level }}LV
+                        </div>
                       </div>
                     </div>
                   </v-col>
 
                   <v-col cols="12" md="6">
-                    <div class="text-subtitle-2 font-weight-black mb-4 opacity-70">활성 각인</div>
+                    <div
+                      class="text-subtitle-2 font-weight-black mb-4 opacity-70"
+                    >
+                      활성 각인
+                    </div>
 
-                    <div class="d-flex flex-nowrap align-center overflow-x-auto custom-scroll pb-2" style="gap: 8px;">
-                      <v-card v-for="engrave in selectedChar.ArmoryEngraving?.ArkPassiveEffects" :key="engrave.Name"
-                        variant="outlined" border class="pa-2 px-3 rounded-pill d-flex align-center flex-shrink-0">
-                        <v-chip size="x-small" color="orange-darken-4" class="me-2 font-weight-black text-white"
-                          label>Lv.{{
-                            engrave.Level }}</v-chip>
-                        <span class="text-caption font-weight-bold text-truncate">{{ engrave.Name }}</span>
+                    <div
+                      class="d-flex flex-nowrap align-center overflow-x-auto custom-scroll pb-2"
+                      style="gap: 8px"
+                    >
+                      <v-card
+                        v-for="engrave in selectedChar.ArmoryEngraving
+                          ?.ArkPassiveEffects"
+                        :key="engrave.Name"
+                        variant="outlined"
+                        border
+                        class="pa-2 px-3 rounded-pill d-flex align-center flex-shrink-0"
+                      >
+                        <v-chip
+                          size="x-small"
+                          color="orange-darken-4"
+                          class="me-2 font-weight-black text-white"
+                          label
+                          >Lv.{{ engrave.Level }}</v-chip
+                        >
+                        <span
+                          class="text-caption font-weight-bold text-truncate"
+                          >{{ engrave.Name }}</span
+                        >
                       </v-card>
                     </div>
                   </v-col>
                 </v-row>
               </div>
-              <div v-else-if="isDetailLoading" class="d-flex align-center justify-center flex-grow-1 py-12">
-                <v-progress-circular indeterminate color="primary" size="64" width="6"></v-progress-circular>
+              <div
+                v-else-if="isDetailLoading"
+                class="d-flex align-center justify-center flex-grow-1 py-12"
+              >
+                <v-progress-circular
+                  indeterminate
+                  color="primary"
+                  size="64"
+                  width="6"
+                ></v-progress-circular>
               </div>
-              <div v-else class="d-flex flex-column align-center justify-center flex-grow-1 text-center py-12">
-                <v-icon size="100" color="primary" class="opacity-20 mb-6">mdi-card-account-details-outline</v-icon>
-                <h3 class="text-h4 font-weight-bold opacity-50">캐릭터 클릭시 상세 정보</h3>
+              <div
+                v-else
+                class="d-flex flex-column align-center justify-center flex-grow-1 text-center py-12"
+              >
+                <v-icon size="100" color="primary" class="opacity-20 mb-6"
+                  >mdi-card-account-details-outline</v-icon
+                >
+                <h3 class="text-h4 font-weight-bold opacity-50">
+                  캐릭터 클릭시 상세 정보
+                </h3>
               </div>
             </v-fade-transition>
           </div>
 
           <v-row dense v-else>
-            <v-col v-for="(bus, bIdx) in localBuses" :key="bus.localId" cols="12" sm="6" xl="4">
-              <v-card border elevation="1" class="rounded-xl overflow-hidden bus-card mb-4 bg-surface">
+            <v-col
+              v-for="(bus, bIdx) in localBuses"
+              :key="bus.localId"
+              cols="12"
+              sm="6"
+              xl="4"
+            >
+              <v-card
+                border
+                elevation="1"
+                class="rounded-xl overflow-hidden bus-card mb-4 bg-surface"
+              >
                 <v-toolbar color="primary" density="compact" flat>
-                  <v-icon :icon="bus.isHomework ? 'mdi-calendar-check' : 'mdi-bus-side'" class="ms-3" size="small"
-                    color="white"></v-icon>
-                  <v-toolbar-title class="text-body-2 font-weight-bold text-white">
-                    {{ bus.isHomework ? '신규 숙제 편성' : '신규 버스 편성' }}
+                  <v-icon
+                    :icon="
+                      bus.isHomework ? 'mdi-calendar-check' : 'mdi-bus-side'
+                    "
+                    class="ms-3"
+                    size="small"
+                    color="white"
+                  ></v-icon>
+                  <v-toolbar-title
+                    class="text-body-2 font-weight-bold text-white"
+                  >
+                    {{ bus.isHomework ? "신규 숙제 편성" : "신규 버스 편성" }}
                   </v-toolbar-title>
 
                   <v-spacer></v-spacer>
 
                   <div class="d-flex align-center me-2">
-                    <span class="text-caption me-2 text-white">{{ bus.isHomework ? '숙제' : '버스' }}</span>
-                    <v-switch v-model="bus.isHomework" :false-value="false" :true-value="true" hide-details
-                      density="compact" color="secondary" inset></v-switch>
+                    <span class="text-caption me-2 text-white">{{
+                      bus.isHomework ? "숙제" : "버스"
+                    }}</span>
+                    <v-switch
+                      v-model="bus.isHomework"
+                      :false-value="false"
+                      :true-value="true"
+                      hide-details
+                      density="compact"
+                      color="secondary"
+                      inset
+                    ></v-switch>
                   </div>
 
-                  <v-btn icon="mdi-close" size="x-small" color="white" @click="localBuses.splice(bIdx, 1)"></v-btn>
+                  <v-btn
+                    icon="mdi-close"
+                    size="x-small"
+                    color="white"
+                    @click="localBuses.splice(bIdx, 1)"
+                  ></v-btn>
                 </v-toolbar>
                 <v-card-text class="pa-4">
-                  <v-select v-model="bus.raid" :items="['2막', '3막', '4막', '종막', '세르카']" label="레이드" density="compact"
-                    variant="outlined" class="mb-2" @update:model-value="bus.difficulty = '노말'"></v-select>
+                  <v-select
+                    v-model="bus.raid"
+                    :items="['2막', '3막', '4막', '종막', '세르카']"
+                    label="레이드"
+                    density="compact"
+                    variant="outlined"
+                    class="mb-2"
+                    @update:model-value="bus.difficulty = '노말'"
+                  ></v-select>
 
-                  <v-select v-model="bus.difficulty" :items="getDifficultyList(bus.raid)" label="난이도" density="compact"
-                    variant="outlined" class="mb-2"></v-select>
-                  <div class="text-subtitle-2 font-weight-black mb-2 d-flex align-center text-high-emphasis">
-                    <v-icon size="18" class="me-1">mdi-account-check</v-icon> 참여 공격대 목록
+                  <v-select
+                    v-model="bus.difficulty"
+                    :items="getDifficultyList(bus.raid)"
+                    label="난이도"
+                    density="compact"
+                    variant="outlined"
+                    class="mb-2"
+                  ></v-select>
+                  <div
+                    class="text-subtitle-2 font-weight-black mb-2 d-flex align-center text-high-emphasis"
+                  >
+                    <v-icon size="18" class="me-1">mdi-account-check</v-icon>
+                    참여 공격대 목록
                   </div>
-                  <div class="drop-zone pa-0 rounded-lg border-dashed mb-4"
-                    :style="{ backgroundColor: theme.global.current.value.dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }">
-
-                    <draggable v-model="bus.members" group="pilots" item-key="id"
-                      class="d-flex flex-wrap align-content-start bus-member-draggable-area pa-2 position-relative">
+                  <div
+                    class="drop-zone pa-0 rounded-lg border-dashed mb-4"
+                    :style="{
+                      backgroundColor: theme.global.current.value.dark
+                        ? 'rgba(255,255,255,0.05)'
+                        : 'rgba(0,0,0,0.05)',
+                    }"
+                  >
+                    <draggable
+                      v-model="bus.members"
+                      group="pilots"
+                      item-key="id"
+                      class="d-flex flex-wrap align-content-start bus-member-draggable-area pa-2 position-relative"
+                    >
                       <template #item="{ element, index }">
-                        <v-chip closable size="small" color="primary" class="ma-1 font-weight-bold text-white" label
-                          @click:close="bus.members.splice(index, 1)">
-                          {{ element.job }} | {{ element.name }} | Lv.{{ element.level }} | ⚔ {{ element.combatPower }}
-                          <v-tooltip v-if="topRosterMembers.includes(element.name)" location="top">
+                        <v-chip
+                          closable
+                          size="small"
+                          color="primary"
+                          class="ma-1 font-weight-bold text-white"
+                          label
+                          @click:close="bus.members.splice(index, 1)"
+                        >
+                          {{ element.job }} | {{ element.name }} | Lv.{{
+                            element.level
+                          }}
+                          | ⚔ {{ element.combatPower }}
+                          <v-tooltip
+                            v-if="topRosterMembers.includes(element.name)"
+                            location="top"
+                          >
                             <template v-slot:activator="{ props }">
-                              <v-chip v-bind="props" size="x-small" color="lime" variant="flat"
-                                class="ms-2 px-1 pulse-badge">
-                                <v-icon size="14" color="red">mdi-alarm-light</v-icon>
-                                <span class="ms-1 font-weight-bold" style="font-size: 0.7rem !important;">흐사게스타</span>
+                              <v-chip
+                                v-bind="props"
+                                size="x-small"
+                                color="red"
+                                variant="flat"
+                                class="ms-2 px-1 pulse-badge"
+                              >
+                                <v-icon size="14" color="white"
+                                  >mdi-skull</v-icon
+                                >
+                                <span
+                                  class="ms-1 font-weight-bold"
+                                  style="font-size: 0.7rem !important"
+                                  >흐사게스타</span
+                                >
                               </v-chip>
                             </template>
-                            <span>원정대 누적 신고 {{ topRosterCount }}회!</span>
+                            <span
+                              >원정대 누적 신고 {{ topRosterCount }}회!</span
+                            >
                           </v-tooltip>
                         </v-chip>
                       </template>
 
                       <template #footer>
-                        <div v-if="bus.members.length === 0"
-                          class="empty-drop-msg d-flex flex-column align-center justify-center pointer-events-none position-absolute w-100 h-100 top-0 left-0">
-                          <v-icon size="24" class="mb-1">mdi-drag-variant</v-icon>
-                          <div class="text-caption">캐릭터를 이리로 드래그하세요</div>
+                        <div
+                          v-if="bus.members.length === 0"
+                          class="empty-drop-msg d-flex flex-column align-center justify-center pointer-events-none position-absolute w-100 h-100 top-0 left-0"
+                        >
+                          <v-icon size="24" class="mb-1"
+                            >mdi-drag-variant</v-icon
+                          >
+                          <div class="text-caption">
+                            캐릭터를 이리로 드래그하세요
+                          </div>
                         </div>
                       </template>
                     </draggable>
                   </div>
-                  <v-text-field v-model="bus.dateTime" type="datetime-local" label="출발 시간" variant="outlined"
-                    density="compact"></v-text-field>
+                  <v-text-field
+                    v-model="bus.dateTime"
+                    type="datetime-local"
+                    label="출발 시간"
+                    variant="outlined"
+                    density="compact"
+                  ></v-text-field>
                 </v-card-text>
                 <v-card-actions class="pa-3 d-flex align-center">
-                  <v-btn :icon="bus.password ? 'mdi-lock' : 'mdi-lock-open-variant-outline'"
-                    :color="bus.password ? 'error' : 'grey-darken-1'" variant="tonal" size="large"
-                    class="rounded-lg me-2 flex-shrink-0" @click="openLockDialog(bus)"></v-btn>
+                  <v-btn
+                    :icon="
+                      bus.password
+                        ? 'mdi-lock'
+                        : 'mdi-lock-open-variant-outline'
+                    "
+                    :color="bus.password ? 'error' : 'grey-darken-1'"
+                    variant="tonal"
+                    size="large"
+                    class="rounded-lg me-2 flex-shrink-0"
+                    @click="openLockDialog(bus)"
+                  ></v-btn>
 
-                  <v-btn color="success" variant="flat" rounded="lg" size="large" class="flex-grow-1 font-weight-black"
-                    :loading="isLoading" @click="confirmAndUpload(bus, bIdx)">
+                  <v-btn
+                    color="success"
+                    variant="flat"
+                    rounded="lg"
+                    size="large"
+                    class="flex-grow-1 font-weight-black"
+                    :loading="isLoading"
+                    @click="confirmAndUpload(bus, bIdx)"
+                  >
                     확정 등록
                   </v-btn>
                 </v-card-actions>
               </v-card>
-
             </v-col>
           </v-row>
         </v-card>
@@ -346,17 +739,35 @@
     <v-dialog v-model="lockDialog" max-width="300">
       <v-card class="rounded-xl pa-2">
         <v-card-title class="text-subtitle-1 font-weight-bold">
-          <v-icon color="error" class="me-2">mdi-lock-outline</v-icon>편집 잠금 설정
+          <v-icon color="error" class="me-2">mdi-lock-outline</v-icon>편집 잠금
+          설정
         </v-card-title>
         <v-card-text>
-          <div class="text-caption mb-2 text-medium-emphasis">숫자 4자리를 입력하세요.</div>
-          <v-text-field v-model="tempPassword" type="password" maxlength="4" variant="outlined" density="compact"
-            placeholder="****" hide-details autofocus @keyup.enter="applyPassword"></v-text-field>
+          <div class="text-caption mb-2 text-medium-emphasis">
+            숫자 4자리를 입력하세요.
+          </div>
+          <v-text-field
+            v-model="tempPassword"
+            type="password"
+            maxlength="4"
+            variant="outlined"
+            density="compact"
+            placeholder="****"
+            hide-details
+            autofocus
+            @keyup.enter="applyPassword"
+          ></v-text-field>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn variant="text" @click="lockDialog = false">취소</v-btn>
-          <v-btn color="error" variant="flat" rounded="lg" @click="applyPassword">설정</v-btn>
+          <v-btn
+            color="error"
+            variant="flat"
+            rounded="lg"
+            @click="applyPassword"
+            >설정</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -364,22 +775,30 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
-import draggable from 'vuedraggable';
-import axios from 'axios';
-import { db } from '../firebase';
-import { collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc } from "firebase/firestore";
-import { useTheme } from 'vuetify';
+import { ref, onMounted, computed } from "vue";
+import draggable from "vuedraggable";
+import axios from "axios";
+import { db } from "../firebase";
+import {
+  collection,
+  addDoc,
+  onSnapshot,
+  query,
+  orderBy,
+  deleteDoc,
+  doc,
+} from "firebase/firestore";
+import { useTheme } from "vuetify";
 
-import { inject } from 'vue';
+import { inject } from "vue";
 // App.vue에서 제공한 빌런 리스트 주입
-const topVillains = inject('topVillains', []);
-const topRosterMembers = inject('topRosterMembers', ref([]));
-const topRosterCount = inject('topRosterCount', ref(0)); // [추가]
+const topVillains = inject("topVillains", []);
+const topRosterMembers = inject("topRosterMembers", ref([]));
+const topRosterCount = inject("topRosterCount", ref(0)); // [추가]
 
 const theme = useTheme();
 const API_KEY = import.meta.env.VITE_LOSTARK_API_KEY || "";
-const searchName = ref('');
+const searchName = ref("");
 const charList = ref([]);
 const localBuses = ref([]);
 const isLoading = ref(false);
@@ -390,13 +809,13 @@ const registeredBuses = ref([]);
 
 // [추가] 비밀번호 관련 상태 변수
 const lockDialog = ref(false);
-const tempPassword = ref('');
+const tempPassword = ref("");
 const selectedBusForLock = ref(null);
 
 // [추가] 자물쇠 팝업 열기
 const openLockDialog = (bus) => {
   selectedBusForLock.value = bus;
-  tempPassword.value = bus.password || '';
+  tempPassword.value = bus.password || "";
   lockDialog.value = true;
 };
 
@@ -410,13 +829,13 @@ const applyPassword = () => {
 
 // 레이드 종류에 따라 난이도 목록을 반환하는 함수
 const getDifficultyList = (raidName) => {
-  if (raidName === '종막') {
-    return ['노말', '하드', 'The First'];
-  } else if (raidName === '세르카') {
-    return ['노말', '하드', '나이트메어'];
+  if (raidName === "종막") {
+    return ["노말", "하드", "The First"];
+  } else if (raidName === "세르카") {
+    return ["노말", "하드", "나이트메어"];
   } else {
     // 그 외 (2막, 3막, 4막 등)
-    return ['노말', '하드'];
+    return ["노말", "하드"];
   }
 };
 
@@ -425,8 +844,8 @@ const timeOptions = computed(() => {
   const times = [];
   for (let h = 0; h < 24; h++) {
     for (let m = 0; m < 60; m += 10) {
-      const hh = String(h).padStart(2, '0');
-      const mm = String(m).padStart(2, '0');
+      const hh = String(h).padStart(2, "0");
+      const mm = String(m).padStart(2, "0");
       times.push(`${hh}:${mm}`);
     }
   }
@@ -434,14 +853,23 @@ const timeOptions = computed(() => {
 });
 
 onMounted(() => {
-  const qChar = query(collection(db, "characters"), orderBy("createdAt", "desc"));
+  const qChar = query(
+    collection(db, "characters"),
+    orderBy("createdAt", "desc"),
+  );
   onSnapshot(qChar, (snapshot) => {
-    charList.value = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    charList.value = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
   });
 
   const qBus = query(collection(db, "buses"), orderBy("dateTime", "asc"));
   onSnapshot(qBus, (snapshot) => {
-    registeredBuses.value = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    registeredBuses.value = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
   });
 });
 
@@ -450,45 +878,72 @@ const selectCharacter = async (charName) => {
   selectedChar.value = null;
   try {
     const url = `https://developer-lostark.game.onstove.com/armories/characters/${encodeURIComponent(charName)}`;
-    const response = await axios.get(url, { headers: { 'accept': 'application/json', 'authorization': `bearer ${API_KEY.trim()}` } });
+    const response = await axios.get(url, {
+      headers: {
+        accept: "application/json",
+        authorization: `bearer ${API_KEY.trim()}`,
+      },
+    });
     if (response.data) selectedChar.value = response.data;
     console.log(selectedChar.value);
-  } catch (e) { console.error(e); } finally { isDetailLoading.value = false; }
+  } catch (e) {
+    console.error(e);
+  } finally {
+    isDetailLoading.value = false;
+  }
 };
 
 const getArkGridBgColor = (grade) => {
   switch (grade) {
-    case '영웅': return '#D1C4E9';
-    case '전설': return '#FFF59D';
-    case '유물': return '#EF6C00';
-    case '고대': return '#F5F5DC';
-    default: return '#EEEEEE';
+    case "영웅":
+      return "#D1C4E9";
+    case "전설":
+      return "#FFF59D";
+    case "유물":
+      return "#EF6C00";
+    case "고대":
+      return "#F5F5DC";
+    default:
+      return "#EEEEEE";
   }
 };
 
 const getEquipmentBgColor = (grade) => {
-  const colors = { '고대': '#3d3325', '유물': '#441c04', '전설': '#362003', '영웅': '#182233' };
-  return colors[grade] || '#EEEEEE';
+  const colors = {
+    고대: "#3d3325",
+    유물: "#441c04",
+    전설: "#362003",
+    영웅: "#182233",
+  };
+  return colors[grade] || "#EEEEEE";
 };
 
 const getGradeColor = (grade) => {
-  const colors = { '고대': '#E3C7A1', '유물': '#EF6C00', '전설': '#FFD200', '영웅': '#CE43FC' };
-  return colors[grade] || '#999';
+  const colors = {
+    고대: "#E3C7A1",
+    유물: "#EF6C00",
+    전설: "#FFD200",
+    영웅: "#CE43FC",
+  };
+  return colors[grade] || "#999";
 };
 
 const filteredEquipment = computed(() => {
   if (!selectedChar.value?.ArmoryEquipment) return [];
-  const targetTypes = ['무기', '투구', '상의', '하의', '장갑', '어깨'];
-  return selectedChar.value.ArmoryEquipment.filter(item => targetTypes.includes(item.Type));
+  const targetTypes = ["무기", "투구", "상의", "하의", "장갑", "어깨"];
+  return selectedChar.value.ArmoryEquipment.filter((item) =>
+    targetTypes.includes(item.Type),
+  );
 });
 
 const filteredAccessories = computed(() => {
   if (!selectedChar.value?.ArmoryEquipment) return [];
-  const targetTypes = ['목걸이', '귀걸이', '반지', '팔찌', '어빌리티 스톤'];
+  const targetTypes = ["목걸이", "귀걸이", "반지", "팔찌", "어빌리티 스톤"];
 
-  return selectedChar.value.ArmoryEquipment
-    .filter(item => targetTypes.includes(item.Type))
-    .map(item => {
+  return selectedChar.value.ArmoryEquipment.filter((item) =>
+    targetTypes.includes(item.Type),
+  )
+    .map((item) => {
       let displayInfo = "";
       try {
         const tooltip = JSON.parse(item.Tooltip);
@@ -497,7 +952,7 @@ const filteredAccessories = computed(() => {
           if (!element || !element.type) continue;
 
           // 1. 악세서리 & 팔찌 (ItemPartBox)
-          if (element.type === 'ItemPartBox') {
+          if (element.type === "ItemPartBox") {
             const title = element.value?.Element_000 || "";
             // 연마 효과 또는 팔찌 효과 추출
             if (title.includes("연마 효과") || title.includes("팔찌 효과")) {
@@ -509,7 +964,7 @@ const filteredAccessories = computed(() => {
           }
 
           // 2. 어빌리티 스톤 (IndentStringGroup) -> 무작위 각인 효과
-          if (element.type === 'IndentStringGroup') {
+          if (element.type === "IndentStringGroup") {
             const title = element.value?.Element_000?.topStr || "";
             if (title.includes("무작위 각인 효과")) {
               const contentObj = element.value.Element_000.contentStr;
@@ -524,12 +979,14 @@ const filteredAccessories = computed(() => {
             }
           }
         }
-      } catch (e) { console.error(e); }
+      } catch (e) {
+        console.error(e);
+      }
 
       return { ...item, displayInfo };
     })
     .sort((a, b) => {
-      const order = ['목걸이', '귀걸이', '반지', '팔찌', '어빌리티 스톤'];
+      const order = ["목걸이", "귀걸이", "반지", "팔찌", "어빌리티 스톤"];
       return order.indexOf(a.Type) - order.indexOf(b.Type);
     });
 });
@@ -545,12 +1002,16 @@ const confirmAndUpload = async (bus, index) => {
       members: JSON.parse(JSON.stringify(bus.members)),
       createdAt: new Date(),
       isHomework: bus.isHomework,
-      password: bus.password || "" // [추가] 비밀번호 필드 저장
+      password: bus.password || "", // [추가] 비밀번호 필드 저장
     };
     const targetCollection = bus.isHomework ? "homeworks" : "schedules";
     await addDoc(collection(db, targetCollection), scheduleData);
     localBuses.value.splice(index, 1);
-  } catch (e) { console.error(e); } finally { isLoading.value = false; }
+  } catch (e) {
+    console.error(e);
+  } finally {
+    isLoading.value = false;
+  }
 };
 
 const fetchCharacter = async () => {
@@ -558,42 +1019,64 @@ const fetchCharacter = async () => {
   isLoading.value = true;
   try {
     const url = `https://developer-lostark.game.onstove.com/armories/characters/${encodeURIComponent(searchName.value)}/profiles`;
-    const response = await axios.get(url, { headers: { 'accept': 'application/json', 'authorization': `bearer ${API_KEY.trim()}` } });
+    const response = await axios.get(url, {
+      headers: {
+        accept: "application/json",
+        authorization: `bearer ${API_KEY.trim()}`,
+      },
+    });
     const data = response.data;
     if (data && data.CharacterName) {
-      const existingChar = charList.value.find(c => c.name === data.CharacterName);
+      const existingChar = charList.value.find(
+        (c) => c.name === data.CharacterName,
+      );
       if (existingChar) await deleteDoc(doc(db, "characters", existingChar.id));
       await addDoc(collection(db, "characters"), {
-        name: data.CharacterName, level: data.ItemAvgLevel, job: data.CharacterClassName, img: data.CharacterImage, combatPower: data.CombatPower, createdAt: new Date()
+        name: data.CharacterName,
+        level: data.ItemAvgLevel,
+        job: data.CharacterClassName,
+        img: data.CharacterImage,
+        combatPower: data.CombatPower,
+        createdAt: new Date(),
       });
-      searchName.value = '';
+      searchName.value = "";
     }
-  } catch (e) { console.error(e); } finally { isLoading.value = false; }
+  } catch (e) {
+    console.error(e);
+  } finally {
+    isLoading.value = false;
+  }
 };
 
-const deleteChar = async (id) => { if (confirm("삭제하시겠습니까?")) await deleteDoc(doc(db, "characters", id)); };
+const deleteChar = async (id) => {
+  if (confirm("삭제하시겠습니까?")) await deleteDoc(doc(db, "characters", id));
+};
 const cloneCharacter = (char) => ({ ...char, id: Date.now() + Math.random() });
 const addBusSlot = () => {
   localBuses.value.push({
     localId: Date.now(),
-    raid: '종막',
-    difficulty: '노말',
+    raid: "종막",
+    difficulty: "노말",
     members: [],
-    dateTime: '',
+    dateTime: "",
     isHomework: false,
-    password: '' // [추가] 초기값 설정
+    password: "", // [추가] 초기값 설정
   });
 };
 
 const rankedCharList = computed(() => {
   const powerSorted = [...charList.value].sort((a, b) => {
-    const powerA = parseInt(a.combatPower?.replace(/,/g, '') || 0);
-    const powerB = parseInt(b.combatPower?.replace(/,/g, '') || 0);
+    const powerA = parseInt(a.combatPower?.replace(/,/g, "") || 0);
+    const powerB = parseInt(b.combatPower?.replace(/,/g, "") || 0);
     return powerB - powerA;
   });
-  const top5Names = powerSorted.slice(0, 5).map(c => c.name);
-  const top5 = powerSorted.slice(0, 5).map((char, index) => ({ ...char, rank: index + 1 }));
-  const others = charList.value.filter(c => !top5Names.includes(c.name)).map(char => ({ ...char, rank: 999 }));
+  const top5Names = powerSorted.slice(0, 5).map((c) => c.name);
+  const top5 = powerSorted
+    .slice(0, 5)
+    .map((char, index) => ({ ...char, rank: index + 1 }));
+  const others = charList.value
+    .filter((c) => !top5Names.includes(c.name))
+    .map((char) => ({ ...char, rank: 999 }));
   return [...top5, ...others];
 });
 
@@ -604,7 +1087,10 @@ const parseGemEffect = (tooltipJson) => {
     for (const key in tooltip) {
       const item = tooltip[key];
       // ItemPartBox 타입이면서 "효과"라는 텍스트를 포함한 섹션을 찾음
-      if (item?.type === "ItemPartBox" && item.value?.Element_000?.includes("효과")) {
+      if (
+        item?.type === "ItemPartBox" &&
+        item.value?.Element_000?.includes("효과")
+      ) {
         let effectText = item.value.Element_001;
 
         // 1. [블래스터] 등 직업 태그 제거
@@ -623,7 +1109,6 @@ const parseGemEffect = (tooltipJson) => {
   }
   return "효과 정보 없음";
 };
-
 </script>
 
 <style scoped>
@@ -654,11 +1139,21 @@ const parseGemEffect = (tooltipJson) => {
 }
 
 :deep(.v-theme--light) .rank-step-2 {
-  background: linear-gradient(135deg, #4a004d 0%, #7b1fa2 50%, #4a004d 100%) !important;
+  background: linear-gradient(
+    135deg,
+    #4a004d 0%,
+    #7b1fa2 50%,
+    #4a004d 100%
+  ) !important;
 }
 
 :deep(.v-theme--light) .rank-step-3 {
-  background: linear-gradient(135deg, #7c5e00 0%, #b8860b 50%, #7c5e00 100%) !important;
+  background: linear-gradient(
+    135deg,
+    #7c5e00 0%,
+    #b8860b 50%,
+    #7c5e00 100%
+  ) !important;
 }
 
 .accessory-polish-card {
@@ -684,7 +1179,9 @@ const parseGemEffect = (tooltipJson) => {
   border: 1px solid rgba(128, 128, 128, 0.2) !important;
   backdrop-filter: blur(10px);
   overflow: hidden;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
 }
 
 .rank-number {
@@ -724,20 +1221,25 @@ const parseGemEffect = (tooltipJson) => {
 
 @keyframes pulse-glow {
   0% {
-    box-shadow: 0 0 5px var(--rank-color), inset 0 0 5px var(--rank-color);
+    box-shadow:
+      0 0 5px var(--rank-color),
+      inset 0 0 5px var(--rank-color);
   }
 
   50% {
-    box-shadow: var(--glow-intensity) var(--rank-color), inset 0 0 10px var(--rank-color);
+    box-shadow:
+      var(--glow-intensity) var(--rank-color),
+      inset 0 0 10px var(--rank-color);
   }
 
   100% {
-    box-shadow: 0 0 5px var(--rank-color), inset 0 0 5px var(--rank-color);
+    box-shadow:
+      0 0 5px var(--rank-color),
+      inset 0 0 5px var(--rank-color);
   }
 }
 
 @keyframes twinkle {
-
   0%,
   100% {
     opacity: 0.2;
@@ -762,27 +1264,42 @@ const parseGemEffect = (tooltipJson) => {
 .rank-step-1 {
   --rank-color: #ff1e00;
   border: 2.5px solid #ff1e00 !important;
-  animation: border-glow 1s linear infinite, pulse-glow 0.6s ease-in-out infinite !important;
-  background: radial-gradient(circle at center, #600000 0%, #1a1a1a 80%) !important;
+  animation:
+    border-glow 1s linear infinite,
+    pulse-glow 0.6s ease-in-out infinite !important;
+  background: radial-gradient(
+    circle at center,
+    #600000 0%,
+    #1a1a1a 80%
+  ) !important;
 }
 
 .rank-step-2 {
   --rank-color: #d011d6;
   border: 2px solid #d011d6 !important;
-  background: linear-gradient(135deg, #150025 0%, #2a0045 50%, #150025 100%) !important;
+  background: linear-gradient(
+    135deg,
+    #150025 0%,
+    #2a0045 50%,
+    #150025 100%
+  ) !important;
   animation: border-glow 1.5s linear infinite !important;
 }
 
 .rank-step-3 {
   --rank-color: #ffe600;
   border: 2px solid #ffe600 !important;
-  background: radial-gradient(ellipse at top right, #2b1d00 0%, #1a1a1a 80%) !important;
+  background: radial-gradient(
+    ellipse at top right,
+    #2b1d00 0%,
+    #1a1a1a 80%
+  ) !important;
   animation: border-glow 2s linear infinite !important;
 }
 
 .rank-step-4 {
   --rank-color: #757575;
-  border: 1.5px solid #E0E0E0 !important;
+  border: 1.5px solid #e0e0e0 !important;
 }
 
 .rank-step-5 {
@@ -799,7 +1316,10 @@ const parseGemEffect = (tooltipJson) => {
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: radial-gradient(1px 1px at 10% 10%, #fff, transparent), radial-gradient(1.5px 1.5px at 60% 30%, #fff, transparent), radial-gradient(1.5px 1.5px at 85% 90%, #fff, transparent);
+  background-image:
+    radial-gradient(1px 1px at 10% 10%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 60% 30%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 85% 90%, #fff, transparent);
   background-size: var(--star-density) var(--star-density);
   animation: twinkle 2s infinite ease-in-out;
   opacity: var(--star-opacity);
@@ -812,7 +1332,12 @@ const parseGemEffect = (tooltipJson) => {
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
   animation: sweep 2s infinite;
   z-index: 1;
 }
@@ -858,7 +1383,6 @@ const parseGemEffect = (tooltipJson) => {
   border-radius: 10px;
 }
 
-
 .level-badge {
   background: rgba(128, 128, 128, 0.1);
   padding: 0px 4px;
@@ -875,7 +1399,11 @@ const parseGemEffect = (tooltipJson) => {
 }
 
 .profile-gradient {
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 10%, transparent 100%);
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.95) 10%,
+    transparent 100%
+  );
 }
 
 .gem-wrapper {
@@ -909,15 +1437,15 @@ const parseGemEffect = (tooltipJson) => {
 }
 
 /* [추가] 화이트 모드일 때, 악세서리 정보 내의 '흰색' 폰트를 강제로 '진한 회색'으로 변경 */
-:deep(.v-theme--light) .accessory-polish-card font[color='#FFFFFF'] {
+:deep(.v-theme--light) .accessory-polish-card font[color="#FFFFFF"] {
   color: #424242 !important;
 }
 
 /* 기존에 추가했던 흰색 폰트 강제 변경 코드 아래에 이어서 작성하세요 */
 
 /* [추가] 화이트 모드일 때, 어빌리티 스톤의 밝은 노란색(#FFFFAC)을 진한 오렌지/브라운 색으로 변경 */
-:deep(.v-theme--light) .accessory-polish-card font[color='#FFFFAC'] {
-  color: #E65100 !important;
+:deep(.v-theme--light) .accessory-polish-card font[color="#FFFFAC"] {
+  color: #e65100 !important;
   /* 진한 오렌지색 (가독성 확보) */
   font-weight: 900 !important;
 }
@@ -935,7 +1463,7 @@ const parseGemEffect = (tooltipJson) => {
 }
 
 /* 툴팁 내 노란색 스킬명 강조 (#FFD200) 가 다크모드에서 너무 쨍하면 조정 가능 */
-:deep(.gem-effect-text font[color='#FFD200']) {
+:deep(.gem-effect-text font[color="#FFD200"]) {
   font-weight: 900 !important;
   text-decoration: underline;
   text-underline-offset: 2px;
@@ -944,7 +1472,7 @@ const parseGemEffect = (tooltipJson) => {
 /* 보석 이름 가독성 개선 */
 .gem-name-text :deep(font) {
   /* 게임 데이터의 어두운 황금색 등을 무시하고 밝은 색으로 고정 */
-  color: #FFFFFF !important;
+  color: #ffffff !important;
   text-shadow: 0px 0px 3px rgba(0, 0, 0, 1) !important;
   font-weight: 900 !important;
 }

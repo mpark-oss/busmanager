@@ -582,7 +582,7 @@ import { ref, onMounted, computed } from 'vue';
 import axios from 'axios';
 import draggable from 'vuedraggable';
 import { db } from '../firebase';
-import { collection, onSnapshot, getDoc } from "firebase/firestore";
+import { collection, onSnapshot, getDoc, serverTimestamp } from "firebase/firestore";
 
 import { inject } from 'vue';
 // App.vue에서 제공한 빌런 리스트 주입
@@ -1264,57 +1264,77 @@ const restoreCharacter = async (name) => {
 // [추가] DB 동기화 로직
 const isSyncing = ref(false);
 
-// 1. 현재 상태를 DB에 저장 (대표 캐릭터명 기준)
+// 1. 클라우드 저장 함수
 const saveToCloud = async () => {
-    if (!newName.value) return alert('상단 메뉴에서 대표 캐릭터를 먼저 설정해주세요!');
+  // 로컬 스토리지에서 현재 선택된 대표 캐릭터명을 가져옵니다.
+  const mainName = localStorage.getItem('current_main_name');
+  
+  if (!mainName) {
+    return alert('상단 메뉴에서 대표 캐릭터를 먼저 설정하거나 선택해주세요!');
+  }
+  
+  const confirmSave = confirm(`'${mainName}' 계정의 현재 숙제 설정을 클라우드에 저장하시겠습니까?`);
+  if (!confirmSave) return;
 
-    const confirmSave = confirm(`'${newName.value}' 계정의 클라우드에 현재 설정을 저장하시겠습니까?\n(기존 저장 데이터는 덮어씌워집니다.)`);
-    if (!confirmSave) return;
-
-    isSyncing.value = true;
-    try {
-        // characters 배열과 로컬 설정을 통째로 저장
-        const docRef = doc(db, "user_configs", newName.value);
-        await setDoc(docRef, {
-            characters: characters.value,
-            lastUpdated: serverTimestamp()
-        });
-        alert('클라우드 저장이 완료되었습니다!');
-    } catch (e) {
-        console.error("Cloud Save Error:", e);
-        alert('저장 중 오류가 발생했습니다.');
-    } finally {
-        isSyncing.value = false;
-    }
+  isSyncing.value = true;
+  try {
+    const docRef = doc(db, "user_configs", mainName);
+    
+    // 현재 페이지의 숙제 데이터(characters)를 저장합니다.
+    // 만약 변수명이 characters가 아니라면 해당 변수명으로 수정하세요.
+    await setDoc(docRef, {
+      characters: characters.value, 
+      lastUpdated: serverTimestamp()
+    });
+    
+    alert('클라우드 서버에 안전하게 저장되었습니다!');
+  } catch (e) {
+    console.error("Cloud Save Error:", e);
+    alert('저장 중 오류가 발생했습니다. 파이어베이스 권한을 확인하세요.');
+  } finally {
+    isSyncing.value = false;
+  }
 };
 
-// 2. DB에서 데이터 불러오기
+// 2. 클라우드 불러오기 함수
 const loadFromCloud = async () => {
-    if (!newName.value) return alert('상단 메뉴에서 대표 캐릭터를 먼저 설정해주세요!');
+  const mainName = localStorage.getItem('current_main_name');
+  
+  if (!mainName) {
+    return alert('대표 캐릭터를 먼저 설정해주세요!');
+  }
 
-    const confirmLoad = confirm('클라우드에서 데이터를 불러오시겠습니까?\n(현재 브라우저의 설정이 교체됩니다.)');
-    if (!confirmLoad) return;
+  const confirmLoad = confirm('클라우드에서 데이터를 불러오시겠습니까?\n(현재 화면의 내용이 서버 데이터로 교체됩니다.)');
+  if (!confirmLoad) return;
 
-    isSyncing.value = true;
-    try {
-        const docRef = doc(db, "user_configs", newName.value);
-        const docSnap = await getDoc(docRef);
+  isSyncing.value = true;
+  try {
+    const docRef = doc(db, "user_configs", mainName);
+    const docSnap = await getDoc(docRef);
 
-        if (docSnap.exists()) {
-            const data = docSnap.data();
-            characters.value = data.characters;
-            // 불러온 데이터를 즉시 로컬 스토리지에도 반영
-            saveLocal();
-            alert('데이터를 성공적으로 불러왔습니다!');
-        } else {
-            alert('저장된 클라우드 데이터가 없습니다.');
-        }
-    } catch (e) {
-        console.error("Cloud Load Error:", e);
-        alert('불러오기 중 오류가 발생했습니다.');
-    } finally {
-        isSyncing.value = false;
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      
+      // 1. 메모리 데이터 갱신
+      characters.value = data.characters;
+      
+      // 2. 로컬 스토리지 갱신 (App.vue의 저장 방식과 동일하게)
+      // 숙제 관리 데이터 키값이 'homework_characters'라고 가정합니다.
+      localStorage.setItem('homework_characters', JSON.stringify(data.characters));
+      
+      // 3. 만약 페이지 내에 saveLocal() 함수가 있다면 실행
+      if (typeof saveLocal === 'function') saveLocal();
+      
+      alert('성공적으로 데이터를 동기화했습니다!');
+    } else {
+      alert('해당 캐릭터명으로 저장된 클라우드 데이터가 없습니다.');
     }
+  } catch (e) {
+    console.error("Cloud Load Error:", e);
+    alert('데이터를 가져오는 중 오류가 발생했습니다.');
+  } finally {
+    isSyncing.value = false;
+  }
 };
 </script>
 

@@ -84,7 +84,33 @@
                                 <v-icon class="me-2">mdi-account-group</v-icon> 원정대 캐릭터 관리
                             </v-card-title>
                             <v-divider></v-divider>
+                            <v-divider class="my-4"></v-divider>
 
+                            <div class="pa-4 bg-grey-lighten-4 rounded-lg mb-4">
+                                <div class="text-subtitle-2 font-weight-bold mb-2">
+                                    <v-icon size="small" color="primary" class="me-1">mdi-cloud-sync</v-icon>
+                                    클라우드 동기화 (기기 간 공유)
+                                </div>
+                                <div class="text-caption text-grey-darken-1 mb-3">
+                                    대표 캐릭터명 기반으로 숙제 상태를 서버에 보관합니다.
+                                </div>
+
+                                <v-row dense>
+                                    <v-col cols="6">
+                                        <v-btn block color="primary" variant="elevated" prepend-icon="mdi-cloud-upload"
+                                            :loading="isSyncing" @click="saveToCloud">
+                                            현재 상태 저장
+                                        </v-btn>
+                                    </v-col>
+                                    <v-col cols="6">
+                                        <v-btn block color="secondary" variant="outlined"
+                                            prepend-icon="mdi-cloud-download" :loading="isSyncing"
+                                            @click="loadFromCloud">
+                                            데이터 불러오기
+                                        </v-btn>
+                                    </v-col>
+                                </v-row>
+                            </div>
                             <v-card-text class="pa-4" style="height: 500px;">
                                 <div class="text-subtitle-2 font-weight-bold mb-2 text-primary">카드 순서 변경 (드래그)</div>
                                 <v-list class="pa-0 border rounded-lg mb-6">
@@ -99,9 +125,9 @@
                                                     </v-avatar>
                                                 </template>
                                                 <v-list-item-title class="font-weight-bold">{{ element.name
-                                                    }}</v-list-item-title>
+                                                }}</v-list-item-title>
                                                 <v-list-item-subtitle>Lv.{{ element.level }} {{ element.className
-                                                    }}</v-list-item-subtitle>
+                                                }}</v-list-item-subtitle>
                                             </v-list-item>
                                         </template>
                                     </draggable>
@@ -130,6 +156,7 @@
                                     저장</v-btn>
                             </v-card-actions>
                         </v-card>
+
                     </v-dialog>
                 </div>
 
@@ -159,7 +186,8 @@
                                             <v-btn icon variant="text" size="x-small"
                                                 :color="char.isGoldCharacter ? 'amber-darken-3' : 'grey-lighten-1'"
                                                 @click.stop="toggleGoldCharacter(char)" class="me-1">
-                                                <v-icon size="18">{{ char.isGoldCharacter ? 'mdi-gold' : 'mdi-treasure-chest'}}</v-icon>
+                                                <v-icon size="18">{{ char.isGoldCharacter ? 'mdi-gold' :
+                                                    'mdi-treasure-chest'}}</v-icon>
                                             </v-btn>
                                             <span class="text-subtitle-1 font-weight-black text-truncate"
                                                 style="max-width: 130px;">{{ char.name }}</span>
@@ -191,7 +219,7 @@
                                                 @click.stop="openScheduleModal(char.name)">
                                                 <v-icon>mdi-bell-outline</v-icon>
                                                 <span class="bell-badge-count">{{ getCharSchedules(char.name).length
-                                                }}</span>
+                                                    }}</span>
                                             </v-btn>
 
                                             <v-btn icon="mdi-cog-outline" variant="text" color="grey-darken-1"
@@ -339,7 +367,8 @@
                                                                                 <v-icon size="18">
                                                                                     {{ isGoldGateSelected(char,
                                                                                         raid.name, gate.g) ?
-                                                                                        'mdi-currency-usd' :'mdi-currency-usd-off' }}
+                                                                                        'mdi-currency-usd'
+                                                                                    :'mdi-currency-usd-off' }}
                                                                                 </v-icon>
                                                                                 <v-tooltip activator="parent"
                                                                                     location="top">골드 보상 지정</v-tooltip>
@@ -392,7 +421,7 @@
                                 :color="isTaskVisibleInSettings(task.id) ? 'orange' : 'grey-darken-2'"
                                 class="text-white px-3" @click="toggleTaskVisibility(task.id)">
                                 <v-icon start size="14">{{ isTaskVisibleInSettings(task.id) ? 'mdi-eye' : 'mdi-eye-off'
-                                }}</v-icon>
+                                    }}</v-icon>
                                 {{ task.name }}
                             </v-btn>
                         </div>
@@ -403,7 +432,7 @@
                                 :color="isTaskVisibleInSettings(task.id) ? 'cyan-darken-2' : 'grey-darken-2'"
                                 class="text-white px-3" @click="toggleTaskVisibility(task.id)">
                                 <v-icon start size="14">{{ isTaskVisibleInSettings(task.id) ? 'mdi-eye' : 'mdi-eye-off'
-                                }}</v-icon>
+                                    }}</v-icon>
                                 {{ task.label }}
                             </v-btn>
                         </div>
@@ -553,7 +582,7 @@ import { ref, onMounted, computed } from 'vue';
 import axios from 'axios';
 import draggable from 'vuedraggable';
 import { db } from '../firebase';
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, onSnapshot, getDoc } from "firebase/firestore";
 
 import { inject } from 'vue';
 // App.vue에서 제공한 빌런 리스트 주입
@@ -719,15 +748,15 @@ const toggleGoldCharacter = (char) => {
 const openCharSettings = (char) => {
     targetChar.value = char;
     // 현재 raidList를 기반으로 한 최신 그룹 목록
-    const currentRaidGroups = raidGroups.value; 
+    const currentRaidGroups = raidGroups.value;
 
     if (!char.settings) {
-        char.settings = { 
-            visibleGroups: [], 
-            selectedGateIds: [], 
+        char.settings = {
+            visibleGroups: [],
+            selectedGateIds: [],
             groupOrder: currentRaidGroups, // 최신 목록 주입
-            hiddenTaskIds: [], 
-            showWeekly: true 
+            hiddenTaskIds: [],
+            showWeekly: true
         };
     }
 
@@ -849,7 +878,7 @@ const fetchMyExpedition = async (charName) => {
 
             // 2. 저장된 데이터(savedData)의 순서를 기준으로 리스트 재구성
             let newList = [];
-            
+
             // 기존에 저장된 순서대로 먼저 채우기
             savedData.forEach(saved => {
                 const apiMatch = apiChars.find(ac => ac.CharacterName === saved.name);
@@ -862,7 +891,7 @@ const fetchMyExpedition = async (charName) => {
             const newChars = apiChars.filter(ac => !newList.some(nc => nc.name === ac.CharacterName));
             // 새 캐릭터들은 레벨순 정렬 후 뒤에 붙임
             newChars.sort((a, b) => parseFloat(b.ItemAvgLevel.replace(',', '')) - parseFloat(a.ItemAvgLevel.replace(',', '')));
-            
+
             newChars.forEach(nc => {
                 newList.push(mapCharacterData(nc, null, isNewWeek, newList.length));
             });
@@ -1226,12 +1255,67 @@ const restoreCharacter = async (name) => {
     const main = localStorage.getItem('current_main_name');
     if (main) {
         await fetchMyExpedition(main); // 비동기 완료를 기다림
-        
+
         // 3. UI 반응성 갱신 (다이얼로그의 순서 변경 리스트도 동시 업데이트)
         tempRosterOrder.value = [...characters.value];
     }
 };
 
+// [추가] DB 동기화 로직
+const isSyncing = ref(false);
+
+// 1. 현재 상태를 DB에 저장 (대표 캐릭터명 기준)
+const saveToCloud = async () => {
+    if (!newName.value) return alert('상단 메뉴에서 대표 캐릭터를 먼저 설정해주세요!');
+
+    const confirmSave = confirm(`'${newName.value}' 계정의 클라우드에 현재 설정을 저장하시겠습니까?\n(기존 저장 데이터는 덮어씌워집니다.)`);
+    if (!confirmSave) return;
+
+    isSyncing.value = true;
+    try {
+        // characters 배열과 로컬 설정을 통째로 저장
+        const docRef = doc(db, "user_configs", newName.value);
+        await setDoc(docRef, {
+            characters: characters.value,
+            lastUpdated: serverTimestamp()
+        });
+        alert('클라우드 저장이 완료되었습니다!');
+    } catch (e) {
+        console.error("Cloud Save Error:", e);
+        alert('저장 중 오류가 발생했습니다.');
+    } finally {
+        isSyncing.value = false;
+    }
+};
+
+// 2. DB에서 데이터 불러오기
+const loadFromCloud = async () => {
+    if (!newName.value) return alert('상단 메뉴에서 대표 캐릭터를 먼저 설정해주세요!');
+
+    const confirmLoad = confirm('클라우드에서 데이터를 불러오시겠습니까?\n(현재 브라우저의 설정이 교체됩니다.)');
+    if (!confirmLoad) return;
+
+    isSyncing.value = true;
+    try {
+        const docRef = doc(db, "user_configs", newName.value);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            characters.value = data.characters;
+            // 불러온 데이터를 즉시 로컬 스토리지에도 반영
+            saveLocal();
+            alert('데이터를 성공적으로 불러왔습니다!');
+        } else {
+            alert('저장된 클라우드 데이터가 없습니다.');
+        }
+    } catch (e) {
+        console.error("Cloud Load Error:", e);
+        alert('불러오기 중 오류가 발생했습니다.');
+    } finally {
+        isSyncing.value = false;
+    }
+};
 </script>
 
 <style scoped>

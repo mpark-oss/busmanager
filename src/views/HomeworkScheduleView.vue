@@ -1272,7 +1272,7 @@ const saveToCloud = async () => {
     return alert('상단 메뉴에서 대표 캐릭터를 먼저 설정하거나 선택해주세요!');
   }
   
-  const confirmSave = confirm(`'${mainName}' 계정의 현재 숙제 설정을 클라우드에 저장하시겠습니까?`);
+  const confirmSave = confirm(`'${mainName}'현재 설정을 클라우드에 저장하시겠습니까?`);
   if (!confirmSave) return;
 
   isSyncing.value = true;
@@ -1286,10 +1286,10 @@ const saveToCloud = async () => {
       lastUpdated: serverTimestamp()
     });
     
-    alert('클라우드 서버에 안전하게 저장되었습니다!');
+    alert('클라우드 저장완료!');
   } catch (e) {
     console.error("Cloud Save Error:", e);
-    alert('저장 중 오류가 발생했습니다. 파이어베이스 권한을 확인하세요.');
+    alert('저장 중 오류가 발생했습니다.');
   } finally {
     isSyncing.value = false;
   }

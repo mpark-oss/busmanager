@@ -4,7 +4,7 @@
       <v-col cols="12">
         <div class="d-flex align-center mb-6">
           <v-avatar size="40" class="me-3" color="primary" variant="tonal">
-            <v-icon>mdi-calendar-check</v-icon>
+            <v-icon>mdi-format-list-checks</v-icon>
           </v-avatar>
           <div>
             <h2 class="text-h4 font-weight-black text-primary">
@@ -2076,32 +2076,27 @@ const restoreCharacter = async (name) => {
 // [추가] DB 동기화 로직
 const isSyncing = ref(false);
 
-// 1. 클라우드 저장 함수
 const saveToCloud = async () => {
-  // 로컬 스토리지에서 현재 선택된 대표 캐릭터명을 가져옵니다.
   const mainName = localStorage.getItem("current_main_name");
+  if (!mainName) return alert("대표 캐릭터를 먼저 설정해주세요!");
 
-  if (!mainName) {
-    return alert("상단 메뉴에서 대표 캐릭터를 먼저 설정하거나 선택해주세요!");
-  }
-
-  const confirmSave = confirm(
-    `'${mainName}'현재 설정을 클라우드에 저장하시겠습니까?`,
-  );
+  const confirmSave = confirm(`'${mainName}'의 현재 설정을 클라우드에 저장하시겠습니까?`);
   if (!confirmSave) return;
 
   isSyncing.value = true;
   try {
     const docRef = doc(db, "user_configs", mainName);
+    
+    // 로컬의 블랙리스트 가져오기
+    const currentBlacklist = JSON.parse(localStorage.getItem(getBlacklistKey()) || "[]");
 
-    // 현재 페이지의 숙제 데이터(characters)를 저장합니다.
-    // 만약 변수명이 characters가 아니라면 해당 변수명으로 수정하세요.
     await setDoc(docRef, {
       characters: characters.value,
+      blacklist: currentBlacklist, // [추가] 블랙리스트도 함께 업로드
       lastUpdated: serverTimestamp(),
     });
 
-    alert("클라우드 저장완료!");
+    alert("✅ 클라우드 저장 완료!");
   } catch (e) {
     console.error("Cloud Save Error:", e);
     alert("저장 중 오류가 발생했습니다.");
@@ -2113,15 +2108,7 @@ const saveToCloud = async () => {
 // 2. 클라우드 불러오기 함수 수정
 const loadFromCloud = async () => {
   const mainName = localStorage.getItem("current_main_name");
-
-  if (!mainName) {
-    return alert("대표 캐릭터를 먼저 설정해주세요!");
-  }
-
-  const confirmLoad = confirm(
-    "클라우드에서 데이터를 불러오시겠습니까?\n(현재 기기의 로컬 설정이 서버 데이터로 교체됩니다.)",
-  );
-  if (!confirmLoad) return;
+  if (!mainName) return alert("대표 캐릭터를 먼저 설정해주세요!");
 
   isSyncing.value = true;
   try {
@@ -2131,32 +2118,26 @@ const loadFromCloud = async () => {
     if (docSnap.exists()) {
       const data = docSnap.data();
 
-      // [핵심] 1. 메모리(반응형 변수)에 데이터 주입
-      // 서버 데이터가 최신 구조(moreTasks 등)를 포함하고 있는지 확인하며 할당합니다.
-      characters.value = data.characters.map((char) => ({
-        ...char,
-        completedTasks: char.completedTasks || [],
-        moreTasks: char.moreTasks || [],
-        busTasks: char.busTasks || {},
-        settings: char.settings || {},
-      }));
+      // 1. 캐릭터 리스트 반영
+      characters.value = data.characters.map(char => ({ ...char }));
 
-      // [핵심] 2. 로컬 스토리지에 즉시 저장 (saveToLocal 함수 재활용)
-      // 이 함수가 실행되면서 localStorage.setItem(getAccountKey(), ...)이 수행됩니다.
+      // 2. [핵심] 블랙리스트 강제 주입
+      const serverBlacklist = data.blacklist || [];
+      const bKey = `hw_blacklist_${mainName}`; // 함수 의존하지 않고 직접 생성
+      
+      localStorage.setItem(bKey, JSON.stringify(serverBlacklist));
+      blacklistedChars.value = serverBlacklist; // UI 반응형 변수 업데이트
+
+      // 3. 로컬 저장 실행
       saveToLocal();
+      
+      // 4. [중요] API 데이터와 다시 대조해서 화면 갱신
+      await fetchMyExpedition(mainName); 
 
-      // [핵심] 3. 주간 초기화 로직 재검토 (선택 사항)
-      // 불러온 데이터가 너무 옛날 데이터일 수 있으므로 필요 시 휴게 게이지 등을 재계산합니다.
-      updateDailyRestGauges();
-
-      rosterDialog.value = false;
-      alert("☁️ 클라우드 동기화 완료! 현재 기기에 자동 저장되었습니다.");
-    } else {
-      alert("해당 캐릭터명으로 저장된 클라우드 데이터가 없습니다.");
+      alert("☁️ 클라우드 동기화 완료! ");
     }
   } catch (e) {
-    console.error("Cloud Load Error:", e);
-    alert("데이터를 가져오는 중 오류가 발생했습니다.");
+    console.error(e);
   } finally {
     isSyncing.value = false;
   }

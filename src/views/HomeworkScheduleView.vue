@@ -596,7 +596,10 @@ const raidList = [
     { group: "2막", name: "2막: 아브렐슈드(싱글)", level: 1670, gold: 16500, gates: [{ g: 1, gold: 5500, moreGold: 1820 }, { g: 2, gold: 11000, moreGold: 3720 }] },
     { group: "1막", name: "1막: 에기르(하드)", level: 1680, gold: 18000, gates: [{ g: 1, gold: 5500, moreGold: 1820 }, { g: 2, gold: 12500, moreGold: 4150 }] },
     { group: "1막", name: "1막: 에기르(노말)", level: 1660, gold: 11500, gates: [{ g: 1, gold: 3500, moreGold: 750 }, { g: 2, gold: 8000, moreGold: 1780 }] },
-    { group: "1막", name: "1막: 에기르(싱글)", level: 1660, gold: 11500, gates: [{ g: 1, gold: 3500, moreGold: 750 }, { g: 2, gold: 8000, moreGold: 1780 }] }
+    { group: "1막", name: "1막: 에기르(싱글)", level: 1660, gold: 11500, gates: [{ g: 1, gold: 3500, moreGold: 750 }, { g: 2, gold: 8000, moreGold: 1780 }] },
+    { group: "서막", name: "서막: 에키드나(하드)", level: 1640, gold: 7200, gates: [{ g: 1, gold: 2200, moreGold: 720 }, { g: 2, gold: 5000, moreGold: 1630 }] },
+    { group: "서막", name: "서막: 에키드나(노말)", level: 1620, gold: 6100, gates: [{ g: 1, gold: 1900, moreGold: 310 }, { g: 2, gold: 4200, moreGold: 700 }] },
+    { group: "서막", name: "서막: 에키드나(싱글)", level: 1620, gold: 6100, gates: [{ g: 1, gold: 1900, moreGold: 310 }, { g: 2, gold: 4200, moreGold: 700 }] }
 ];
 
 const raidGroups = computed(() => [...new Set(raidList.map(r => r.group))]);
@@ -716,13 +719,35 @@ const toggleGoldCharacter = (char) => {
 
 const openCharSettings = (char) => {
     targetChar.value = char;
-    const defaultOrder = raidGroups.value;
-    if (!char.settings) char.settings = { visibleGroups: [], selectedGateIds: [], groupOrder: defaultOrder, hiddenTaskIds: [], showWeekly: true };
+    // 현재 raidList를 기반으로 한 최신 그룹 목록
+    const currentRaidGroups = raidGroups.value; 
+
+    if (!char.settings) {
+        char.settings = { 
+            visibleGroups: [], 
+            selectedGateIds: [], 
+            groupOrder: currentRaidGroups, // 최신 목록 주입
+            hiddenTaskIds: [], 
+            showWeekly: true 
+        };
+    }
+
     tempSettings.value = JSON.parse(JSON.stringify(char.settings));
+
+    // [핵심 수정 부분]
+    // 기존에 저장된 순서(savedOrder)를 가져오되, 
+    // 현재 raidList에는 있는데 저장된 데이터에는 없는 '신규 그룹'들을 찾아냅니다.
+    const savedOrder = tempSettings.value.groupOrder || [];
+    const newGroups = currentRaidGroups.filter(g => !savedOrder.includes(g));
+
+    // 기존 순서 뒤에 새 레이드 그룹을 붙여서 설정창용 목록(allGroups)을 만듭니다.
+    tempSettings.value.allGroups = [...savedOrder, ...newGroups];
+
+    // 나머지 초기화 로직
     if (!tempSettings.value.hiddenTaskIds) tempSettings.value.hiddenTaskIds = [];
     if (!tempSettings.value.selectedGateIds) tempSettings.value.selectedGateIds = [];
     if (!tempSettings.value.visibleGroups) tempSettings.value.visibleGroups = [];
-    tempSettings.value.allGroups = tempSettings.value.groupOrder || defaultOrder;
+
     charSettingsDialog.value = true;
 };
 

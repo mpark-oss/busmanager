@@ -581,7 +581,7 @@ import { ref, onMounted, computed } from 'vue';
 import axios from 'axios';
 import draggable from 'vuedraggable';
 import { db } from '../firebase';
-import { collection, onSnapshot, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
+import { collection, onSnapshot, setDoc, getDoc, serverTimestamp, doc } from "firebase/firestore";
 
 import { inject } from 'vue';
 // App.vue에서 제공한 빌런 리스트 주입

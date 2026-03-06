@@ -62,12 +62,11 @@
                     <v-row class="mb-8">
                         <v-col cols="12">
                             <div class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center opacity-80">
-                                <v-icon color="success" class="me-2">mdi-calendar-range</v-icon> 주간 숙제 일정 드래그(오늘 기준
-                                7일)
+                                <v-icon color="success" class="me-2">mdi-calendar-range</v-icon> 주간 숙제 일정 드래그(오늘 기준 7일)
                             </div>
-                            <div class="calendar-wrapper d-flex">
-                                <div v-for="day in daysOfWeek" :key="day.fullDate"
-                                    class="calendar-day-column flex-grow-1">
+
+                            <div class="calendar-wrapper d-flex border rounded-lg overflow-hidden">
+                                <div v-for="day in daysOfWeek" :key="day.fullDate" class="calendar-day-column">
                                     <div class="day-header pa-2 text-center font-weight-bold"
                                         :class="{ 'today-header': isToday(day.fullDate) }">
                                         {{ day.display }}
@@ -83,7 +82,7 @@
                                                 :class="{ 'elevation-5': hoveredId === element.id }" label
                                                 @mouseenter="hoveredId = element.id" @mouseleave="hoveredId = null"
                                                 @click="scrollToDetail(element.id)">
-                                                <span class="text-truncate font-weight-black">
+                                                <span class="text-truncate font-weight-black d-block w-100">
                                                     [{{ element.difficulty[0] }}] {{ element.raid }}
                                                 </span>
                                             </v-chip>
@@ -91,7 +90,7 @@
                                     </draggable>
                                 </div>
 
-                                <div class="calendar-day-column pending-column flex-grow-1">
+                                <div class="calendar-day-column pending-column">
                                     <div
                                         class="day-header pa-2 text-center font-weight-bold bg-amber-lighten-4 text-amber-darken-4">
                                         일정 미정
@@ -104,7 +103,8 @@
                                                 :class="{ 'elevation-5': hoveredId === element.id }" label
                                                 @mouseenter="hoveredId = element.id" @mouseleave="hoveredId = null"
                                                 @click="scrollToDetail(element.id)">
-                                                <span class="text-truncate font-weight-black">{{ element.raid }}</span>
+                                                <span class="text-truncate font-weight-black d-block w-100">{{
+                                                    element.raid }}</span>
                                             </v-chip>
                                         </template>
                                     </draggable>
@@ -140,8 +140,8 @@
                                         style="min-width: 0; cursor: pointer; height: 100%; position: relative; z-index: 1;"
                                         @click="openRaidPicker(hw)">
 
-                                        <span class="text-subtitle-1 font-weight-black me-2 text-truncate">{{ hw.raid
-                                        }}</span>
+                                        <span class="text-subtitle-1 font-weight-black me-2">{{ hw.raid
+                                            }}</span>
 
                                         <v-chip size="small" :color="getDifficultyColor(hw.difficulty)"
                                             class="font-weight-black text-white px-2 flex-shrink-0" variant="flat"
@@ -190,7 +190,7 @@
                                             <div class="text-subtitle-2 font-weight-bold"><v-icon size="small"
                                                     class="me-1">mdi-sword</v-icon> 파티 평균 전투력</div>
                                             <div class="text-h6 font-weight-black">{{ calculateAveragePower(hw.members)
-                                            }}</div>
+                                                }}</div>
                                         </div>
                                     </v-alert>
 
@@ -540,21 +540,32 @@ const getDifficultyColor = (difficulty) => {
 }
 
 .calendar-day-column {
-    border-right: 1px solid rgba(var(--v-border-color), 0.12);
-    min-height: 180px;
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
+  flex: 0 0 12.5% !important; /* 너비를 무조건 12.5%로 고정 */
+  min-width: 0; /* 내부 요소가 너비를 밀어내는 것 방지 */
+  border-right: 1px solid rgba(var(--v-border-color), 0.12);
+  display: flex;
+  flex-direction: column;
 }
 
 .calendar-day-column:last-child {
-    border-right: none;
+  border-right: none;
+}
+
+.homework-chip {
+  max-width: 100% !important;
+}
+
+.text-truncate {
+  display: block !important;
+  width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
 }
 
 .day-header {
-    font-size: 0.7rem;
-    background: rgba(var(--v-theme-surface-variant), 0.05);
-    border-bottom: 1px solid rgba(var(--v-border-color), 0.08);
+  font-size: 0.75rem;
+  border-bottom: 1px solid rgba(var(--v-border-color), 0.12);
 }
 
 .today-header {

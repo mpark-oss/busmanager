@@ -29,15 +29,15 @@
                         <div class="text-caption text-truncate text-medium-emphasis" style="font-size: 0.65rem;">
                           Lv.{{ element.level }}
                           <v-tooltip v-if="topRosterMembers.includes(element.name)" location="top">
-                            <template v-slot:activator="{ props }">
-                              <v-chip v-bind="props" size="x-small" color="lime" variant="flat"
-                                class="ms-2 px-1 pulse-badge">
-                                <v-icon size="14" color="red">mdi-alarm-light</v-icon>
-                                <span class="ms-1 font-weight-bold" style="font-size: 0.7rem !important;">흐사게스타</span>
-                              </v-chip>
-                            </template>
-                            <span>원정대 누적 신고 {{ topRosterCount }}회!</span>
-                          </v-tooltip>
+                        <template v-slot:activator="{ props }">
+                          <v-chip v-bind="props" size="x-small" color="lime" variant="flat"
+                            class="ms-2 px-1 pulse-badge">
+                            <v-icon size="14" color="red">mdi-alarm-light</v-icon>
+                            <span class="ms-1 font-weight-bold" style="font-size: 0.7rem !important;">흐사게스타</span>
+                          </v-chip>
+                        </template>
+                        <span>원정대 누적 신고 {{ topRosterCount }}회!</span>
+                      </v-tooltip>
                         </div>
                       </div>
                     </div>
@@ -125,7 +125,7 @@
                     size="small"></v-icon>
 
                   <div class="d-flex align-center flex-grow-1 overflow-hidden" style="min-width: 0;">
-                    <span class="text-subtitle-1 font-weight-black me-2 text-truncate">{{ bus.raid }}</span>
+                    <span class="text-subtitle-1 font-weight-black me-2">{{ bus.raid }}</span>
 
                     <div class="d-flex align-center flex-grow-1 overflow-hidden" style="min-width: 0; cursor: pointer;"
                       @click="openRaidPicker(bus)">
@@ -191,15 +191,15 @@
 
                         <div class="text-body-2 font-weight-bold text-truncate">{{ element.name }}
                           <v-tooltip v-if="topRosterMembers.includes(element.name)" location="top">
-                            <template v-slot:activator="{ props }">
-                              <v-chip v-bind="props" size="x-small" color="lime" variant="flat"
-                                class="ms-2 px-1 pulse-badge">
-                                <v-icon size="14" color="red">mdi-alarm-light</v-icon>
-                                <span class="ms-1 font-weight-bold" style="font-size: 0.7rem !important;">흐사게스타</span>
-                              </v-chip>
-                            </template>
-                            <span>원정대 누적 신고 {{ topRosterCount }}회!</span>
-                          </v-tooltip>
+                        <template v-slot:activator="{ props }">
+                          <v-chip v-bind="props" size="x-small" color="lime" variant="flat"
+                            class="ms-2 px-1 pulse-badge">
+                            <v-icon size="14" color="red">mdi-alarm-light</v-icon>
+                            <span class="ms-1 font-weight-bold" style="font-size: 0.7rem !important;">흐사게스타</span>
+                          </v-chip>
+                        </template>
+                        <span>원정대 누적 신고 {{ topRosterCount }}회!</span>
+                      </v-tooltip>
                         </div>
 
                         <div style="font-size: 0.7rem;" class="mt-1">
@@ -506,21 +506,36 @@ const deleteSchedule = async (id) => {
   }
 }
 
-/* 달력 스케줄러 스타일 */
+/* 캘린더 전체 컨테이너: 내부 요소가 튀어나오지 않게 제어 */
 .calendar-wrapper {
   display: flex;
-  background: rgba(var(--v-theme-surface), 1);
+  width: 100%;
   border: 1px solid rgba(var(--v-border-color), 0.12);
-  border-radius: 12px;
-  overflow: hidden;
+  border-radius: 8px;
+  overflow: hidden; /* 중요: 칩이 삐져나오는 것 방지 */
 }
 
+/* 각 열의 너비를 1/8(12.5%)로 강제 고정 */
 .calendar-day-column {
-  border-right: 1px solid rgba(var(--v-border-color), 0.12);
-  min-height: 180px;
+  flex: 0 0 12.5% !important; 
+  min-width: 0; /* 내부 텍스트 생략(ellipsis) 작동을 위한 필수 설정 */
+  border-right: 1px solid rgba(var(--v-border-color), 0.08);
   display: flex;
   flex-direction: column;
-  min-width: 0;
+}
+
+/* 칩 내부 텍스트 생략 처리 강화 */
+.schedule-chip {
+  max-width: 100% !important;
+  display: flex !important;
+}
+
+.text-truncate {
+  display: block !important;
+  width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
 }
 
 .calendar-day-column:last-child {
@@ -552,11 +567,7 @@ const deleteSchedule = async (id) => {
   border-left: 2px solid #FFAB00 !important;
 }
 
-.schedule-chip {
-  font-size: 0.65rem !important;
-  cursor: pointer;
-  transition: transform 0.2s;
-}
+
 
 .schedule-chip:hover {
   transform: translateY(-2px);

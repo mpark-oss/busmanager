@@ -42,7 +42,7 @@
                                             <span
                                                 :class="['font-weight-bold', getTotalBusGold() >= 0 ? 'text-light-blue-accent-2' : 'text-red-accent-2']">
                                                 {{ getTotalBusGold() >= 0 ? '+' : '' }}{{
-                                                getTotalBusGold().toLocaleString() }}G
+                                                    getTotalBusGold().toLocaleString() }}G
                                             </span>
                                         </div>
 
@@ -71,6 +71,66 @@
                         </div>
                     </div>
                     <v-spacer></v-spacer>
+                    <div class="d-flex align-center mb-6">
+                        <v-btn prepend-icon="mdi-account-edit-outline" color="primary" variant="flat" rounded="lg"
+                            @click="openRosterManager">
+                            화면 설정
+                        </v-btn>
+                    </div>
+
+                    <v-dialog v-model="rosterDialog" max-width="500" scrollable>
+                        <v-card class="rounded-xl">
+                            <v-card-title class="pa-4 font-weight-black d-flex align-center">
+                                <v-icon class="me-2">mdi-account-group</v-icon> 원정대 캐릭터 관리
+                            </v-card-title>
+                            <v-divider></v-divider>
+
+                            <v-card-text class="pa-4" style="height: 500px;">
+                                <div class="text-subtitle-2 font-weight-bold mb-2 text-primary">카드 순서 변경 (드래그)</div>
+                                <v-list class="pa-0 border rounded-lg mb-6">
+                                    <draggable v-model="tempRosterOrder" handle=".drag-handle" item-key="name">
+                                        <template #item="{ element }">
+                                            <v-list-item class="border-b last-mb-0">
+                                                <template v-slot:prepend>
+                                                    <v-icon
+                                                        class="drag-handle cursor-move me-2">mdi-drag-vertical</v-icon>
+                                                    <v-avatar size="32" border class="me-2">
+                                                        <v-img :src="element.img"></v-img>
+                                                    </v-avatar>
+                                                </template>
+                                                <v-list-item-title class="font-weight-bold">{{ element.name
+                                                    }}</v-list-item-title>
+                                                <v-list-item-subtitle>Lv.{{ element.level }} {{ element.className
+                                                    }}</v-list-item-subtitle>
+                                            </v-list-item>
+                                        </template>
+                                    </draggable>
+                                </v-list>
+
+                                <div v-if="blacklistedChars.length > 0">
+                                    <div class="text-subtitle-2 font-weight-bold mb-2 text-error">삭제된 캐릭터 복구</div>
+                                    <v-list class="pa-0 border rounded-lg bg-grey-lighten-4">
+                                        <v-list-item v-for="name in blacklistedChars" :key="name">
+                                            <v-list-item-title class="font-weight-medium">{{ name }}</v-list-item-title>
+                                            <template v-slot:append>
+                                                <v-btn size="small" variant="text" color="success"
+                                                    prepend-icon="mdi-refresh" @click="restoreCharacter(name)">
+                                                    복구
+                                                </v-btn>
+                                            </template>
+                                        </v-list-item>
+                                    </v-list>
+                                </div>
+                            </v-card-text>
+
+                            <v-card-actions class="pa-4">
+                                <v-spacer></v-spacer>
+                                <v-btn variant="text" @click="rosterDialog = false">닫기</v-btn>
+                                <v-btn color="primary" variant="flat" rounded="lg" @click="saveRosterOrder">
+                                    저장</v-btn>
+                            </v-card-actions>
+                        </v-card>
+                    </v-dialog>
                 </div>
 
                 <v-row v-if="characters.length === 0 && !isFetching" justify="center" class="py-12">
@@ -132,7 +192,7 @@
                                                 @click.stop="openScheduleModal(char.name)">
                                                 <v-icon>mdi-bell-outline</v-icon>
                                                 <span class="bell-badge-count">{{ getCharSchedules(char.name).length
-                                                    }}</span>
+                                                }}</span>
                                             </v-btn>
 
                                             <v-btn icon="mdi-cog-outline" variant="text" color="grey-darken-1"
@@ -333,7 +393,7 @@
                                 :color="isTaskVisibleInSettings(task.id) ? 'orange' : 'grey-darken-2'"
                                 class="text-white px-3" @click="toggleTaskVisibility(task.id)">
                                 <v-icon start size="14">{{ isTaskVisibleInSettings(task.id) ? 'mdi-eye' : 'mdi-eye-off'
-                                    }}</v-icon>
+                                }}</v-icon>
                                 {{ task.name }}
                             </v-btn>
                         </div>
@@ -344,7 +404,7 @@
                                 :color="isTaskVisibleInSettings(task.id) ? 'cyan-darken-2' : 'grey-darken-2'"
                                 class="text-white px-3" @click="toggleTaskVisibility(task.id)">
                                 <v-icon start size="14">{{ isTaskVisibleInSettings(task.id) ? 'mdi-eye' : 'mdi-eye-off'
-                                    }}</v-icon>
+                                }}</v-icon>
                                 {{ task.label }}
                             </v-btn>
                         </div>
@@ -756,43 +816,35 @@ const fetchMyExpedition = async (charName) => {
             const blacklist = JSON.parse(localStorage.getItem(getBlacklistKey()) || '[]');
             const savedData = JSON.parse(localStorage.getItem(getAccountKey()) || '[]');
 
-            // [추가] 주간 초기화 체크 로직 (수요일 06시 기준)
             const currentWeek = getCurrentWeekId();
             const lastSavedWeek = localStorage.getItem(`last_week_id_${localStorage.getItem('current_main_name')}`);
             const isNewWeek = lastSavedWeek !== currentWeek;
 
-            const newList = res.data
-                .filter(char => !blacklist.includes(char.CharacterName))
-                .sort((a, b) => parseFloat(b.ItemAvgLevel.replace(',', '')) - parseFloat(a.ItemAvgLevel.replace(',', '')))
-                .map((char, index) => {
-                    const existing = savedData.find(c => c.name === char.CharacterName);
+            // 1. 먼저 API 데이터를 객체화하여 매핑 준비
+            const apiChars = res.data.filter(char => !blacklist.includes(char.CharacterName));
 
-                    return {
-                        name: char.CharacterName,
-                        className: char.CharacterClassName,
-                        level: char.ItemAvgLevel,
-                        img: existing?.img || '',
-                        // [수정] 새 주차라면 비우고, 아니면 기존 데이터 로드
-                        completedTasks: isNewWeek ? [] : (existing?.completedTasks || []),
-                        moreTasks: isNewWeek ? [] : (existing?.moreTasks || []),
-                        busTasks: isNewWeek ? {} : (existing?.busTasks || {}), // 버스 데이터 보존 및 초기화
-                        restGauges: existing?.restGauges || { chaos: 0, guardian: 0 },
-                        lastDailyUpdate: existing?.lastDailyUpdate || null,
-                        settings: existing?.settings || {
-                            visibleGroups: [],
-                            selectedGateIds: [],
-                            groupOrder: raidGroups.value,
-                            hiddenTaskIds: [],
-                            showWeekly: true,
-                            goldSelectedGates: [] // 골드 지정 관문 리스트 보존
-                        },
-                        isGoldCharacter: existing?.isGoldCharacter !== undefined ? existing.isGoldCharacter : index < 6
-                    };
-                });
+            // 2. 저장된 데이터(savedData)의 순서를 기준으로 리스트 재구성
+            let newList = [];
+            
+            // 기존에 저장된 순서대로 먼저 채우기
+            savedData.forEach(saved => {
+                const apiMatch = apiChars.find(ac => ac.CharacterName === saved.name);
+                if (apiMatch) {
+                    newList.push(mapCharacterData(apiMatch, saved, isNewWeek, newList.length));
+                }
+            });
+
+            // 저장된 데이터에 없는 새로운 캐릭터(또는 복구된 캐릭터) 추가
+            const newChars = apiChars.filter(ac => !newList.some(nc => nc.name === ac.CharacterName));
+            // 새 캐릭터들은 레벨순 정렬 후 뒤에 붙임
+            newChars.sort((a, b) => parseFloat(b.ItemAvgLevel.replace(',', '')) - parseFloat(a.ItemAvgLevel.replace(',', '')));
+            
+            newChars.forEach(nc => {
+                newList.push(mapCharacterData(nc, null, isNewWeek, newList.length));
+            });
 
             characters.value = newList;
 
-            // [추가] 초기화가 발생했다면 주차 정보 업데이트 및 저장
             if (isNewWeek) {
                 localStorage.setItem(`last_week_id_${localStorage.getItem('current_main_name')}`, currentWeek);
                 saveToLocal();
@@ -806,6 +858,30 @@ const fetchMyExpedition = async (charName) => {
     } finally {
         isFetching.value = false;
     }
+};
+
+// 캐릭터 데이터 매핑 헬퍼 함수 (중복 코드 방지)
+const mapCharacterData = (apiChar, existing, isNewWeek, index) => {
+    return {
+        name: apiChar.CharacterName,
+        className: apiChar.CharacterClassName,
+        level: apiChar.ItemAvgLevel,
+        img: existing?.img || '',
+        completedTasks: isNewWeek ? [] : (existing?.completedTasks || []),
+        moreTasks: isNewWeek ? [] : (existing?.moreTasks || []),
+        busTasks: isNewWeek ? {} : (existing?.busTasks || {}),
+        restGauges: existing?.restGauges || { chaos: 0, guardian: 0 },
+        lastDailyUpdate: existing?.lastDailyUpdate || null,
+        settings: existing?.settings || {
+            visibleGroups: [],
+            selectedGateIds: [],
+            groupOrder: raidGroups.value,
+            hiddenTaskIds: [],
+            showWeekly: true,
+            goldSelectedGates: []
+        },
+        isGoldCharacter: existing?.isGoldCharacter !== undefined ? existing.isGoldCharacter : index < 6
+    };
 };
 
 const updateCharImage = async (name, index) => {
@@ -1086,6 +1162,46 @@ const getTotalMoreCost = () => {
         return sum + charMoreCost;
     }, 0);
 };
+
+// 캐릭터 관리 관련 상태
+const rosterDialog = ref(false);
+const tempRosterOrder = ref([]);
+const blacklistedChars = ref([]);
+
+// 관리 팝업 열기
+const openRosterManager = () => {
+    tempRosterOrder.value = [...characters.value];
+    blacklistedChars.value = JSON.parse(localStorage.getItem(getBlacklistKey()) || '[]');
+    rosterDialog.value = true;
+};
+
+// 순서 저장
+const saveRosterOrder = () => {
+    characters.value = [...tempRosterOrder.value];
+    saveToLocal(); // 기존에 만든 저장 함수 활용
+    rosterDialog.value = false;
+};
+
+// 블랙리스트에서 캐릭터 복구 (새로고침 없이 즉시 반영)
+const restoreCharacter = async (name) => {
+    // 1. 로컬 스토리지의 블랙리스트에서 해당 이름 제거
+    const blKey = getBlacklistKey();
+    const bl = JSON.parse(localStorage.getItem(blKey) || '[]');
+    const newBl = bl.filter(n => n !== name);
+    localStorage.setItem(blKey, JSON.stringify(newBl));
+    blacklistedChars.value = newBl;
+
+    // 2. 전체 Siblings 데이터 재동기화 (fetch 함수 재호출)
+    // fetchMyExpedition 내부의 filter가 새로운 블랙리스트(newBl)를 기준으로 작동하게 됩니다.
+    const main = localStorage.getItem('current_main_name');
+    if (main) {
+        await fetchMyExpedition(main); // 비동기 완료를 기다림
+        
+        // 3. UI 반응성 갱신 (다이얼로그의 순서 변경 리스트도 동시 업데이트)
+        tempRosterOrder.value = [...characters.value];
+    }
+};
+
 </script>
 
 <style scoped>

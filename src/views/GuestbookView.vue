@@ -73,6 +73,16 @@
                   <v-btn icon="mdi-delete-outline" size="small" variant="text" color="medium-emphasis"
                     @click="deleteMessage(msg.id)"></v-btn>
                 </template>
+                <v-divider class="my-3"></v-divider>
+                <div class="px-2 pb-2">
+                  <div v-for="reply in (msg.replies || [])" :key="reply.id" class="text-caption mb-1">
+                    <b class="text-error">{{ reply.nickname }}:</b> {{ reply.content }}
+                  </div>
+                  <v-text-field v-model="msg.newReply" placeholder="댓글 작성..." variant="underlined" density="compact"
+                    hide-details append-inner-icon="mdi-chat-plus-outline"
+                    @click:append-inner="addComment('guestbook', msg)"
+                    @keyup.enter="addComment('guestbook', msg)"></v-text-field>
+                </div>
               </v-list-item>
             </v-fade-transition>
           </v-list>
@@ -120,7 +130,7 @@
                 </v-btn>
               </v-col>
 
-              
+
               <v-col cols="12" class="mt-2">
                 <v-textarea v-model="reportForm.reason" label="신고 사유" variant="outlined" rows="3"
                   placeholder="신고 사유를 상세히 적어주세요" hide-details></v-textarea>
@@ -166,10 +176,21 @@
                   <v-btn icon="mdi-delete-outline" size="small" variant="elevated" color="bg-red-darken-4"
                     style="opacity: 1 !important;" @click="deleteReport(report)"></v-btn>
                 </template>
+
+                <v-divider class="my-3"></v-divider>
+                <div class="px-2 pb-2">
+                  <div v-for="reply in (report.replies || [])" :key="reply.id" class="text-caption mb-1">
+                    <b class="text-error">{{ reply.nickname }}:</b> {{ reply.content }}
+                  </div>
+
+                  <v-text-field v-model="report.newReply" placeholder="댓글 작성..." variant="underlined" density="compact"
+                    hide-details append-inner-icon="mdi-chat-plus-outline"
+                    @click:append-inner="addComment('reports', report)"
+                    @keyup.enter="addComment('reports', report)"></v-text-field>
+                </div>
               </v-list-item>
             </v-fade-transition>
           </v-list>
-
           <div v-if="reports.length === 0" class="text-center py-10 text-grey">
             등록된 사건/사고 내역이 없습니다.
           </div>
@@ -249,7 +270,6 @@ const searchTarget = async () => {
     if (res.data && Array.isArray(res.data)) {
       tempRosterList.value = res.data.map(c => typeof c === 'string' ? c : (c.CharacterName || c.name));
       isSearched.value = true; // 검색 성공 확정
-      alert(`확인 완료`);
     } else {
       alert('캐릭터를 찾을 수 없습니다. 정확한 이름을 입력해주세요.');
     }
@@ -381,6 +401,7 @@ const handleMainCharChange = (e) => {
 onMounted(() => {
   loadCurrentMainName();
   window.addEventListener('main-char-changed', handleMainCharChange);
+  window.addEventListener('paste', handlePaste); // 붙여넣기 이벤트 리스너 등록
 
   const q = query(collection(db, "guestbook"), orderBy("createdAt", "desc"));
   onSnapshot(q, (snapshot) => {
@@ -401,6 +422,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('main-char-changed', handleMainCharChange);
+  window.removeEventListener('paste', handlePaste); // 리스너 제거
 });
 
 const addMessage = async () => {
@@ -431,74 +453,46 @@ const formatDate = (timestamp) => {
   return `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
 };
 
-const rebuildRosterStats = async () => {
-  if (!confirm("기존 리포트를 분석하여 원정대별로 점수를 합산하시겠습니까? (roster_stats 재구축)")) return;
+const addComment = async (collectionName, item) => {
+  if (!newName.value) return alert('상단 메뉴에서 대표 캐릭터를 먼저 설정해야 작성이 가능합니다!');
+  if (!item.newReply) return;
 
   try {
-    const reportSnap = await getDocs(collection(db, "reports"));
-    const rosterGroups = {}; // { rosterKey: { members: [], count: 0 } }
+    const parentDocRef = doc(db, collectionName, item.id);
+    const commentData = {
+      nickname: newName.value,
+      content: item.newReply,
+      createdAt: new Date()
+    };
 
-    console.log("1. 기존 신고 데이터 분석 시작...");
+    // 문서 내 replies 배열에 추가
+    await setDoc(parentDocRef, {
+      replies: [...(item.replies || []), { ...commentData, id: Date.now() }]
+    }, { merge: true });
 
-    for (const reportDoc of reportSnap.docs) {
-      const data = reportDoc.data();
-      let rosterList = data.rosterList;
-      const targetName = data.targetName;
-
-      // 원정대 정보가 없거나 부족한 데이터 보정
-      if (!rosterList || rosterList.length <= 1) {
-        try {
-          const res = await axios.get(`/api/characters/${encodeURIComponent(targetName)}/siblings`, { headers: { 'authorization': `bearer ${API_KEY.trim()}` } });
-
-          console.log(res);
-
-          if (res.data && Array.isArray(res.data)) {
-            rosterList = res.data.map(c => c.CharacterName);
-          } else {
-            rosterList = [targetName];
-          }
-
-          // 리포트 문서에도 나중을 위해 rosterList 업데이트
-          await setDoc(doc(db, "reports", reportDoc.id), { rosterList }, { merge: true });
-        } catch (e) {
-          console.error(`${targetName} 정보 획득 실패:`, e);
-          rosterList = [targetName];
-        }
-      }
-
-      // [핵심] 원정대 고유 키 생성 (정렬 후 결합)
-      const rosterKey = [...rosterList].sort().join(',');
-
-      if (!rosterGroups[rosterKey]) {
-        rosterGroups[rosterKey] = { members: rosterList, count: 0 };
-      }
-      rosterGroups[rosterKey].count += 1;
-    }
-
-    console.log("2. 기존 roster_stats 컬렉션 초기화...");
-    const oldRosterSnap = await getDocs(collection(db, "roster_stats"));
-    for (const d of oldRosterSnap.docs) {
-      await deleteDoc(doc(db, "roster_stats", d.id));
-    }
-
-    console.log("3. 통합된 원정대 통계 데이터 저장 중...");
-    for (const [rosterKey, info] of Object.entries(rosterGroups)) {
-      // 문서 ID를 rosterKey로 사용하여 중복 방지
-      await setDoc(doc(db, "roster_stats", rosterKey), {
-        totalCount: info.count,
-        members: info.members,
-        lastUpdated: serverTimestamp()
-      });
-    }
-
-    alert("원정대 통합 데이터 구축이 완료되었습니다!");
-    //window.location.reload(); // App.vue의 실시간 감시를 갱신하기 위해 새로고침
-  } catch (error) {
-    console.error("오류 발생:", error);
-    alert("보정 중 오류가 발생했습니다. 콘솔을 확인하세요.");
+    item.newReply = '';
+  } catch (e) {
+    console.error("댓글 저장 오류:", e);
   }
 };
 
+// 2. 클립보드 이미지 붙여넣기 처리
+const handlePaste = async (event) => {
+  // 사건/사고 탭이 활성화되어 있을 때만 작동
+  if (activeTab.value !== 'incident') return;
+
+  const items = (event.clipboardData || event.originalEvent.clipboardData).items;
+  for (const item of items) {
+    if (item.type.indexOf("image") !== -1) {
+      const file = item.getAsFile();
+      if (file) {
+        // 클립보드 파일을 reportForm의 imageFile에 할당
+        reportForm.value.imageFile = file;
+        alert('클립보드 이미지가 첨부되었습니다.');
+      }
+    }
+  }
+};
 </script>
 
 <style scoped>

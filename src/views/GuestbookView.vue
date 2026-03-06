@@ -23,6 +23,9 @@
       <v-tab value="incident" class="font-weight-black text-error">
         <v-icon start>mdi-alert-octagon</v-icon>흐흣 사건/사고
       </v-tab>
+      <v-tab value="guide" class="font-weight-black text-amber-darken-3">
+        <v-icon start>mdi-map-marker-path</v-icon>지옥/나락 길잡이
+      </v-tab>
     </v-tabs>
 
     <v-window v-model="activeTab">
@@ -214,6 +217,72 @@
           </div>
         </v-card>
       </v-window-item>
+
+      <v-window-item value="guide">
+        <v-card variant="flat" border class="rounded-xl pa-6">
+          <h2 class="text-h4 font-weight-black text-amber-darken-3 mb-6">
+            <v-icon size="large" class="me-2">mdi-key-variant</v-icon> 지옥/나락 길잡이
+          </h2>
+
+          <v-alert border="start" color="amber-darken-3" variant="tonal" class="mb-6 rounded-lg">
+            <div class="text-body-2">등급별 열쇠를 선택하여 길잡이 정보를 확인하세요.</div>
+          </v-alert>
+
+          <v-row dense>
+            <v-col v-for="key in keyGrades" :key="key.label" cols="12" sm="4" md="3">
+              <v-btn block variant="elevated" height="60" class="rounded-lg font-weight-black text-h6"
+                :style="{ backgroundColor: key.color, color: key.label === '고대' ? '#333' : '#333' }"
+                @click="generateGuide(key.label)">
+                <v-icon start size="large">mdi-key-chain</v-icon>
+                {{ key.label }} 열쇠
+              </v-btn>
+            </v-col>
+          </v-row>
+
+          <v-expand-transition>
+            <div v-if="selectedKey" class="mt-10 pa-8 rounded-xl bg-grey-darken-4 text-center border-double"
+              style="border: 4px double rgba(255, 255, 255, 0.2);">
+
+              <div class="text-h5 font-weight-black mb-4"
+                :style="{ color: keyGrades.find(k => k.label === selectedKey)?.color }">
+                <v-icon class="me-2">mdi-auto-fix</v-icon>
+                {{ selectedKey }} 열쇠 길잡이 결과
+              </div>
+
+              <div class="d-flex flex-wrap justify-center gap-4 mb-8">
+                <div v-for="(res, index) in guideResults" :key="index" class="d-flex align-center">
+                  <v-card width="100" height="120" variant="flat"
+                    :color="res === '왼쪽' ? 'blue-darken-4' : 'red-darken-4'"
+                    class="d-flex flex-column align-center justify-center rounded-lg border-sm elevation-4"
+                    style="position: relative;">
+                    <div class="text-caption font-weight-bold mb-1 opacity-70">{{ index + 1 }}회차</div>
+                    <v-icon size="48" class="mb-1">
+                      {{ res === '왼쪽' ? 'mdi-chevron-double-left' : 'mdi-chevron-double-right' }}
+                    </v-icon>
+                    <div class="text-h6 font-weight-black">{{ res }}</div>
+
+                    <div :class="res === '왼쪽' ? 'bg-blue' : 'bg-red'"
+                      style="position: absolute; bottom: 0; width: 100%; height: 4px; opacity: 0.6;"></div>
+                  </v-card>
+
+                  <v-icon v-if="index < guideResults.length - 1" color="grey-darken-2" class="mx-1">
+                    mdi-chevron-right
+                  </v-icon>
+                </div>
+              </div>
+
+              <v-btn size="large" variant="outlined" color="white" rounded="pill" class="px-8 font-weight-bold"
+                @click="generateGuide(selectedKey)">
+                <v-icon start>mdi-refresh</v-icon> 다시 뽑기
+              </v-btn>
+            </div>
+          </v-expand-transition>
+
+          <div class="mt-10 text-center text-grey">
+            본인의 등급에 맞는 열쇠 버튼을 누르세요.
+          </div>
+        </v-card>
+      </v-window-item>
     </v-window>
   </v-container>
   <v-dialog v-model="imageDialog" max-width="90vw">
@@ -264,6 +333,46 @@ const tempRosterList = ref([]); // 검색으로 가져온 원정대 명단
 // [추가] 신고 검색어 상태값
 const searchKeyword = ref('');
 
+// [추가] 열쇠 등급 데이터 정의
+const keyGrades = [
+  { label: '일반', color: '#9E9E9E' }, // 회색
+  { label: '고급', color: '#4CAF50' }, // 초록
+  { label: '희귀', color: '#2196F3' }, // 파랑
+  { label: '영웅', color: '#9C27B0' }, // 보라
+  { label: '전설', color: '#FFD700' }, // 노랑 (골드)
+  { label: '유물', color: '#E65100' }, // 주황
+  { label: '고대', color: '#F5F5DC' }, // 아이보리 (밝은 회색 계열)
+];
+// GuestbookView.vue <script setup> 내부
+
+const selectedKey = ref(null); // 현재 선택된 열쇠 등급
+const guideResults = ref([]);  // 생성된 왼쪽/오른쪽 결과 리스트
+
+// 등급별 기회 횟수 매핑 (일반 3개부터 하나씩 증가)
+const chanceMap = {
+  '일반': 3,
+  '고급': 4,
+  '희귀': 5,
+  '영웅': 6,
+  '전설': 7,
+  '유물': 8,
+  '고대': 9
+};
+
+// 랜덤 가이드 생성 함수
+const generateGuide = (grade) => {
+  selectedKey.value = grade;
+  const chances = chanceMap[grade];
+  const results = [];
+
+  for (let i = 0; i < chances; i++) {
+    // 50% 확률로 왼쪽/오른쪽 결정
+    results.push(Math.random() < 0.5 ? '왼쪽' : '오른쪽');
+  }
+
+  guideResults.value = results;
+};
+
 // [추가] 원정대 통합 검색 필터링 로직
 const filteredReports = computed(() => {
   if (!searchKeyword.value.trim()) return reports.value;
@@ -286,11 +395,15 @@ const filteredReports = computed(() => {
 // [기존] 바로가기 링크 데이터
 const quickLinks = [
   { title: '로아공홈', icon: 'mdi-home', url: 'https://lostark.game.onstove.com/Main', color: 'blue-darken-2' },
+  { title: '공식유튜브', icon: 'mdi-youtube', url: 'https://www.youtube.com/@LostArk_KR', color: 'red-darken-1' },
   { title: '로펙', icon: 'mdi-chart-box', url: 'https://lopec.kr/', color: 'cyan-darken-2' },
-  { title: '로아와', icon: 'mdi-magnify', url: 'https://loawa.com/', color: 'deep-orange-darken-1' },
-  { title: '로아인벤', icon: 'mdi-forum', url: 'https://lostark.inven.co.kr/', color: 'green-darken-2' },
+  { title: '로아와', icon: 'mdi-magnify', url: 'https://loawa.com/', color: 'deep-orange-darken-3' },
+  { title: '로아도구', icon: 'mdi-hammer-wrench', url: 'https://loatool.taeu.kr/', color: 'amber-darken-2' },
+  { title: '로스트골드', icon: 'mdi-gold', url: 'https://lostgld.com/', color: 'deep-purple-darken-1' },
   { title: '지옥/나락 효율', icon: 'mdi-calculator', url: 'https://loatto.kr/efficiency/hell-rewards/', color: 'indigo-darken-1' },
+  { title: '로아인벤', icon: 'mdi-forum', url: 'https://lostark.inven.co.kr/', color: 'green-darken-2' },
   { title: '영영소', icon: 'mdi-video-wireless', url: 'https://chzzk.naver.com/34ed30da91a4a278966346bac7b1075a/', color: 'green-accent-3' },
+
 ];
 
 const openLink = (url) => {

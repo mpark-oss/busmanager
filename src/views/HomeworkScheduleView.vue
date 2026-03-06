@@ -159,8 +159,7 @@
                                             <v-btn icon variant="text" size="x-small"
                                                 :color="char.isGoldCharacter ? 'amber-darken-3' : 'grey-lighten-1'"
                                                 @click.stop="toggleGoldCharacter(char)" class="me-1">
-                                                <v-icon size="18">{{ char.isGoldCharacter ? 'mdi-database-check' :
-                                                    'mdi-database-outline' }}</v-icon>
+                                                <v-icon size="18">{{ char.isGoldCharacter ? 'mdi-gold' : 'mdi-treasure-chest'}}</v-icon>
                                             </v-btn>
                                             <span class="text-subtitle-1 font-weight-black text-truncate"
                                                 style="max-width: 130px;">{{ char.name }}</span>
@@ -340,7 +339,7 @@
                                                                                 <v-icon size="18">
                                                                                     {{ isGoldGateSelected(char,
                                                                                         raid.name, gate.g) ?
-                                                                                        'mdi-sack-percent' : 'mdi-sack' }}
+                                                                                        'mdi-currency-usd' :'mdi-currency-usd-off' }}
                                                                                 </v-icon>
                                                                                 <v-tooltip activator="parent"
                                                                                     location="top">골드 보상 지정</v-tooltip>

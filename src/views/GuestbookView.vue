@@ -282,7 +282,7 @@
           <v-text-field
             v-model="searchKeyword"
             label="신고 내역 통합 검색 (캐릭터명 입력)"
-            placeholder="검색하면 해당 유저의 원정대 전체 내역이 나옵니다."
+            placeholder="캐릭터명 입력 후 Enter"
             prepend-inner-icon="mdi-account-search"
             variant="solo-filled"
             flat
@@ -290,16 +290,23 @@
             rounded="lg"
             clearable
             class="mb-6"
+            @keyup.enter="handleSearch"
+            @click:append-inner="handleSearch"
+            @click:clear="resetSearch"
+            @update:model-value="(val) => !val && resetSearch()"
           ></v-text-field>
 
           <v-fade-transition>
-            <div v-if="searchKeyword" class="px-1 mb-4 d-flex align-center">
+            <div
+              v-if="searchedKeyword && !isSearching"
+              class="px-1 mb-4 d-flex align-center"
+            >
               <v-icon size="small" color="error" class="me-2"
                 >mdi-database-search</v-icon
               >
               <span class="text-subtitle-2 font-weight-bold">
-                '{{ searchKeyword }}' 관련 통합 검색 결과:
-                <span class="text-error">{{ filteredReports.length }}</span
+                '{{ searchedKeyword }}' 관련 원정대 통합 검색 결과:
+                <span class="text-error">{{ searchTotalCount }}</span
                 >건
               </span>
             </div>
@@ -308,7 +315,7 @@
           <v-list class="bg-transparent">
             <v-fade-transition group>
               <v-list-item
-                v-for="report in filteredReports"
+                v-for="report in searchedKeyword ? searchResults : reports"
                 :key="report.id"
                 class="mb-4 pa-4 rounded-lg border incident-item"
                 :class="
@@ -404,16 +411,21 @@
               </v-list-item>
             </v-fade-transition>
           </v-list>
-
+          <div
+            v-if="searchedKeyword && searchResults.length === 0"
+            class="text-center py-10 text-grey"
+          >
+            '{{ searchedKeyword }}'와 관련된 신고 내역이 없습니다.
+          </div>
           <div v-if="hasMoreReports" class="text-center mt-6">
             <v-btn
               variant="flat"
               color="error"
               rounded="lg"
-              :loading="isReportsLoading"
+              :loading="isMoreLoading"
               @click="fetchMoreReports"
             >
-              <v-icon start>mdi-history</v-icon> 이전 신고 내역 더보기
+              <v-icon start>mdi-history</v-icon> 이전 신고 더보기
             </v-btn>
           </div>
           <div
@@ -423,9 +435,6 @@
             모든 신고 내역을 불러왔습니다.
           </div>
 
-          <div v-if="reports.length === 0" class="text-center py-10 text-grey">
-            등록된 사건/사고 내역이 없습니다.
-          </div>
           <div
             v-if="filteredReports.length === 0 && searchKeyword"
             class="text-center py-10 text-grey"
@@ -614,6 +623,7 @@ import {
   getDocs,
   limit,
   startAfter,
+  where,
 } from "firebase/firestore";
 import { useTheme } from "vuetify";
 import axios from "axios";
@@ -662,12 +672,64 @@ const openImage = (url) => {
   imageDialog.value = true;
 };
 
+const isReportsLoading = ref(false);
 // GuestbookView.vue <script setup>
 const isSearched = ref(false); // 검색 완료 여부
 const tempRosterList = ref([]); // 검색으로 가져온 원정대 명단
 
-// [추가] 신고 검색어 상태값
-const searchKeyword = ref("");
+const searchKeyword = ref(""); // 1. 유저가 지금 타이핑 중인 텍스트
+const searchedKeyword = ref(""); // 2. 엔터를 눌러서 '확정된' 텍스트
+const searchResults = ref([]); // 검색 결과 담는 곳
+const searchTotalCount = ref(0); // 검색된 총 개수
+const isSearching = ref(false); // 로딩 상태
+
+const handleSearch = async () => {
+  const keyword = searchKeyword.value?.trim().toLowerCase();
+
+  // 검색어가 없으면 무시하거나 초기화
+  if (!keyword) {
+    resetSearch();
+    return;
+  }
+
+  // 🔥 핵심: 엔터를 쳤을 때만 searchedKeyword에 값을 넣어줌! (이 순간 화면이 바뀜)
+  searchedKeyword.value = searchKeyword.value;
+  isSearching.value = true;
+
+  try {
+    // limit 없이 전체 reports를 가져옵니다. (로컬 필터링 방식)
+    const q = query(collection(db, "reports"), orderBy("createdAt", "desc"));
+    const snapshot = await getDocs(q);
+
+    const allReports = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    searchResults.value = allReports.filter((report) => {
+      const isDirectMatch = report.targetName?.toLowerCase().includes(keyword);
+      const isRosterMatch = (report.rosterList || []).some((name) =>
+        name.toLowerCase().includes(keyword),
+      );
+      return isDirectMatch || isRosterMatch;
+    });
+
+    searchTotalCount.value = searchResults.value.length;
+    hasMoreReports.value = false; // 검색 모드에서는 기본 더보기 버튼 숨김
+  } catch (e) {
+    console.error("검색 오류:", e);
+  } finally {
+    isSearching.value = false;
+  }
+};
+
+const resetSearch = () => {
+  searchKeyword.value = "";
+  searchedKeyword.value = ""; // 🔥 확정된 검색어까지 비워야 원래 리스트가 나옵니다.
+  searchResults.value = [];
+  searchTotalCount.value = 0;
+  hasMoreReports.value = reports.value.length >= 10;
+};
 
 // [추가] 열쇠 등급 데이터 정의
 const keyGrades = [
@@ -932,7 +994,6 @@ const submitReport = async () => {
 
   isReporting.value = true;
 
-
   try {
     // 2. 이미지 업로드 처리 (선택 사항)
     let imageUrl = "";
@@ -1057,24 +1118,38 @@ const fetchMoreMessages = async () => {
       collection(db, "guestbook"),
       orderBy("createdAt", "desc"),
       startAfter(lastVisibleMsg.value),
-      limit(10)
+      limit(10),
     );
     const snapshot = await getDocs(nextQ);
     if (!snapshot.empty) {
-      const newItems = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      const newItems = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
       messages.value.push(...newItems);
       lastVisibleMsg.value = snapshot.docs[snapshot.docs.length - 1];
       if (snapshot.docs.length < 10) hasMoreMessages.value = false;
     } else {
       hasMoreMessages.value = false;
     }
-  } catch (e) { console.error(e); } finally { isMoreMsgLoading.value = false; }
+  } catch (e) {
+    console.error(e);
+  } finally {
+    isMoreMsgLoading.value = false;
+  }
 };
 
 const setupInitialGuestbook = () => {
-  const q = query(collection(db, "guestbook"), orderBy("createdAt", "desc"), limit(10));
+  const q = query(
+    collection(db, "guestbook"),
+    orderBy("createdAt", "desc"),
+    limit(10),
+  );
   onSnapshot(q, (snapshot) => {
-    const initialMsgs = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    const initialMsgs = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
     if (messages.value.length <= 10) {
       messages.value = initialMsgs;
     } else {

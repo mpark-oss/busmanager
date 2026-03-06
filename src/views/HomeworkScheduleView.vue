@@ -13,7 +13,7 @@
                             <span>주간 수익 현황:</span>
                             <v-tooltip location="bottom" offset="10" transition="fade-transition">
                                 <template v-slot:activator="{ props }">
-                                    <span v-bind="props" class="text-primary cursor-help font-weight-black"
+                                    <span v-bind="props" class="text-primary cursor-help font-weight-black num-style"
                                         style="border-bottom: 2px dotted currentColor; font-size: 1.1rem;">
                                         {{ getTotalGrossGold().toLocaleString() }}G
                                     </span>
@@ -29,7 +29,7 @@
                                                 <v-icon size="16" color="amber" class="me-2">mdi-sword-cross</v-icon>
                                                 <span>레이드</span>
                                             </div>
-                                            <span class="text-amber-accent-2 font-weight-bold">+{{
+                                            <span class="text-amber-accent-2 font-weight-bold num-style">+{{
                                                 getPureRaidGold().toLocaleString() }}G</span>
                                         </div>
 
@@ -40,7 +40,7 @@
                                                 <span>버스</span>
                                             </div>
                                             <span
-                                                :class="['font-weight-bold', getTotalBusGold() >= 0 ? 'text-light-blue-accent-2' : 'text-red-accent-2']">
+                                                :class="['font-weight-bold num-style', getTotalBusGold() >= 0 ? 'text-light-blue-accent-2' : 'text-red-accent-2'] ">
                                                 {{ getTotalBusGold() >= 0 ? '+' : '' }}{{
                                                     getTotalBusGold().toLocaleString() }}G
                                             </span>
@@ -52,7 +52,7 @@
                                                     class="me-2">mdi-minus-box</v-icon>
                                                 <span>더보기</span>
                                             </div>
-                                            <span class="text-red-accent-2 font-weight-bold">-{{
+                                            <span class="text-red-accent-2 font-weight-bold num-style">-{{
                                                 getTotalMoreCost().toLocaleString() }}G</span>
                                         </div>
                                     </div>
@@ -61,9 +61,9 @@
                             <span class="text-grey">/</span>
                             <span class="text-grey-darken-1">{{ getMaxPossibleGold().toLocaleString() }}G</span>
 
-                            <v-chip size="x-small"
+                            <v-chip size="x-small" 
                                 :color="getMaxPossibleGold() - getTotalGrossGold() > 0 ? 'error' : 'success'"
-                                variant="flat" class="font-weight-black">
+                                variant="flat" class="font-weight-black num-style">
                                 {{ getMaxPossibleGold() - getTotalGrossGold() > 0 ? '남은 수익: ' + (getMaxPossibleGold() -
                                     getTotalGrossGold()).toLocaleString() + 'G' : '주간 수입 목표 완료' }}
                             </v-chip>
@@ -206,7 +206,7 @@
                                     <template v-slot:append>
                                         <div class="d-flex align-center">
                                             <div class="text-right mr-1">
-                                                <div class="text-caption font-weight-bold"
+                                                <div class="text-caption font-weight-bold num-style"
                                                     :class="char.isGoldCharacter ? 'text-amber-darken-4' : 'text-grey-lighten-1'">
                                                     {{ (char.isGoldCharacter ? getCharGold(char) : 0).toLocaleString()
                                                     }} G
@@ -349,7 +349,7 @@
                                                                             <span
                                                                                 class="text-overline font-weight-black">
                                                                                 {{ gate.g }} 관문
-                                                                                <span class="ms-1"
+                                                                                <span class="ms-1 num-style"
                                                                                     style="font-size: 0.6rem; opacity: 0.7">({{
                                                                                         (gate.gold / 1000).toFixed(1) }}k{{
                                                                                         raid.name.includes('싱글') ? ' 귀속' :
@@ -1594,6 +1594,14 @@ const loadFromCloud = async () => {
         transform: scale(1);
         opacity: 0.8;
     }
+}
+
+.num-style {
+  font-family: 'Pretendard', sans-serif; /* 기존 폰트 유지 */
+  font-weight: 500;                      /* 너무 두껍지 않게 */
+  letter-spacing: -0.02em;               /* 숫자는 자간을 살짝 좁히는 게 예뻐요 */
+  opacity: 0.8;                          /* 서브타이틀 특유의 은은한 느낌 */
+  font-variant-numeric: tabular-nums;    /* 숫자 폭을 일정하게 맞춰서 정렬 시 깔끔함 */
 }
 
 /* 다크모드 대응 강조 */

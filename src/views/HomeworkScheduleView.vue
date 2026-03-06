@@ -2112,11 +2112,9 @@ const saveToCloud = async () => {
 // 2. 클라우드 불러오기 함수
 const loadFromCloud = async () => {
   const mainName = localStorage.getItem("current_main_name");
-  if (!mainName) {
-    return alert("대표 캐릭터를 먼저 설정해주세요!");
-  }
+  if (!mainName) return alert("대표 캐릭터를 먼저 설정해주세요!");
 
-  const confirmLoad = confirm("클라우드에서 데이터를 불러오시겠습니까?)");
+  const confirmLoad = confirm("클라우드 데이터를 불러오시겠습니까? (로컬 설정이 교체됩니다.)");
   if (!confirmLoad) return;
 
   isSyncing.value = true;
@@ -2127,7 +2125,7 @@ const loadFromCloud = async () => {
     if (docSnap.exists()) {
       const data = docSnap.data();
 
-      // [핵심 1] 캐릭터 리스트 복구
+      // 1. 캐릭터 리스트 복구 (메모리 주입)
       characters.value = data.characters.map((char) => ({
         ...char,
         completedTasks: char.completedTasks || [],
@@ -2136,25 +2134,31 @@ const loadFromCloud = async () => {
         settings: char.settings || {},
       }));
 
-      // [핵심 2] 🔥 서버에서 온 블랙리스트를 로컬 스토리지에 강제 주입
+      // 2. 🔥 [핵심] 블랙리스트 복구
       const serverBlacklist = data.blacklist || [];
-      const bKey = getBlacklistKey(); // 현재 캐릭터 기준의 키
+      const bKey = `hw_blacklist_${mainName}`; // 또는 getBlacklistKey() 사용
+      
+      // 로컬 스토리지에 즉시 물리적 저장
       localStorage.setItem(bKey, JSON.stringify(serverBlacklist));
       
-      // [핵심 3] 🔥 UI 반응형 변수 업데이트 (화면 즉시 반영)
-      blacklistedChars.value = serverBlacklist;
+      // 화면 반응형 변수(UI) 업데이트
+      if (typeof blacklistedChars !== 'undefined') {
+        blacklistedChars.value = serverBlacklist;
+      }
 
-      // 로컬 스토리지 저장 (characters 정보)
-      saveToLocal();
-      updateDailyRestGauges();
-
-      // [추가] 블랙리스트가 적용된 상태로 API 데이터를 다시 필터링하기 위해 호출
+      // 3. 캐릭터 리스트 로컬 저장 (기존 saveToLocal 호출)
+      saveToLocal(); 
+      
+      // 4. 기타 연동 로직
+      if (typeof updateDailyRestGauges === 'function') updateDailyRestGauges();
+      
+      // 5. 🔥 [중요] 블랙리스트가 적용된 상태로 API 데이터를 다시 필터링
+      // 이 함수가 실행되어야 '삭제된 캐릭터'가 화면에서 즉시 사라집니다.
       await fetchMyExpedition(mainName);
 
-      rosterDialog.value = false;
-      alert("☁️ 클라우드 동기화 완료! ");
+      alert("☁️ 클라우드 동기화 완료!");
     } else {
-      alert("해당 캐릭터명으로 저장된 클라우드 데이터가 없습니다.");
+      alert("저장된 클라우드 데이터가 없습니다.");
     }
   } catch (e) {
     console.error("Cloud Load Error:", e);
@@ -2163,6 +2167,8 @@ const loadFromCloud = async () => {
     isSyncing.value = false;
   }
 };
+
+
 </script>
 
 <style scoped>

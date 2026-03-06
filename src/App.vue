@@ -6,7 +6,7 @@
         <div class="d-flex flex-row align-center">
           <v-img src="/stamp_logo.png" alt="흐흣 로고" width="50" height="50"
             class="me-3 rounded-lg border border-opacity-25" cover></v-img>
-          <span class="text-h6">흐흣 운수</span>
+          <span class="text-h6">흐흣 수용소</span>
         </div>
       </v-app-bar-title>
 

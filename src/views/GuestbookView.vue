@@ -146,9 +146,24 @@
 
           <v-divider class="mb-6"></v-divider>
 
+          <v-text-field v-model="searchKeyword" label="신고 내역 통합 검색 (캐릭터명 입력)" placeholder="검색하면 해당 유저의 원정대 전체 내역이 나옵니다."
+            prepend-inner-icon="mdi-account-search" variant="solo-filled" flat hide-details rounded="lg" clearable
+            class="mb-6"></v-text-field>
+
+          <v-fade-transition>
+            <div v-if="searchKeyword" class="px-1 mb-4 d-flex align-center">
+              <v-icon size="small" color="error" class="me-2">mdi-database-search</v-icon>
+              <span class="text-subtitle-2 font-weight-bold">
+                '{{ searchKeyword }}' 관련 통합 검색 결과:
+                <span class="text-error">{{ filteredReports.length }}</span>건
+              </span>
+            </div>
+          </v-fade-transition>
+
           <v-list class="bg-transparent">
             <v-fade-transition group>
-              <v-list-item v-for="report in reports" :key="report.id" class="mb-4 pa-4 rounded-lg border incident-item"
+              <v-list-item v-for="report in filteredReports" :key="report.id"
+                class="mb-4 pa-4 rounded-lg border incident-item"
                 :class="theme.global.current.value.dark ? 'bg-red-darken-4' : 'bg-red-lighten-5'">
                 <div class="d-flex justify-space-between align-center mb-2">
                   <span class="text-h6 font-weight-black text-error">🚨 대상: {{ report.targetName }}</span>
@@ -194,6 +209,9 @@
           <div v-if="reports.length === 0" class="text-center py-10 text-grey">
             등록된 사건/사고 내역이 없습니다.
           </div>
+          <div v-if="filteredReports.length === 0 && searchKeyword" class="text-center py-10 text-grey">
+            '{{ searchKeyword }}'와 관련된 신고 내역이 없습니다.
+          </div>
         </v-card>
       </v-window-item>
     </v-window>
@@ -207,7 +225,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { db } from '../firebase';
 import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, deleteDoc, doc, setDoc, increment, getDocs } from 'firebase/firestore';
 import { useTheme } from 'vuetify';
@@ -242,6 +260,28 @@ const openImage = (url) => {
 // GuestbookView.vue <script setup>
 const isSearched = ref(false); // 검색 완료 여부
 const tempRosterList = ref([]); // 검색으로 가져온 원정대 명단
+
+// [추가] 신고 검색어 상태값
+const searchKeyword = ref('');
+
+// [추가] 원정대 통합 검색 필터링 로직
+const filteredReports = computed(() => {
+  if (!searchKeyword.value.trim()) return reports.value;
+
+  const keyword = searchKeyword.value.trim().toLowerCase();
+
+  return reports.value.filter(report => {
+    // 1. 대상자 이름 본인 확인
+    const isDirectMatch = report.targetName.toLowerCase().includes(keyword);
+
+    // 2. 해당 신고 데이터에 저장된 원정대 명단(rosterList) 중 일치하는 이름이 있는지 확인
+    const isRosterMatch = (report.rosterList || []).some(name =>
+      name.toLowerCase().includes(keyword)
+    );
+
+    return isDirectMatch || isRosterMatch;
+  });
+});
 
 // [기존] 바로가기 링크 데이터
 const quickLinks = [

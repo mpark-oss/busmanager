@@ -1079,8 +1079,9 @@ const hasBusSetting = (char, groupName) => {
 const getCharGold = (char) => {
     let current = 0;
 
-    // 1. 지정된 관문 기본 골드 합산
+    // 골드 획득 캐릭터로 지정된 경우에만 레이드 수익과 더보기 비용을 계산합니다
     if (char.isGoldCharacter) {
+        // 1. 지정된 관문 기본 골드 합산
         const selected = char.settings?.goldSelectedGates || [];
         const completed = char.completedTasks || [];
         selected.forEach(id => {
@@ -1091,20 +1092,22 @@ const getCharGold = (char) => {
                 if (gate) current += Number(gate.gold);
             }
         });
+
+        // 2. 더보기 지출 비용 차감 (골드 캐릭터일 때만 수행하도록 이동)
+        let moreCost = 0;
+        (char.moreTasks || []).forEach(id => {
+            const [rName, gPart] = id.split('_G');
+            const gNum = parseInt(gPart.replace('_More', ''));
+            const raid = raidList.find(r => r.name === rName);
+            const gate = raid?.gates.find(g => g.g === gNum);
+            if (gate) moreCost += Number(gate.moreGold || 0);
+        });
+
+        current -= moreCost; // 계산된 더보기 비용을 수익에서 차감
     }
 
-    // 2. 더보기 지출 비용 차감
-    let moreCost = 0;
-    (char.moreTasks || []).forEach(id => {
-        const [rName, gPart] = id.split('_G');
-        const gNum = parseInt(gPart.replace('_More', ''));
-        const raid = raidList.find(r => r.name === rName);
-        const gate = raid?.gates.find(g => g.g === gNum);
-        if (gate) moreCost += Number(gate.moreGold || 0);
-    });
-
-    // 3. 버스 수지 합산 (getCharBusNetGold 활용)
-    return current - moreCost + getCharBusNetGold(char);
+    // 3. 버스 수지 합산 (버스는 골드 지정 여부와 상관없이 수입/지출을 계산함)
+    return current + getCharBusNetGold(char);
 };
 
 
@@ -1151,6 +1154,9 @@ const getTotalBusGold = () => {
 // 3. 원정대 전체 더보기 지출 합산
 const getTotalMoreCost = () => {
     return characters.value.reduce((sum, char) => {
+        // 골드 지정 캐릭터가 아니면 더보기 비용 합산 제외
+        if (!char.isGoldCharacter) return sum;
+
         let charMoreCost = 0;
         (char.moreTasks || []).forEach(id => {
             const [rName, gPart] = id.split('_G');

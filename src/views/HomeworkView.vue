@@ -74,6 +74,7 @@
 
                                     <draggable :list="calendarSchedules[day.fullDate]" group="homework-items"
                                         item-key="id" class="day-dropzone pa-1"
+                                        :disabled="homeworks.some(h => isLocked(h))"
                                         @change="(e) => onDateDrop(e, day.fullDate)">
                                         <template #item="{ element }">
                                             <v-chip size="x-small" :color="getDifficultyColor(element.difficulty)"
@@ -131,13 +132,17 @@
                                 }">
                                 <v-toolbar
                                     :color="(!hw.dateTime) ? 'amber-darken-2' : (isToday(hw.dateTime) ? 'success' : 'teal-darken-1')"
-                                    density="compact" flat>
+                                    density="compact" flat :class="{ 'opacity-85': isLocked(hw) }">
+                                    <v-btn v-if="hw.password"
+                                        :icon="isLocked(hw) ? 'mdi-lock' : 'mdi-lock-open-variant'" size="small"
+                                        variant="text" class="ms-1" :color="isLocked(hw) ? 'amber-lighten-4' : 'white'"
+                                        @click.stop="toggleLock(hw)"></v-btn>
 
-                                    <v-icon :icon="!hw.dateTime ? 'mdi-clock-question' : 'mdi-shield-cross'"
+                                    <v-icon v-else :icon="!hw.dateTime ? 'mdi-clock-question' : 'mdi-shield-cross'"
                                         class="ms-3 me-2" size="small"></v-icon>
 
                                     <div class="d-flex align-center flex-grow-1 overflow-hidden"
-                                        style="min-width: 0; cursor: pointer; height: 100%; position: relative; z-index: 1;"
+                                        :style="{ minWidth: 0, cursor: isLocked(hw) ? 'default' : 'pointer', position: 'relative', zIndex: 1 }"
                                         @click="openRaidPicker(hw)">
 
                                         <span class="text-subtitle-1 font-weight-black me-2">{{ hw.raid
@@ -149,8 +154,8 @@
                                             {{ hw.difficulty }}
                                         </v-chip>
 
-                                        <v-icon size="small" class="ms-1 opacity-60"
-                                            style="pointer-events: none;">mdi-pencil-circle</v-icon>
+                                        <v-icon v-if="!isLocked(hw)" size="small"
+                                            class="ms-1 opacity-60">mdi-pencil-circle</v-icon>
 
                                         <v-chip v-if="isToday(hw.dateTime)" size="small" color="white"
                                             class="ms-2 font-weight-black today-badge flex-shrink-0" variant="flat"
@@ -164,7 +169,7 @@
 
                                     <v-spacer></v-spacer>
 
-                                    <v-btn icon="mdi-delete" size="small" variant="text"
+                                    <v-btn icon="mdi-delete" size="small" variant="text" :disabled="isLocked(hw)"
                                         @click.stop="deleteHomework(hw.id)"></v-btn>
                                 </v-toolbar>
 
@@ -176,7 +181,8 @@
                                             {{ formatDateTime(hw.dateTime) }}
                                         </div>
                                         <v-btn v-if="hw.dateTime" size="small" variant="tonal" color="success"
-                                            prepend-icon="mdi-clock-edit" @click="openTimePicker(hw)">
+                                            prepend-icon="mdi-clock-edit" :disabled="isLocked(hw)"
+                                            @click="openTimePicker(hw)">
                                             시간 수정
                                         </v-btn>
                                     </div>
@@ -199,21 +205,24 @@
                                         <v-icon size="small" class="me-1">mdi-account-group</v-icon> 참여 캐릭터 명단
                                     </div>
                                     <draggable v-model="hw.members" group="pilots" item-key="id"
+                                        :disabled="isLocked(hw)"
                                         class="d-flex flex-wrap pa-2 rounded-lg border-dashed dropzone-area"
                                         @change="updateHomework(hw)">
                                         <template #item="{ element, index }">
                                             <v-card variant="outlined"
                                                 class="ma-1 pa-2 rounded-lg member-card bg-surface"
-                                                style="width: calc(50% - 8px); min-height: 85px;">
+                                                :style="{ width: 'calc(50% - 8px)', minHeight: '85px', opacity: isLocked(hw) ? '0.7' : '1' }">
                                                 <div class="d-flex justify-space-between align-start">
                                                     <span
                                                         class="text-caption font-weight-black text-success text-truncate">{{
-                                                            element.job }}</span>
-                                                    <v-btn icon="mdi-close" size="14" variant="text" color="grey"
+                                                        element.job }}</span>
+                                                    <v-btn v-if="!isLocked(hw)" icon="mdi-close" size="14"
+                                                        variant="text" color="grey"
                                                         @click="removeMember(hw, index)"></v-btn>
                                                 </div>
-                                                <div class="text-body-2 font-weight-bold text-truncate">{{
-                                                    element.name }}
+
+                                                <div class="text-body-2 font-weight-bold text-truncate">
+                                                    {{ element.name }}
                                                     <v-tooltip v-if="topRosterMembers.includes(element.name)"
                                                         location="top">
                                                         <template v-slot:activator="{ props }">
@@ -227,10 +236,12 @@
                                                         <span>원정대 누적 신고 {{ topRosterCount }}회!</span>
                                                     </v-tooltip>
                                                 </div>
+
                                                 <div style="font-size: 0.7rem;" class="mt-1">
                                                     <div class="text-medium-emphasis">Lv.{{ element.level }}</div>
-                                                    <div class="text-teal-accent-4 font-weight-bold"><v-icon
-                                                            size="10">mdi-sword-cross</v-icon> {{ element.combatPower }}
+                                                    <div class="text-teal-accent-4 font-weight-bold">
+                                                        <v-icon size="10">mdi-sword-cross</v-icon> {{
+                                                        element.combatPower }}
                                                     </div>
                                                 </div>
                                             </v-card>
@@ -314,8 +325,33 @@ const editRaidDialog = ref(false);
 const tempRaid = ref("");
 const tempDifficulty = ref("");
 
+const unlockedIds = ref([]);
+
+// [추가] 현재 숙제가 잠겨있는지 확인
+const isLocked = (hw) => {
+    // 비밀번호가 설정되어 있고, 해제 리스트에 해당 ID가 없다면 잠긴 상태입니다.
+    return hw.password && !unlockedIds.value.includes(hw.id);
+};
+
+// [추가] 자물쇠 아이콘 클릭 시 작동하는 비밀번호 검증 함수
+const toggleLock = (hw) => {
+    if (!isLocked(hw)) {
+        // 이미 풀려있는 경우 다시 잠금 처리
+        unlockedIds.value = unlockedIds.value.filter(id => id !== hw.id);
+        return;
+    }
+
+    const inputPw = prompt('이 숙제의 잠금을 해제하려면 비밀번호를 입력하세요.');
+    if (inputPw === hw.password) {
+        unlockedIds.value.push(hw.id);
+    } else if (inputPw !== null) {
+        alert('비밀번호가 일치하지 않습니다!');
+    }
+};
+
 // 수정 팝업 열기
 const openRaidPicker = (hw) => {
+    if (isLocked(hw)) return; // [추가] 잠긴 상태면 수정 팝업 차단
     selectedHw.value = hw;
     tempRaid.value = hw.raid;
     tempDifficulty.value = hw.difficulty;
@@ -540,32 +576,34 @@ const getDifficultyColor = (difficulty) => {
 }
 
 .calendar-day-column {
-  flex: 0 0 12.5% !important; /* 너비를 무조건 12.5%로 고정 */
-  min-width: 0; /* 내부 요소가 너비를 밀어내는 것 방지 */
-  border-right: 1px solid rgba(var(--v-border-color), 0.12);
-  display: flex;
-  flex-direction: column;
+    flex: 0 0 12.5% !important;
+    /* 너비를 무조건 12.5%로 고정 */
+    min-width: 0;
+    /* 내부 요소가 너비를 밀어내는 것 방지 */
+    border-right: 1px solid rgba(var(--v-border-color), 0.12);
+    display: flex;
+    flex-direction: column;
 }
 
 .calendar-day-column:last-child {
-  border-right: none;
+    border-right: none;
 }
 
 .homework-chip {
-  max-width: 100% !important;
+    max-width: 100% !important;
 }
 
 .text-truncate {
-  display: block !important;
-  width: 100% !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  white-space: nowrap !important;
+    display: block !important;
+    width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
 }
 
 .day-header {
-  font-size: 0.75rem;
-  border-bottom: 1px solid rgba(var(--v-border-color), 0.12);
+    font-size: 0.75rem;
+    border-bottom: 1px solid rgba(var(--v-border-color), 0.12);
 }
 
 .today-header {

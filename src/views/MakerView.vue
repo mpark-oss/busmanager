@@ -326,14 +326,40 @@
                   <v-text-field v-model="bus.dateTime" type="datetime-local" label="출발 시간" variant="outlined"
                     density="compact"></v-text-field>
                 </v-card-text>
-                <v-card-actions class="pa-3"><v-btn color="success" variant="flat" block rounded="lg"
-                    @click="confirmAndUpload(bus, bIdx)">확정 등록</v-btn></v-card-actions>
+                <v-card-actions class="pa-3 d-flex align-center">
+                  <v-btn :icon="bus.password ? 'mdi-lock' : 'mdi-lock-open-variant-outline'"
+                    :color="bus.password ? 'error' : 'grey-darken-1'" variant="tonal" size="large"
+                    class="rounded-lg me-2 flex-shrink-0" @click="openLockDialog(bus)"></v-btn>
+
+                  <v-btn color="success" variant="flat" rounded="lg" size="large" class="flex-grow-1 font-weight-black"
+                    :loading="isLoading" @click="confirmAndUpload(bus, bIdx)">
+                    확정 등록
+                  </v-btn>
+                </v-card-actions>
               </v-card>
+
             </v-col>
           </v-row>
         </v-card>
       </v-col>
     </v-row>
+    <v-dialog v-model="lockDialog" max-width="300">
+      <v-card class="rounded-xl pa-2">
+        <v-card-title class="text-subtitle-1 font-weight-bold">
+          <v-icon color="error" class="me-2">mdi-lock-outline</v-icon>편집 잠금 설정
+        </v-card-title>
+        <v-card-text>
+          <div class="text-caption mb-2 text-medium-emphasis">숫자 4자리를 입력하세요.</div>
+          <v-text-field v-model="tempPassword" type="password" maxlength="4" variant="outlined" density="compact"
+            placeholder="****" hide-details autofocus @keyup.enter="applyPassword"></v-text-field>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn variant="text" @click="lockDialog = false">취소</v-btn>
+          <v-btn color="error" variant="flat" rounded="lg" @click="applyPassword">설정</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -361,6 +387,26 @@ const selectedChar = ref(null);
 const isDetailLoading = ref(false);
 
 const registeredBuses = ref([]);
+
+// [추가] 비밀번호 관련 상태 변수
+const lockDialog = ref(false);
+const tempPassword = ref('');
+const selectedBusForLock = ref(null);
+
+// [추가] 자물쇠 팝업 열기
+const openLockDialog = (bus) => {
+  selectedBusForLock.value = bus;
+  tempPassword.value = bus.password || '';
+  lockDialog.value = true;
+};
+
+// [추가] 입력한 비밀번호 적용
+const applyPassword = () => {
+  if (selectedBusForLock.value) {
+    selectedBusForLock.value.password = tempPassword.value;
+  }
+  lockDialog.value = false;
+};
 
 // 레이드 종류에 따라 난이도 목록을 반환하는 함수
 const getDifficultyList = (raidName) => {
@@ -493,8 +539,13 @@ const confirmAndUpload = async (bus, index) => {
   try {
     isLoading.value = true;
     const scheduleData = {
-      raid: bus.raid, difficulty: bus.difficulty, dateTime: bus.dateTime || "",
-      members: JSON.parse(JSON.stringify(bus.members)), createdAt: new Date(), isHomework: bus.isHomework
+      raid: bus.raid,
+      difficulty: bus.difficulty,
+      dateTime: bus.dateTime || "",
+      members: JSON.parse(JSON.stringify(bus.members)),
+      createdAt: new Date(),
+      isHomework: bus.isHomework,
+      password: bus.password || "" // [추가] 비밀번호 필드 저장
     };
     const targetCollection = bus.isHomework ? "homeworks" : "schedules";
     await addDoc(collection(db, targetCollection), scheduleData);
@@ -522,7 +573,17 @@ const fetchCharacter = async () => {
 
 const deleteChar = async (id) => { if (confirm("삭제하시겠습니까?")) await deleteDoc(doc(db, "characters", id)); };
 const cloneCharacter = (char) => ({ ...char, id: Date.now() + Math.random() });
-const addBusSlot = () => { localBuses.value.push({ localId: Date.now(), raid: '2막', difficulty: '노말', members: [], dateTime: '', isHomework: false }); };
+const addBusSlot = () => {
+  localBuses.value.push({
+    localId: Date.now(),
+    raid: '종막',
+    difficulty: '노말',
+    members: [],
+    dateTime: '',
+    isHomework: false,
+    password: '' // [추가] 초기값 설정
+  });
+};
 
 const rankedCharList = computed(() => {
   const powerSorted = [...charList.value].sort((a, b) => {

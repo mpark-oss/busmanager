@@ -29,15 +29,15 @@
                         <div class="text-caption text-truncate text-medium-emphasis" style="font-size: 0.65rem;">
                           Lv.{{ element.level }}
                           <v-tooltip v-if="topRosterMembers.includes(element.name)" location="top">
-                        <template v-slot:activator="{ props }">
-                          <v-chip v-bind="props" size="x-small" color="lime" variant="flat"
-                            class="ms-2 px-1 pulse-badge">
-                            <v-icon size="14" color="red">mdi-alarm-light</v-icon>
-                            <span class="ms-1 font-weight-bold" style="font-size: 0.7rem !important;">흐사게스타</span>
-                          </v-chip>
-                        </template>
-                        <span>원정대 누적 신고 {{ topRosterCount }}회!</span>
-                      </v-tooltip>
+                            <template v-slot:activator="{ props }">
+                              <v-chip v-bind="props" size="x-small" color="lime" variant="flat"
+                                class="ms-2 px-1 pulse-badge">
+                                <v-icon size="14" color="red">mdi-alarm-light</v-icon>
+                                <span class="ms-1 font-weight-bold" style="font-size: 0.7rem !important;">흐사게스타</span>
+                              </v-chip>
+                            </template>
+                            <span>원정대 누적 신고 {{ topRosterCount }}회!</span>
+                          </v-tooltip>
                         </div>
                       </div>
                     </div>
@@ -69,7 +69,8 @@
                     {{ day.display }}
                   </div>
                   <draggable :list="calendarSchedules[day.fullDate]" group="schedule-items" item-key="id"
-                    class="day-dropzone pa-1" @change="(e) => onDateDrop(e, day.fullDate)">
+                    class="day-dropzone pa-1" :disabled="schedules.some(s => isLocked(s))"
+                    @change="(e) => onDateDrop(e, day.fullDate)">
                     <template #item="{ element }">
                       <v-chip size="x-small" :color="getDifficultyColor(element.difficulty)" variant="flat"
                         class="mb-1 w-100 justify-start px-1 rounded-sm schedule-chip transition-swing"
@@ -120,9 +121,12 @@
                 }">
                 <v-toolbar
                   :color="(!bus.dateTime) ? 'amber-darken-2' : (isToday(bus.dateTime) ? 'deep-purple-accent-3' : 'primary')"
-                  density="compact" flat>
-                  <v-icon :icon="!bus.dateTime ? 'mdi-help-circle-outline' : 'mdi-shield-cross'" class="ms-3 me-2"
-                    size="small"></v-icon>
+                  density="compact" flat :class="{ 'opacity-80': isLocked(bus) }">
+                  <v-btn v-if="bus.password" :icon="isLocked(bus) ? 'mdi-lock' : 'mdi-lock-open-variant'" size="small"
+                    variant="text" class="ms-1" :color="isLocked(bus) ? 'amber-lighten-4' : 'white'"
+                    @click="toggleLock(bus)"></v-btn>
+                  <v-icon v-else :icon="!bus.dateTime ? 'mdi-help-circle-outline' : 'mdi-shield-cross'"
+                    class="ms-3 me-2" size="small"></v-icon>
 
                   <div class="d-flex align-center flex-grow-1 overflow-hidden" style="min-width: 0;">
                     <span class="text-subtitle-1 font-weight-black me-2">{{ bus.raid }}</span>
@@ -133,20 +137,20 @@
                         class="font-weight-black text-white px-2 flex-shrink-0" variant="flat" label>
                         {{ bus.difficulty }}
                       </v-chip>
-                      <v-icon size="small" class="ms-1 opacity-60">mdi-pencil-circle</v-icon>
+                      <v-icon size="small" class="ms-1 opacity-60" v-if="!isLocked(bus)">mdi-pencil-circle</v-icon>
+                      <v-chip v-if="isToday(bus.dateTime)" size="small" color="white"
+                        class="ms-2 font-weight-black today-badge flex-shrink-0" variant="flat" label>
+                        <v-icon start size="14" class="today-icon">mdi-star</v-icon> TODAY
+                      </v-chip>
+                      <v-chip v-else-if="!bus.dateTime" size="x-small" color="white" variant="outlined"
+                        class="ms-2 flex-shrink-0">출발 미정</v-chip>
                     </div>
 
-                    <v-chip v-if="isToday(bus.dateTime)" size="small" color="white"
-                      class="ms-2 font-weight-black today-badge flex-shrink-0" variant="flat" label>
-                      <v-icon start size="14" class="today-icon">mdi-star</v-icon>
-                      TODAY
-                    </v-chip>
-                    <v-chip v-else-if="!bus.dateTime" size="x-small" color="white" variant="outlined"
-                      class="ms-2 flex-shrink-0">출발 미정</v-chip>
+
                   </div>
 
                   <v-spacer></v-spacer> <v-btn icon="mdi-delete" size="small" variant="text"
-                    @click="deleteSchedule(bus.id)"></v-btn>
+                    @click="deleteSchedule(bus.id)" :disabled="isLocked(bus)"></v-btn>
                 </v-toolbar>
 
                 <v-card-text class="pa-6">
@@ -157,7 +161,7 @@
                       {{ formatDateTime(bus.dateTime) }}
                     </div>
                     <v-btn v-if="bus.dateTime" size="small" variant="tonal" color="primary"
-                      prepend-icon="mdi-clock-edit" @click="openTimePicker(bus)">
+                      prepend-icon="mdi-clock-edit" @click="openTimePicker(bus)" :disabled="isLocked(bus)">
                       시간 수정
                     </v-btn>
                   </div>
@@ -178,28 +182,29 @@
                     <v-icon size="small" class="me-1">mdi-account-group</v-icon> 참여 캐릭터 명단
                   </div>
                   <draggable v-model="bus.members" group="pilots" item-key="id"
-                    class="d-flex flex-wrap pa-2 rounded-lg border-dashed dropzone-area" @change="updateSchedule(bus)">
+                    class="d-flex flex-wrap pa-2 rounded-lg border-dashed dropzone-area" :disabled="isLocked(bus)"
+                    @change="updateSchedule(bus)">
                     <template #item="{ element, index }">
                       <v-card variant="outlined" class="ma-1 pa-2 rounded-lg member-card bg-surface"
                         style="width: calc(50% - 8px); min-height: 85px;">
                         <div class="d-flex justify-space-between align-start">
                           <span class="text-caption font-weight-black text-primary text-truncate">{{ element.job
                           }}</span>
-                          <v-btn icon="mdi-close" size="14" variant="text" color="grey"
+                          <v-btn icon="mdi-close" size="14" variant="text" color="grey" v-if="!isLocked(bus)"
                             @click="removeMember(bus, index)"></v-btn>
                         </div>
 
                         <div class="text-body-2 font-weight-bold text-truncate">{{ element.name }}
                           <v-tooltip v-if="topRosterMembers.includes(element.name)" location="top">
-                        <template v-slot:activator="{ props }">
-                          <v-chip v-bind="props" size="x-small" color="lime" variant="flat"
-                            class="ms-2 px-1 pulse-badge">
-                            <v-icon size="14" color="red">mdi-alarm-light</v-icon>
-                            <span class="ms-1 font-weight-bold" style="font-size: 0.7rem !important;">흐사게스타</span>
-                          </v-chip>
-                        </template>
-                        <span>원정대 누적 신고 {{ topRosterCount }}회!</span>
-                      </v-tooltip>
+                            <template v-slot:activator="{ props }">
+                              <v-chip v-bind="props" size="x-small" color="lime" variant="flat"
+                                class="ms-2 px-1 pulse-badge">
+                                <v-icon size="14" color="red">mdi-alarm-light</v-icon>
+                                <span class="ms-1 font-weight-bold" style="font-size: 0.7rem !important;">흐사게스타</span>
+                              </v-chip>
+                            </template>
+                            <span>원정대 누적 신고 {{ topRosterCount }}회!</span>
+                          </v-tooltip>
                         </div>
 
                         <div style="font-size: 0.7rem;" class="mt-1">
@@ -285,8 +290,32 @@ const editRaidDialog = ref(false);
 const tempRaid = ref("");
 const tempDifficulty = ref("");
 
-// [추가] 수정 팝업 열기
+const unlockedIds = ref([]);
+
+// [추가] 현재 카드가 잠겨있는지 확인하는 함수
+const isLocked = (bus) => {
+  // 비밀번호가 설정되어 있고, 해제 리스트에 해당 ID가 없다면 잠긴 상태입니다.
+  return bus.password && !unlockedIds.value.includes(bus.id);
+};
+
+// [추가] 자물쇠 아이콘 클릭 시 작동하는 비밀번호 검증 함수
+const toggleLock = (bus) => {
+  if (!isLocked(bus)) {
+    // 이미 풀려있는 경우 다시 잠금 처리
+    unlockedIds.value = unlockedIds.value.filter(id => id !== bus.id);
+    return;
+  }
+
+  const inputPw = prompt('이 스케줄의 잠금을 해제하려면 비밀번호를 입력하세요.');
+  if (inputPw === bus.password) {
+    unlockedIds.value.push(bus.id);
+  } else if (inputPw !== null) {
+    alert('비밀번호가 일치하지 않습니다!');
+  }
+};
+
 const openRaidPicker = (bus) => {
+  if (isLocked(bus)) return; // [추가] 잠긴 상태면 팝업 차단
   selectedBus.value = bus;
   tempRaid.value = bus.raid;
   tempDifficulty.value = bus.difficulty;
@@ -512,13 +541,15 @@ const deleteSchedule = async (id) => {
   width: 100%;
   border: 1px solid rgba(var(--v-border-color), 0.12);
   border-radius: 8px;
-  overflow: hidden; /* 중요: 칩이 삐져나오는 것 방지 */
+  overflow: hidden;
+  /* 중요: 칩이 삐져나오는 것 방지 */
 }
 
 /* 각 열의 너비를 1/8(12.5%)로 강제 고정 */
 .calendar-day-column {
-  flex: 0 0 12.5% !important; 
-  min-width: 0; /* 내부 텍스트 생략(ellipsis) 작동을 위한 필수 설정 */
+  flex: 0 0 12.5% !important;
+  min-width: 0;
+  /* 내부 텍스트 생략(ellipsis) 작동을 위한 필수 설정 */
   border-right: 1px solid rgba(var(--v-border-color), 0.08);
   display: flex;
   flex-direction: column;

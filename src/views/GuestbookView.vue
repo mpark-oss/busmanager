@@ -236,6 +236,15 @@
                 <v-icon start size="large">mdi-key-chain</v-icon>
                 {{ key.label }} 열쇠
               </v-btn>
+
+            </v-col>
+            <v-col cols="12" sm="4" md="3">
+              <v-btn block variant="flat" height="60" color="cyan"
+                class="rounded-lg font-weight-black text-h6 text-white" @click="addExtraChance"
+                :disabled="!selectedKey">
+                <v-icon start size="large">mdi-plus-circle-outline</v-icon>
+                강하 +1
+              </v-btn>
             </v-col>
           </v-row>
 
@@ -249,7 +258,7 @@
                 {{ selectedKey }} 열쇠 길잡이 결과
               </div>
 
-              <div class="d-flex flex-wrap justify-center gap-4 mb-8">
+              <div class="d-flex flex-wrap justify-center mb-8" style="gap: 16px; row-gap: 32px;">
                 <div v-for="(res, index) in guideResults" :key="index" class="d-flex align-center">
                   <v-card width="100" height="120" variant="flat"
                     :color="res === '왼쪽' ? 'blue-darken-4' : 'red-darken-4'"
@@ -357,6 +366,20 @@ const chanceMap = {
   '전설': 7,
   '유물': 8,
   '고대': 9
+};
+
+// GuestbookView.vue <script setup> 내부
+
+// 강하+1 버튼 클릭 시 실행할 함수
+const addExtraChance = () => {
+  if (!selectedKey.value) {
+    alert('먼저 열쇠 등급을 선택해주세요!');
+    return;
+  }
+
+  // 50% 확률로 왼쪽/오른쪽 중 하나를 추가 생성하여 배열에 넣음
+  const extraRes = Math.random() < 0.5 ? '왼쪽' : '오른쪽';
+  guideResults.value.push(extraRes);
 };
 
 // 랜덤 가이드 생성 함수

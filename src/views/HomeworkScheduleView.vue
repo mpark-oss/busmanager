@@ -3,13 +3,11 @@
     <v-row>
       <v-col cols="12">
         <div class="d-flex align-center mb-6">
-          <v-avatar size="40" class="me-3" color="primary" variant="tonal">
-            <v-icon>mdi-format-list-checks</v-icon>
-          </v-avatar>
           <div>
             <h2 class="text-h4 font-weight-black text-primary">
               개인 숙제 관리
             </h2>
+
             <div
               class="text-caption text-medium-emphasis font-weight-bold d-flex align-center flex-wrap gap-2"
             >

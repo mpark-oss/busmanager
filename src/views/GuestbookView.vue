@@ -1549,19 +1549,35 @@ const handlePaste = async (event) => {
   border-color: #cd7f32 !important;
 }
 
+/* [공통] 배경 아이콘 기본 설정 */
 .rank-bg-icon {
-  position: absolute;
-  right: -10px;
-  bottom: -10px;
-  font-size: 80px !important;
-  opacity: 0.07;
+  position: absolute !important;
+  right: -10px !important;
+  bottom: -15px !important;
+  font-size: 100px !important; /* 크기를 살짝 더 키워서 존재감 확보 */
   transform: rotate(-15deg);
   z-index: 1;
+  transition: all 0.3s ease;
+  pointer-events: none; /* 아이콘 때문에 텍스트 선택 방해 안 되게 */
 }
 
-.ranking-medal-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1) !important;
+/* --- 라이트 모드 아이콘 가시성 --- */
+.theme--light .rank-bg-icon {
+  color: rgba(0, 0, 0, 0.08) !important; /* 검정색 투명도 */
+}
+
+/* --- 다크 모드 아이콘 가시성 (여기가 핵심!) --- */
+.theme--dark .rank-bg-icon {
+  /* 다크모드 카드 배경이 검정색이므로 하얀색 계열로 대비를 줍니다 */
+  color: rgba(255, 255, 255, 1) !important;
+  opacity: 0.1 !important; /* 투명도를 0.1 정도로 주면 은은하게 보입니다 */
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.05)); /* 미세한 광택감 */
+}
+
+/* 마우스 호버 시 효과 */
+.ranking-medal-card:hover .rank-bg-icon {
+  opacity: 0.85 !important;
+  transform: rotate(-5deg) scale(1.05);
 }
 
 /* 공통 레이아웃 */
@@ -1640,22 +1656,6 @@ const handlePaste = async (event) => {
 .theme--dark .roster-chip {
   background-color: rgba(255, 255, 255, 0.15) !important;
   color: #ffffff !important;
-}
-
-/* 공통 아이콘 및 효과 */
-.rank-bg-icon {
-  position: absolute;
-  right: -10px;
-  bottom: -10px;
-  font-size: 80px !important;
-  opacity: 0.1;
-  transform: rotate(-15deg);
-  z-index: 1;
-}
-
-.theme--dark .rank-bg-icon {
-  opacity: 0.2;
-  color: #fff;
 }
 
 .ranking-medal-card:hover {

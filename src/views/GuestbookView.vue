@@ -181,6 +181,109 @@
       </v-window-item>
 
       <v-window-item value="incident">
+        <v-card
+          variant="flat"
+          class="rounded-xl pa-4 mb-6 border-dashed ranking-board-container"
+        >
+          <div class="d-flex align-center mb-4">
+            <v-icon color="error" class="me-2">mdi-trophy-variant</v-icon>
+            <span class="text-subtitle-1 font-weight-black text-error"
+              >원정대 누적 신고 랭킹 (Top 3)</span
+            >
+          </div>
+
+          <v-row dense justify="center">
+            <v-col
+              v-for="(rank, index) in rosterRankings"
+              :key="index"
+              cols="12"
+              sm="4"
+            >
+              <v-card
+                variant="flat"
+                class="pa-4 rounded-xl border-lg position-relative overflow-hidden ranking-medal-card"
+                :class="[
+                  `medal-rank-${index + 1}`,
+                  theme.global.current.value.dark
+                    ? 'theme--dark'
+                    : 'theme--light',
+                ]"
+                height="100%"
+              >
+                <v-icon class="rank-bg-icon">{{
+                  index === 0
+                    ? "mdi-trophy"
+                    : index === 1
+                      ? "mdi-medal"
+                      : "mdi-medal-outline"
+                }}</v-icon>
+
+                <div
+                  class="d-flex justify-space-between align-start position-relative"
+                  style="z-index: 2"
+                >
+                  <div class="d-flex flex-column">
+                    <div class="d-flex align-center mb-1">
+                      <v-avatar
+                        size="24"
+                        :color="getMedalColor(index)"
+                        class="me-2 elevation-2"
+                      >
+                        <span
+                          class="text-white font-weight-black text-caption"
+                          >{{ index + 1 }}</span
+                        >
+                      </v-avatar>
+                      <span
+                        class="text-subtitle-2 font-weight-black medal-label"
+                      >
+                        {{
+                          index === 0
+                            ? "GOLD"
+                            : index === 1
+                              ? "SILVER"
+                              : "BRONZE"
+                        }}
+                      </span>
+                    </div>
+
+                    <div
+                      class="text-h6 font-weight-black text-truncate ranking-name"
+                      style="max-width: 140px"
+                    >
+                      {{ rank.lastTargetName || "정보 없음" }}
+                    </div>
+                  </div>
+
+                  <div class="text-right">
+                    <div class="text-h4 font-weight-black ranking-count">
+                      {{ rank.totalCount }}
+                    </div>
+                    <div
+                      class="text-caption font-weight-bold total-label mt-n1"
+                    >
+                      TOTAL
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  class="mt-3 d-flex align-center position-relative"
+                  style="z-index: 2"
+                >
+                  <v-chip
+                    size="x-small"
+                    class="font-weight-bold px-2 roster-chip"
+                    variant="flat"
+                  >
+                    외 {{ rank.members?.length || 0 }} 캐릭터
+                  </v-chip>
+                </div>
+              </v-card>
+            </v-col>
+          </v-row>
+        </v-card>
+
         <v-card variant="flat" border class="rounded-xl pa-6">
           <h2 class="text-h4 font-weight-black text-error mb-6">
             <v-icon size="large" class="me-2">mdi-alert-octagon</v-icon> 흐흣
@@ -683,6 +786,24 @@ const searchResults = ref([]); // 검색 결과 담는 곳
 const searchTotalCount = ref(0); // 검색된 총 개수
 const isSearching = ref(false); // 로딩 상태
 
+const rosterRankings = ref([]); // 랭킹 데이터 저장용
+
+const setupRosterRankings = () => {
+  const q = query(
+    collection(db, "roster_stats"),
+    where("totalCount", ">", 0), // 신고 횟수가 1회 이상인 것만
+    orderBy("totalCount", "desc"),
+    limit(3),
+  );
+
+  onSnapshot(q, (snapshot) => {
+    rosterRankings.value = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+  });
+};
+
 const handleSearch = async () => {
   const keyword = searchKeyword.value?.trim().toLowerCase();
 
@@ -923,6 +1044,13 @@ const openLink = (url) => {
   window.open(url, "_blank");
 };
 
+const getMedalColor = (index) => {
+  if (index === 0) return "#FFD700"; // 금
+  if (index === 1) return "#C0C0C0"; // 은
+  if (index === 2) return "#CD7F32"; // 동
+  return "#grey";
+};
+
 const searchTarget = async () => {
   if (!reportForm.value.targetName)
     return alert("검색할 캐릭터명을 입력하세요.");
@@ -1037,6 +1165,7 @@ const submitReport = async () => {
         totalCount: increment(1),
         members: rosterList,
         lastUpdated: serverTimestamp(),
+        lastTargetName: reportForm.value.targetName,
       },
       { merge: true },
     );
@@ -1058,6 +1187,62 @@ const submitReport = async () => {
     alert("신고 등록 중 오류가 발생했습니다. 콘솔을 확인하세요.");
   } finally {
     isReporting.value = false;
+  }
+};
+
+/**
+ * [1회성] 기존 reports 데이터를 분석하여
+ * roster_stats의 lastTargetName을 "가장 많이 신고된 이름"으로 업데이트합니다.
+ */
+const migrateRosterStatsNames = async () => {
+  if (
+    !confirm(
+      "기존 모든 신고 내역을 분석하여 랭킹 대표 이름을 최적화하시겠습니까?",
+    )
+  )
+    return;
+
+  try {
+    // 1. 모든 리포트 가져오기
+    const reportsSnap = await getDocs(collection(db, "reports"));
+    const statsMap = {}; // { rosterKey: { targetName: count } }
+
+    // 2. 원정대별 캐릭터 신고 횟수 집계
+    reportsSnap.forEach((docSnap) => {
+      const data = docSnap.data();
+      const key = data.rosterKey;
+      const name = data.targetName;
+
+      if (!key || !name) return;
+
+      if (!statsMap[key]) statsMap[key] = {};
+      statsMap[key][name] = (statsMap[key][name] || 0) + 1;
+    });
+
+    // 3. 각 원정대별 가장 많이 신고된 이름으로 roster_stats 업데이트
+    const batch = [];
+    for (const [rosterKey, nameCounts] of Object.entries(statsMap)) {
+      // 가장 높은 횟수를 가진 이름 찾기
+      const mostReportedName = Object.entries(nameCounts).reduce((a, b) =>
+        a[1] > b[1] ? a : b,
+      )[0];
+
+      const rosterRef = doc(db, "roster_stats", rosterKey);
+      // setDoc merge를 통해 기존 데이터(totalCount 등)는 유지하고 이름만 업데이트
+      batch.push(
+        setDoc(
+          rosterRef,
+          { lastTargetName: mostReportedName },
+          { merge: true },
+        ),
+      );
+    }
+
+    await Promise.all(batch);
+    alert(`총 ${batch.length}개의 원정대 통계가 최적화되었습니다!`);
+  } catch (e) {
+    console.error("마이그레이션 오류:", e);
+    alert("데이터 분석 중 오류가 발생했습니다.");
   }
 };
 
@@ -1168,6 +1353,7 @@ onMounted(() => {
   // 🔥 기존에 있던 reports 관련 onSnapshot은 모두 지우고 이것만 남기세요!
   setupInitialReports();
   setupInitialGuestbook();
+  setupRosterRankings();
 
   window.addEventListener("main-char-changed", handleMainCharChange);
   window.addEventListener("paste", handlePaste);
@@ -1336,5 +1522,144 @@ const handlePaste = async (event) => {
 /* 맥락 상 맥스 사이즈 고정 (사이즈 통일) */
 .v-img.thumbnail-hover {
   border-color: rgba(var(--v-theme-on-surface), 0.12) !important;
+}
+
+/* --- 랭킹 메달 카드 전용 스타일 --- */
+.ranking-medal-card {
+  transition: all 0.3s ease;
+  border-width: 2px !important;
+}
+
+/* 금메달 효과 */
+.medal-rank-1 {
+  background: linear-gradient(135deg, #fffde7 0%, #fff9c4 100%) !important;
+  border-color: #ffd700 !important;
+  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2) !important;
+}
+
+/* 은메달 효과 */
+.medal-rank-2 {
+  background: linear-gradient(135deg, #f5f5f5 0%, #eeeeee 100%) !important;
+  border-color: #c0c0c0 !important;
+}
+
+/* 동메달 효과 */
+.medal-rank-3 {
+  background: linear-gradient(135deg, #efebe9 0%, #d7ccc8 100%) !important;
+  border-color: #cd7f32 !important;
+}
+
+.rank-bg-icon {
+  position: absolute;
+  right: -10px;
+  bottom: -10px;
+  font-size: 80px !important;
+  opacity: 0.07;
+  transform: rotate(-15deg);
+  z-index: 1;
+}
+
+.ranking-medal-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* 공통 레이아웃 */
+.ranking-board-container {
+  background-color: rgba(var(--v-theme-primary), 0.05) !important;
+  border: 2px rgba(var(--v-theme-error), 0.3) !important;
+}
+
+.ranking-medal-card {
+  transition: all 0.3s ease;
+  border-width: 2px !important;
+}
+
+/* --- 라이트 모드 컬러 세팅 --- */
+.theme--light.medal-rank-1 {
+  background: linear-gradient(135deg, #fffde7 0%, #fff9c4 100%) !important;
+  border-color: #ffd700 !important;
+}
+.theme--light.medal-rank-2 {
+  background: linear-gradient(135deg, #f5f5f5 0%, #eeeeee 100%) !important;
+  border-color: #c0c0c0 !important;
+}
+.theme--light.medal-rank-3 {
+  background: linear-gradient(135deg, #efebe9 0%, #d7ccc8 100%) !important;
+  border-color: #cd7f32 !important;
+}
+
+.theme--light .medal-label {
+  color: #5d4037 !important;
+}
+.theme--light .ranking-name {
+  color: #212121 !important;
+}
+.theme--light .ranking-count {
+  color: #b71c1c !important;
+  font-size: 1rem;
+} /* GOLD 15 숫자색 */
+.theme--light .total-label {
+  color: #757575 !important;
+}
+.theme--light .roster-chip {
+  background-color: rgba(0, 0, 0, 0.08) !important;
+  color: #424242 !important;
+}
+
+/* --- 다크 모드 컬러 세팅 (검정 배경에 고대비 텍스트) --- */
+.theme--dark.ranking-medal-card {
+  border-width: 3px !important;
+}
+.theme--dark.medal-rank-1 {
+  background: linear-gradient(135deg, #2c2601 0%, #000000 100%) !important;
+  border-color: #ffd700 !important;
+}
+.theme--dark.medal-rank-2 {
+  background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%) !important;
+  border-color: #c0c0c0 !important;
+}
+.theme--dark.medal-rank-3 {
+  background: linear-gradient(135deg, #1d1109 0%, #000000 100%) !important;
+  border-color: #cd7f32 !important;
+}
+
+.theme--dark .medal-label {
+  color: #eeeeee !important;
+}
+.theme--dark .ranking-name {
+  color: #ffffff !important;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+.theme--dark .ranking-count {
+  color: #ff5252 !important;
+} /* 다크모드에선 더 밝은 빨강 */
+.theme--dark .total-label {
+  color: #bdbdbd !important;
+}
+.theme--dark .roster-chip {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+}
+
+/* 공통 아이콘 및 효과 */
+.rank-bg-icon {
+  position: absolute;
+  right: -10px;
+  bottom: -10px;
+  font-size: 80px !important;
+  opacity: 0.1;
+  transform: rotate(-15deg);
+  z-index: 1;
+}
+
+.theme--dark .rank-bg-icon {
+  opacity: 0.2;
+  color: #fff;
+}
+
+.ranking-medal-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3) !important;
 }
 </style>

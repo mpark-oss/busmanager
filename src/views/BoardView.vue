@@ -84,7 +84,7 @@
           <v-table class="calculation-table border rounded-lg overflow-hidden">
             <thead>
               <tr class="bg-grey-lighten-4">
-                <th class="text-left font-weight-bold" style="width: 15%">
+                <th class="text-center font-weight-bold" style="width: 15%">
                   인원
                 </th>
                 <th class="text-center font-weight-bold">
@@ -106,7 +106,7 @@
                 :key="n"
                 :class="{ 'highlight-row': [4, 8, 16].includes(n) }"
               >
-                <td class="font-weight-bold">{{ n }}인</td>
+                <td class="text-center font-weight-bold">{{ n }}인</td>
 
                 <td class="text-center">
                   <div class="text-blue-darken-3 font-weight-bold">

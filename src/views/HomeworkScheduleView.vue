@@ -364,16 +364,12 @@
                           :class="
                             char.isGoldCharacter
                               ? 'text-amber-darken-4'
-                              : 'text-grey-lighten-1'
+                              : getCharGold(char) !== 0
+                                ? 'text-light-blue-darken-2'
+                                : 'text-grey-lighten-1'
                           "
                         >
-                          {{
-                            (char.isGoldCharacter
-                              ? getCharGold(char)
-                              : 0
-                            ).toLocaleString()
-                          }}
-                          G
+                          {{ getCharGold(char).toLocaleString() }} G
                         </div>
                       </div>
 

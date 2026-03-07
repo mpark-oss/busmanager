@@ -151,7 +151,7 @@
       >
         <div class="d-flex justify-space-between align-center mb-6">
           <h2 class="text-h5 font-weight-black d-flex align-center">
-            <v-icon class="me-2" color="primary">mdi-bus-school</v-icon> 캐릭터
+            <v-icon class="me-2" color="primary">mdi-sword-cross</v-icon> 캐릭터
             정보 / 공격대 만들기
           </h2>
           <v-btn

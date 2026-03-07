@@ -141,7 +141,7 @@
                 </td>
 
                 <td class="text-center">
-                  <div class="text-deep-orange-darken-4 font-weight-black">
+                  <div class="text-deep-orange-darken-1 font-weight-black">
                     {{ calculateDriverShare(calcPrice, n).toLocaleString() }} G
                   </div>
                   <div class="text-caption text-deep-orange-lighten-1">

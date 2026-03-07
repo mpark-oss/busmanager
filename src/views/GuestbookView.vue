@@ -276,7 +276,7 @@
                     class="font-weight-bold px-2 roster-chip"
                     variant="flat"
                   >
-                    외 {{ rank.members?.length || 0 }} 캐릭터
+                    외 {{ rank.members?.length - 1 || 0 }} 캐릭터
                   </v-chip>
                 </div>
               </v-card>

@@ -131,7 +131,7 @@
                     group="schedule-items"
                     item-key="id"
                     class="day-dropzone pa-1"
-                    :disabled="schedules.some((s) => isLocked(s))"
+                    :disabled="false"
                     @change="(e) => onDateDrop(e, day.fullDate)"
                   >
                     <template #item="{ element }">
@@ -139,9 +139,15 @@
                         size="x-small"
                         :color="getDifficultyColor(element.difficulty)"
                         variant="flat"
+                        :class="{
+                          'elevation-5': hoveredId === element.id,
+                          'opacity-50 cursor-not-allowed': isLocked(element),
+                        }"
                         class="mb-1 w-100 justify-start px-1 rounded-sm schedule-chip transition-swing"
-                        :class="{ 'elevation-5': hoveredId === element.id }"
                         label
+                        :style="
+                          isLocked(element) ? 'pointer-events: none;' : ''
+                        "
                         @mouseenter="hoveredId = element.id"
                         @mouseleave="hoveredId = null"
                         @click="scrollToDetail(element.id)"
@@ -573,7 +579,8 @@ const unlockedIds = ref([]);
 // [추가] 현재 카드가 잠겨있는지 확인하는 함수
 const isLocked = (bus) => {
   // 비밀번호가 설정되어 있고, 해제 리스트에 해당 ID가 없다면 잠긴 상태입니다.
-  return bus.password && !unlockedIds.value.includes(bus.id);
+  const hasPassword = bus.password && String(bus.password).trim() !== "";
+  return hasPassword && !unlockedIds.value.includes(bus.id);
 };
 
 // [추가] 자물쇠 아이콘 클릭 시 작동하는 비밀번호 검증 함수

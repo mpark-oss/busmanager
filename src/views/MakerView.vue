@@ -1002,7 +1002,8 @@ const confirmAndUpload = async (bus, index) => {
       members: JSON.parse(JSON.stringify(bus.members)),
       createdAt: new Date(),
       isHomework: bus.isHomework,
-      password: bus.password || "", // [추가] 비밀번호 필드 저장
+      password:
+        bus.password && bus.password.trim() !== "" ? bus.password : null,
     };
     const targetCollection = bus.isHomework ? "homeworks" : "schedules";
     await addDoc(collection(db, targetCollection), scheduleData);

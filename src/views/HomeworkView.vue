@@ -135,7 +135,7 @@
                     group="homework-items"
                     item-key="id"
                     class="day-dropzone pa-1"
-                    :disabled="homeworks.some((h) => isLocked(h))"
+                    :disabled="false"
                     @change="(e) => onDateDrop(e, day.fullDate)"
                   >
                     <template #item="{ element }">
@@ -144,7 +144,13 @@
                         :color="getDifficultyColor(element.difficulty)"
                         variant="flat"
                         class="mb-1 w-100 justify-start px-1 rounded-sm homework-chip transition-swing"
-                        :class="{ 'elevation-5': hoveredId === element.id }"
+                        :class="{
+                          'elevation-5': hoveredId === element.id,
+                          'opacity-50 cursor-not-allowed': isLocked(element),
+                        }"
+                        :style="
+                          isLocked(element) ? 'pointer-events: none;' : ''
+                        "
                         label
                         @mouseenter="hoveredId = element.id"
                         @mouseleave="hoveredId = null"
@@ -592,8 +598,9 @@ const unlockedIds = ref([]);
 
 // [추가] 현재 숙제가 잠겨있는지 확인
 const isLocked = (hw) => {
-  // 비밀번호가 설정되어 있고, 해제 리스트에 해당 ID가 없다면 잠긴 상태입니다.
-  return hw.password && !unlockedIds.value.includes(hw.id);
+  const hasPassword = hw.password && String(hw.password).trim() !== "";
+
+  return hasPassword && !unlockedIds.value.includes(hw.id);
 };
 
 // [추가] 자물쇠 아이콘 클릭 시 작동하는 비밀번호 검증 함수

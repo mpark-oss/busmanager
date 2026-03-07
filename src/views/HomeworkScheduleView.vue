@@ -978,9 +978,26 @@
                   }}</span>
                 </div>
 
-                <span class="text-caption font-weight-bold text-primary">
-                  {{ formatScheduleTime(item.dateTime) }}
-                </span>
+                <div class="d-flex align-center">
+                  <v-chip
+                    v-if="isToday(item.dateTime)"
+                    color="error"
+                    size="x-small"
+                    variant="flat"
+                    class="font-weight-black text-white me-2 px-2"
+                  >
+                    오늘
+                  </v-chip>
+
+                  <span
+                    class="text-caption font-weight-bold"
+                    :class="
+                      isToday(item.dateTime) ? 'text-error' : 'text-primary'
+                    "
+                  >
+                    {{ formatScheduleTime(item.dateTime) }}
+                  </span>
+                </div>
               </div>
 
               <div
@@ -1113,6 +1130,19 @@ const specialTasks = [
   { id: "hell", label: "지옥" },
   { id: "hall", label: "할" },
 ];
+
+const isToday = (dateInput) => {
+  if (!dateInput) return false;
+
+  const date = new Date(dateInput);
+  const today = new Date();
+
+  return (
+    date.getDate() === today.getDate() &&
+    date.getMonth() === today.getMonth() &&
+    date.getFullYear() === today.getFullYear()
+  );
+};
 
 const raidList = [
   {
@@ -2073,7 +2103,6 @@ const restoreCharacter = async (name) => {
   }
 };
 
-
 // [추가] DB 동기화 로직
 const isSyncing = ref(false);
 
@@ -2084,7 +2113,9 @@ const saveToCloud = async () => {
     return alert("상단 메뉴에서 대표 캐릭터를 먼저 설정하거나 선택해주세요!");
   }
 
-  const confirmSave = confirm(`'${mainName}' 현재 설정을 클라우드에 저장하시겠습니까?`);
+  const confirmSave = confirm(
+    `'${mainName}' 현재 설정을 클라우드에 저장하시겠습니까?`,
+  );
   if (!confirmSave) return;
 
   isSyncing.value = true;
@@ -2092,13 +2123,19 @@ const saveToCloud = async () => {
     const docRef = doc(db, "user_configs", mainName);
 
     // [수정] 로컬에서 현재 블랙리스트 명단을 직접 가져옵니다.
-    const currentBlacklist = JSON.parse(localStorage.getItem(getBlacklistKey()) || "[]");
+    const currentBlacklist = JSON.parse(
+      localStorage.getItem(getBlacklistKey()) || "[]",
+    );
 
-    await setDoc(docRef, {
-      characters: characters.value,
-      blacklist: currentBlacklist, // 🔥 블랙리스트 추가 저장
-      lastUpdated: serverTimestamp(),
-    }, { merge: true }); // 기존 데이터 유지를 위해 merge 옵션 추천
+    await setDoc(
+      docRef,
+      {
+        characters: characters.value,
+        blacklist: currentBlacklist, // 🔥 블랙리스트 추가 저장
+        lastUpdated: serverTimestamp(),
+      },
+      { merge: true },
+    ); // 기존 데이터 유지를 위해 merge 옵션 추천
 
     alert("✅ 클라우드 저장완료!");
   } catch (e) {
@@ -2114,7 +2151,9 @@ const loadFromCloud = async () => {
   const mainName = localStorage.getItem("current_main_name");
   if (!mainName) return alert("대표 캐릭터를 먼저 설정해주세요!");
 
-  const confirmLoad = confirm("클라우드 데이터를 불러오시겠습니까? (로컬 설정이 교체됩니다.)");
+  const confirmLoad = confirm(
+    "클라우드 데이터를 불러오시겠습니까? (로컬 설정이 교체됩니다.)",
+  );
   if (!confirmLoad) return;
 
   isSyncing.value = true;
@@ -2137,21 +2176,21 @@ const loadFromCloud = async () => {
       // 2. 🔥 [핵심] 블랙리스트 복구
       const serverBlacklist = data.blacklist || [];
       const bKey = `hw_blacklist_${mainName}`; // 또는 getBlacklistKey() 사용
-      
+
       // 로컬 스토리지에 즉시 물리적 저장
       localStorage.setItem(bKey, JSON.stringify(serverBlacklist));
-      
+
       // 화면 반응형 변수(UI) 업데이트
-      if (typeof blacklistedChars !== 'undefined') {
+      if (typeof blacklistedChars !== "undefined") {
         blacklistedChars.value = serverBlacklist;
       }
 
       // 3. 캐릭터 리스트 로컬 저장 (기존 saveToLocal 호출)
-      saveToLocal(); 
-      
+      saveToLocal();
+
       // 4. 기타 연동 로직
-      if (typeof updateDailyRestGauges === 'function') updateDailyRestGauges();
-      
+      if (typeof updateDailyRestGauges === "function") updateDailyRestGauges();
+
       // 5. 🔥 [중요] 블랙리스트가 적용된 상태로 API 데이터를 다시 필터링
       // 이 함수가 실행되어야 '삭제된 캐릭터'가 화면에서 즉시 사라집니다.
       await fetchMyExpedition(mainName);
@@ -2167,8 +2206,6 @@ const loadFromCloud = async () => {
     isSyncing.value = false;
   }
 };
-
-
 </script>
 
 <style scoped>

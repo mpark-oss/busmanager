@@ -6,21 +6,9 @@
         <span class="text-h6 font-weight-black">바로가기 링크</span>
       </div>
       <v-row dense>
-        <v-col
-          v-for="link in quickLinks"
-          :key="link.title"
-          cols="6"
-          sm="4"
-          md="2.4"
-        >
-          <v-btn
-            block
-            variant="tonal"
-            :color="link.color"
-            class="rounded-lg font-weight-bold"
-            height="48"
-            @click="openLink(link.url)"
-          >
+        <v-col v-for="link in quickLinks" :key="link.title" cols="6" sm="4" md="2.4">
+          <v-btn block variant="tonal" :color="link.color" class="rounded-lg font-weight-bold" height="48"
+            @click="openLink(link.url)">
             <v-icon start size="small">{{ link.icon }}</v-icon>
             {{ link.title }}
           </v-btn>
@@ -51,32 +39,15 @@
           <v-form @submit.prevent="addMessage" class="mb-8">
             <v-row dense>
               <v-col cols="12" sm="3">
-                <v-text-field
-                  v-model="newName"
-                  label="닉네임"
-                  variant="outlined"
-                  density="compact"
-                  hide-details
-                  readonly
-                  :placeholder="!newName ? '캐릭터 미설정' : ''"
-                  class="mb-2 font-weight-bold"
-                ></v-text-field>
+                <v-text-field v-model="newName" label="닉네임" variant="outlined" density="compact" hide-details readonly
+                  :placeholder="!newName ? '캐릭터 미설정' : ''" class="mb-2 font-weight-bold"></v-text-field>
               </v-col>
               <v-col cols="12" sm="9">
-                <v-text-field
-                  v-model="newMessage"
-                  :label="
-                    !newName
-                      ? '상단 메뉴에서 대표 캐릭터를 먼저 설정해주세요!'
-                      : '자유롭게 한마디 남겨주세요!'
-                  "
-                  variant="outlined"
-                  density="compact"
-                  :disabled="!newName"
-                  append-inner-icon="mdi-send"
-                  @click:append-inner="addMessage"
-                  hide-details
-                ></v-text-field>
+                <v-text-field v-model="newMessage" :label="!newName
+                    ? '상단 메뉴에서 대표 캐릭터를 먼저 설정해주세요!'
+                    : '자유롭게 한마디 남겨주세요!'
+                  " variant="outlined" density="compact" :disabled="!newName" append-inner-icon="mdi-send"
+                  @click:append-inner="addMessage" hide-details></v-text-field>
               </v-col>
             </v-row>
           </v-form>
@@ -85,92 +56,56 @@
 
           <v-list lines="two" class="bg-transparent">
             <v-fade-transition group>
-              <v-list-item
-                v-for="msg in messages"
-                :key="msg.id"
-                class="mb-4 pa-4 rounded-lg border transition-swing"
-                :class="
-                  theme.global.current.value.dark
+              <v-list-item v-for="msg in messages" :key="msg.id" class="mb-4 pa-4 rounded-lg border transition-swing"
+                :class="theme.global.current.value.dark
                     ? 'bg-grey-darken-3'
                     : 'bg-grey-lighten-5'
-                "
-              >
+                  ">
                 <template v-slot:prepend>
                   <v-avatar color="primary" variant="tonal">
                     <v-icon>mdi-account</v-icon>
                   </v-avatar>
                 </template>
 
-                <v-list-item-title
-                  class="font-weight-bold d-flex align-center"
-                  :class="{ 'text-white': theme.global.current.value.dark }"
-                >
+                <v-list-item-title class="font-weight-bold d-flex align-center"
+                  :class="{ 'text-white': theme.global.current.value.dark }">
                   {{ msg.nickname }}
                   <span class="text-caption text-medium-emphasis ms-3">{{
                     formatDate(msg.createdAt)
                   }}</span>
                 </v-list-item-title>
 
-                <v-list-item-subtitle
-                  class="text-body-1 mt-1"
-                  :class="
-                    theme.global.current.value.dark
-                      ? 'text-white'
-                      : 'text-black'
-                  "
-                  style="opacity: 1"
-                >
+                <v-list-item-subtitle class="text-body-1 mt-1" :class="theme.global.current.value.dark
+                    ? 'text-white'
+                    : 'text-black'
+                  " style="opacity: 1">
                   {{ msg.content }}
                 </v-list-item-subtitle>
 
                 <template v-slot:append>
-                  <v-btn
-                    icon="mdi-delete-outline"
-                    size="small"
-                    variant="text"
-                    color="medium-emphasis"
-                    @click="deleteMessage(msg.id)"
-                  ></v-btn>
+                  <v-btn icon="mdi-delete-outline" size="small" variant="text" color="medium-emphasis"
+                    @click="deleteMessage(msg.id)"></v-btn>
                 </template>
                 <v-divider class="my-3"></v-divider>
                 <div class="px-2 pb-2">
-                  <div
-                    v-for="reply in msg.replies || []"
-                    :key="reply.id"
-                    class="text-caption mb-1"
-                  >
+                  <div v-for="reply in msg.replies || []" :key="reply.id" class="text-caption mb-1">
                     <b class="text-error">{{ reply.nickname }}:</b>
                     {{ reply.content }}
                   </div>
-                  <v-text-field
-                    v-model="msg.newReply"
-                    placeholder="댓글 작성..."
-                    variant="underlined"
-                    density="compact"
-                    hide-details
-                    append-inner-icon="mdi-chat-plus-outline"
+                  <v-text-field v-model="msg.newReply" placeholder="댓글 작성..." variant="underlined" density="compact"
+                    hide-details append-inner-icon="mdi-chat-plus-outline"
                     @click:append-inner="addComment('guestbook', msg)"
-                    @keyup.enter="addComment('guestbook', msg)"
-                  ></v-text-field>
+                    @keyup.enter="addComment('guestbook', msg)"></v-text-field>
                 </div>
               </v-list-item>
             </v-fade-transition>
           </v-list>
           <div v-if="hasMoreMessages" class="text-center mt-6">
-            <v-btn
-              variant="tonal"
-              color="primary"
-              rounded="lg"
-              :loading="isMoreMsgLoading"
-              @click="fetchMoreMessages"
-            >
+            <v-btn variant="tonal" color="primary" rounded="lg" :loading="isMoreMsgLoading" @click="fetchMoreMessages">
               <v-icon start>mdi-history</v-icon> 이전 낙서 더보기
             </v-btn>
           </div>
-          <div
-            v-else-if="messages.length > 0"
-            class="text-center mt-6 text-grey text-caption"
-          >
+          <div v-else-if="messages.length > 0" class="text-center mt-6 text-grey text-caption">
             마지막 낙서입니다.
           </div>
 
@@ -181,35 +116,21 @@
       </v-window-item>
 
       <v-window-item value="incident">
-        <v-card
-          variant="flat"
-          class="rounded-xl pa-4 mb-6 border-dashed ranking-board-container"
-        >
+        <v-card variant="flat" class="rounded-xl pa-4 mb-6 border-dashed ranking-board-container">
           <div class="d-flex align-center mb-4">
             <v-icon color="error" class="me-2">mdi-trophy-variant</v-icon>
-            <span class="text-subtitle-1 font-weight-black text-error"
-              >원정대 누적 신고 랭킹 (Top 3)</span
-            >
+            <span class="text-subtitle-1 font-weight-black text-error">원정대 누적 신고 랭킹 (Top 3)</span>
           </div>
 
           <v-row dense justify="center">
-            <v-col
-              v-for="(rank, index) in rosterRankings"
-              :key="index"
-              cols="12"
-              sm="4"
-            >
-              <v-card
-                variant="flat"
-                class="pa-4 rounded-xl border-lg position-relative overflow-hidden ranking-medal-card"
-                :class="[
+            <v-col v-for="(rank, index) in rosterRankings" :key="index" cols="12" sm="4">
+              <v-card variant="flat"
+                class="pa-4 rounded-xl border-lg position-relative overflow-hidden ranking-medal-card" :class="[
                   `medal-rank-${index + 1}`,
                   theme.global.current.value.dark
                     ? 'theme--dark'
                     : 'theme--light',
-                ]"
-                height="100%"
-              >
+                ]" height="100%">
                 <v-icon class="rank-bg-icon">{{
                   index === 0
                     ? "mdi-trophy"
@@ -218,25 +139,13 @@
                       : "mdi-medal-outline"
                 }}</v-icon>
 
-                <div
-                  class="d-flex justify-space-between align-start position-relative"
-                  style="z-index: 2"
-                >
+                <div class="d-flex justify-space-between align-start position-relative" style="z-index: 2">
                   <div class="d-flex flex-column">
                     <div class="d-flex align-center mb-1">
-                      <v-avatar
-                        size="24"
-                        :color="getMedalColor(index)"
-                        class="me-2 elevation-2"
-                      >
-                        <span
-                          class="text-white font-weight-black text-caption"
-                          >{{ index + 1 }}</span
-                        >
+                      <v-avatar size="24" :color="getMedalColor(index)" class="me-2 elevation-2">
+                        <span class="text-white font-weight-black text-caption">{{ index + 1 }}</span>
                       </v-avatar>
-                      <span
-                        class="text-subtitle-2 font-weight-black medal-label"
-                      >
+                      <span class="text-subtitle-2 font-weight-black medal-label">
                         {{
                           index === 0
                             ? "GOLD"
@@ -247,10 +156,7 @@
                       </span>
                     </div>
 
-                    <div
-                      class="text-h6 font-weight-black text-truncate ranking-name"
-                      style="max-width: 140px"
-                    >
+                    <div class="text-h6 font-weight-black text-truncate ranking-name" style="max-width: 140px">
                       {{ rank.lastTargetName || "정보 없음" }}
                     </div>
                   </div>
@@ -259,23 +165,14 @@
                     <div class="text-h4 font-weight-black ranking-count">
                       {{ rank.totalCount }}
                     </div>
-                    <div
-                      class="text-caption font-weight-bold total-label mt-n1"
-                    >
+                    <div class="text-caption font-weight-bold total-label mt-n1">
                       TOTAL
                     </div>
                   </div>
                 </div>
 
-                <div
-                  class="mt-3 d-flex align-center position-relative"
-                  style="z-index: 2"
-                >
-                  <v-chip
-                    size="x-small"
-                    class="font-weight-bold px-2 roster-chip"
-                    variant="flat"
-                  >
+                <div class="mt-3 d-flex align-center position-relative" style="z-index: 2">
+                  <v-chip size="x-small" class="font-weight-bold px-2 roster-chip" variant="flat">
                     외 {{ rank.members?.length - 1 || 0 }} 캐릭터
                   </v-chip>
                 </div>
@@ -293,144 +190,72 @@
           <v-form @submit.prevent="submitReport" class="mb-8">
             <v-row dense>
               <v-col cols="12" sm="5">
-                <v-text-field
-                  v-model="reportForm.targetName"
-                  label="신고 대상 캐릭터명"
-                  variant="outlined"
-                  density="compact"
-                  append-inner-icon="mdi-magnify"
-                  placeholder="정확한 캐릭터명"
-                  hide-details
-                  @update:model-value="isSearched = false"
-                  @keyup.enter="searchTarget"
-                ></v-text-field>
+                <v-text-field v-model="reportForm.targetName" label="신고 대상 캐릭터명" variant="outlined" density="compact"
+                  append-inner-icon="mdi-magnify" placeholder="정확한 캐릭터명" hide-details
+                  @update:model-value="isSearched = false" @keyup.enter="searchTarget"></v-text-field>
               </v-col>
 
               <v-col cols="12" sm="4">
-                <v-text-field
-                  v-model="reportForm.incidentTime"
-                  label="사건 발생 시간"
-                  type="datetime-local"
-                  variant="outlined"
-                  density="compact"
-                  hide-details
-                ></v-text-field>
+                <v-text-field v-model="reportForm.incidentTime" label="사건 발생 시간" type="datetime-local"
+                  variant="outlined" density="compact" hide-details></v-text-field>
               </v-col>
 
               <v-col cols="12" sm="3">
-                <v-text-field
-                  v-model="reportForm.password"
-                  label="삭제 비번(4자리)"
-                  type="password"
-                  variant="outlined"
-                  density="compact"
-                  maxlength="4"
-                  placeholder="숫자 4자리"
-                  hide-details
-                ></v-text-field>
+                <v-text-field v-model="reportForm.password" label="삭제 비번(4자리)" type="password" variant="outlined"
+                  density="compact" maxlength="4" placeholder="숫자 4자리" hide-details></v-text-field>
               </v-col>
 
               <v-col cols="12" class="text-right mt-2">
-                <v-btn
-                  color="primary"
-                  variant="tonal"
-                  rounded="lg"
-                  class="me-2"
-                  prepend-icon="mdi-magnify"
-                  @click="searchTarget"
-                >
+                <v-btn color="primary" variant="tonal" rounded="lg" class="me-2" prepend-icon="mdi-magnify"
+                  @click="searchTarget">
                   캐릭터 검색/확인
                 </v-btn>
 
-                <v-btn
-                  :color="isSearched ? 'error' : 'grey'"
-                  variant="flat"
-                  rounded="lg"
-                  :prepend-icon="isSearched ? 'mdi-bullhorn' : 'mdi-lock'"
-                  @click="submitReport"
-                  :loading="isReporting"
-                  :disabled="!isSearched"
-                >
+                <v-btn :color="isSearched ? 'error' : 'grey'" variant="flat" rounded="lg"
+                  :prepend-icon="isSearched ? 'mdi-bullhorn' : 'mdi-lock'" @click="submitReport" :loading="isReporting"
+                  :disabled="!isSearched">
                   {{ isSearched ? "신고 등록" : "캐릭터 검색 필요" }}
                 </v-btn>
               </v-col>
 
               <v-col cols="12" class="mt-2">
-                <v-textarea
-                  v-model="reportForm.reason"
-                  label="신고 사유"
-                  variant="outlined"
-                  rows="3"
-                  placeholder="신고 사유를 상세히 적어주세요"
-                  hide-details
-                ></v-textarea>
+                <v-textarea v-model="reportForm.reason" label="신고 사유" variant="outlined" rows="3"
+                  placeholder="신고 사유를 상세히 적어주세요" hide-details></v-textarea>
               </v-col>
 
               <v-col cols="12" class="mt-2">
-                <v-file-input
-                  v-model="reportForm.imageFile"
-                  label="증거 스크린샷"
-                  variant="outlined"
-                  density="compact"
-                  prepend-icon="mdi-camera"
-                  accept="image/*"
-                  hide-details
-                ></v-file-input>
+                <v-file-input v-model="reportForm.imageFile" label="증거 스크린샷" variant="outlined" density="compact"
+                  prepend-icon="mdi-camera" accept="image/*" hide-details></v-file-input>
               </v-col>
             </v-row>
           </v-form>
 
           <v-divider class="mb-6"></v-divider>
 
-          <v-text-field
-            v-model="searchKeyword"
-            label="신고 내역 통합 검색 (캐릭터명 입력)"
-            placeholder="캐릭터명 입력 후 Enter"
-            prepend-inner-icon="mdi-account-search"
-            variant="solo-filled"
-            flat
-            hide-details
-            rounded="lg"
-            clearable
-            class="mb-6"
-            @keyup.enter="handleSearch"
-            @click:append-inner="handleSearch"
-            @click:clear="resetSearch"
-            @update:model-value="(val) => !val && resetSearch()"
-          ></v-text-field>
+          <v-text-field v-model="searchKeyword" label="신고 내역 통합 검색 (캐릭터명 입력)" placeholder="캐릭터명 입력 후 Enter"
+            prepend-inner-icon="mdi-account-search" variant="solo-filled" flat hide-details rounded="lg" clearable
+            class="mb-6" @keyup.enter="handleSearch" @click:append-inner="handleSearch" @click:clear="resetSearch"
+            @update:model-value="(val) => !val && resetSearch()"></v-text-field>
 
           <v-fade-transition>
-            <div
-              v-if="searchedKeyword && !isSearching"
-              class="px-1 mb-4 d-flex align-center"
-            >
-              <v-icon size="small" color="error" class="me-2"
-                >mdi-database-search</v-icon
-              >
+            <div v-if="searchedKeyword && !isSearching" class="px-1 mb-4 d-flex align-center">
+              <v-icon size="small" color="error" class="me-2">mdi-database-search</v-icon>
               <span class="text-subtitle-2 font-weight-bold">
                 '{{ searchedKeyword }}' 관련 원정대 통합 검색 결과:
-                <span class="text-error">{{ searchTotalCount }}</span
-                >건
+                <span class="text-error">{{ searchTotalCount }}</span>건
               </span>
             </div>
           </v-fade-transition>
 
           <v-list class="bg-transparent">
             <v-fade-transition group>
-              <v-list-item
-                v-for="report in searchedKeyword ? searchResults : reports"
-                :key="report.id"
-                class="mb-4 pa-4 rounded-lg border incident-item"
-                :class="
-                  theme.global.current.value.dark
+              <v-list-item v-for="report in searchedKeyword ? searchResults : reports" :key="report.id"
+                class="mb-4 pa-4 rounded-lg border incident-item" :class="theme.global.current.value.dark
                     ? 'bg-red-darken-4'
                     : 'bg-red-lighten-5'
-                "
-              >
+                  ">
                 <div class="d-flex justify-space-between align-center mb-2">
-                  <span class="text-h6 font-weight-black text-error"
-                    >🚨 대상: {{ report.targetName }}</span
-                  >
+                  <span class="text-h6 font-weight-black text-error">🚨 대상: {{ report.targetName }}</span>
                   <span class="text-caption font-weight-bold">{{
                     formatDate(report.createdAt)
                   }}</span>
@@ -444,104 +269,55 @@
                   }}
                 </div>
                 <div class="text-body-1 mb-2">{{ report.reason }}</div>
-                <v-img
-                  v-if="report.imageUrl"
-                  :src="report.imageUrl"
-                  aspect-ratio="16/9"
-                  cover
-                  max-width="200"
-                  height="120"
-                  class="rounded-lg mb-3 cursor-pointer thumbnail-hover border"
-                  @click="openImage(report.imageUrl)"
-                >
+                <v-img v-if="report.imageUrl" :src="report.imageUrl" aspect-ratio="16/9" cover max-width="200"
+                  height="120" class="rounded-lg mb-3 cursor-pointer thumbnail-hover border"
+                  @click="openImage(report.imageUrl)">
                   <template v-slot:placeholder>
-                    <v-row
-                      class="fill-height ma-0"
-                      align="center"
-                      justify="center"
-                    >
-                      <v-progress-circular
-                        indeterminate
-                        color="grey-lighten-5"
-                      ></v-progress-circular>
+                    <v-row class="fill-height ma-0" align="center" justify="center">
+                      <v-progress-circular indeterminate color="grey-lighten-5"></v-progress-circular>
                     </v-row>
                   </template>
                 </v-img>
-                <div
-                  class="text-caption font-weight-bold"
-                  :class="
-                    theme.global.current.value.dark
-                      ? 'text-red-lighten-3'
-                      : 'text-red-darken-2'
-                  "
-                >
+                <div class="text-caption font-weight-bold" :class="theme.global.current.value.dark
+                    ? 'text-red-lighten-3'
+                    : 'text-red-darken-2'
+                  ">
                   올바른 길드 생활을 위해 반성하세요.
                 </div>
 
                 <template v-slot:append>
-                  <v-btn
-                    icon="mdi-delete-outline"
-                    size="small"
-                    variant="elevated"
-                    color="bg-red-darken-4"
-                    style="opacity: 1 !important"
-                    @click="deleteReport(report)"
-                  ></v-btn>
+                  <v-btn icon="mdi-delete-outline" size="small" variant="elevated" color="bg-red-darken-4"
+                    style="opacity: 1 !important" @click="deleteReport(report)"></v-btn>
                 </template>
 
                 <v-divider class="my-3"></v-divider>
                 <div class="px-2 pb-2">
-                  <div
-                    v-for="reply in report.replies || []"
-                    :key="reply.id"
-                    class="text-caption mb-1"
-                  >
+                  <div v-for="reply in report.replies || []" :key="reply.id" class="text-caption mb-1">
                     <b class="text-error">{{ reply.nickname }}:</b>
                     {{ reply.content }}
                   </div>
 
-                  <v-text-field
-                    v-model="report.newReply"
-                    placeholder="댓글 작성..."
-                    variant="underlined"
-                    density="compact"
-                    hide-details
-                    append-inner-icon="mdi-chat-plus-outline"
+                  <v-text-field v-model="report.newReply" placeholder="댓글 작성..." variant="underlined" density="compact"
+                    hide-details append-inner-icon="mdi-chat-plus-outline"
                     @click:append-inner="addComment('reports', report)"
-                    @keyup.enter="addComment('reports', report)"
-                  ></v-text-field>
+                    @keyup.enter="addComment('reports', report)"></v-text-field>
                 </div>
               </v-list-item>
             </v-fade-transition>
           </v-list>
-          <div
-            v-if="searchedKeyword && searchResults.length === 0"
-            class="text-center py-10 text-grey"
-          >
+          <div v-if="searchedKeyword && searchResults.length === 0" class="text-center py-10 text-grey">
             '{{ searchedKeyword }}'와 관련된 신고 내역이 없습니다.
           </div>
           <div v-if="hasMoreReports" class="text-center mt-6">
-            <v-btn
-              variant="flat"
-              color="error"
-              rounded="lg"
-              :loading="isMoreLoading"
-              @click="fetchMoreReports"
-            >
+            <v-btn variant="flat" color="error" rounded="lg" :loading="isMoreLoading" @click="fetchMoreReports">
               <v-icon start>mdi-history</v-icon> 이전 신고 더보기
             </v-btn>
           </div>
-          <div
-            v-else-if="reports.length > 0"
-            class="text-center mt-6 text-grey text-caption"
-          >
+          <div v-else-if="reports.length > 0" class="text-center mt-6 text-grey text-caption">
             모든 신고 내역을 불러왔습니다.
           </div>
 
-          <div
-            v-if="filteredReports.length === 0 && searchKeyword"
-            class="text-center py-10 text-grey"
-          >
+          <div v-if="filteredReports.length === 0 && searchKeyword" class="text-center py-10 text-grey">
             '{{ searchKeyword }}'와 관련된 신고 내역이 없습니다.
           </div>
         </v-card>
@@ -554,50 +330,26 @@
             길잡이
           </h2>
 
-          <v-alert
-            border="start"
-            color="amber-darken-3"
-            variant="tonal"
-            class="mb-6 rounded-lg"
-          >
+          <v-alert border="start" color="amber-darken-3" variant="tonal" class="mb-6 rounded-lg">
             <div class="text-body-2">
               등급별 열쇠를 선택하여 길잡이 정보를 확인하세요.
             </div>
           </v-alert>
 
           <v-row dense>
-            <v-col
-              v-for="key in keyGrades"
-              :key="key.label"
-              cols="12"
-              sm="4"
-              md="3"
-            >
-              <v-btn
-                block
-                variant="elevated"
-                height="60"
-                class="rounded-lg font-weight-black text-h6"
-                :style="{
-                  backgroundColor: key.color,
-                  color: '#333 !important' /* 모든 모드에서 검은색 글씨 강제 */,
-                }"
-                @click="generateGuide(key.label)"
-              >
+            <v-col v-for="key in keyGrades" :key="key.label" cols="12" sm="4" md="3">
+              <v-btn block variant="elevated" height="60" class="rounded-lg font-weight-black text-h6" :style="{
+                backgroundColor: key.color,
+                color: '#333 !important' /* 모든 모드에서 검은색 글씨 강제 */,
+              }" @click="generateGuide(key.label)">
                 <v-icon start size="large" color="#333">mdi-key-chain</v-icon>
                 {{ key.label }} 열쇠
               </v-btn>
             </v-col>
             <v-col cols="12" sm="4" md="3">
-              <v-btn
-                block
-                variant="flat"
-                height="60"
-                color="cyan"
-                class="rounded-lg font-weight-black text-h6 text-white"
-                @click="addExtraChance"
-                :disabled="!selectedKey"
-              >
+              <v-btn block variant="flat" height="60" color="cyan"
+                class="rounded-lg font-weight-black text-h6 text-white" @click="addExtraChance"
+                :disabled="!selectedKey">
                 <v-icon start size="large">mdi-plus-circle-outline</v-icon>
                 강하 +1
               </v-btn>
@@ -605,38 +357,21 @@
           </v-row>
 
           <v-expand-transition>
-            <div
-              v-if="selectedKey"
-              class="mt-10 pa-8 rounded-xl bg-grey-darken-4 text-center border-double"
-              style="border: 4px double rgba(255, 255, 255, 0.2)"
-            >
-              <div
-                class="text-h5 font-weight-black mb-4"
-                :style="{
-                  color: keyGrades.find((k) => k.label === selectedKey)?.color,
-                }"
-              >
+            <div v-if="selectedKey" class="mt-10 pa-8 rounded-xl bg-grey-darken-4 text-center border-double"
+              style="border: 4px double rgba(255, 255, 255, 0.2)">
+              <div class="text-h5 font-weight-black mb-4" :style="{
+                color: keyGrades.find((k) => k.label === selectedKey)?.color,
+              }">
                 <v-icon class="me-2">mdi-auto-fix</v-icon>
                 {{ selectedKey }} 열쇠 길잡이 결과
               </div>
 
-              <div
-                class="d-flex flex-wrap justify-center mb-8"
-                style="gap: 16px; row-gap: 32px"
-              >
-                <div
-                  v-for="(res, index) in guideResults"
-                  :key="index"
-                  class="d-flex align-center"
-                >
-                  <v-card
-                    width="100"
-                    height="120"
-                    variant="flat"
+              <div class="d-flex flex-wrap justify-center mb-8" style="gap: 16px; row-gap: 32px">
+                <div v-for="(res, index) in guideResults" :key="index" class="d-flex align-center">
+                  <v-card width="100" height="120" variant="flat"
                     :color="res === '왼쪽' ? 'blue-darken-4' : 'red-darken-4'"
                     class="d-flex flex-column align-center justify-center rounded-lg border-sm elevation-4"
-                    style="position: relative"
-                  >
+                    style="position: relative">
                     <div class="text-caption font-weight-bold mb-1 opacity-70">
                       {{ index + 1 }}회차
                     </div>
@@ -649,36 +384,23 @@
                     </v-icon>
                     <div class="text-h6 font-weight-black">{{ res }}</div>
 
-                    <div
-                      :class="res === '왼쪽' ? 'bg-blue' : 'bg-red'"
-                      style="
+                    <div :class="res === '왼쪽' ? 'bg-blue' : 'bg-red'" style="
                         position: absolute;
                         bottom: 0;
                         width: 100%;
                         height: 4px;
                         opacity: 0.6;
-                      "
-                    ></div>
+                      "></div>
                   </v-card>
 
-                  <v-icon
-                    v-if="index < guideResults.length - 1"
-                    color="grey-darken-2"
-                    class="mx-1"
-                  >
+                  <v-icon v-if="index < guideResults.length - 1" color="grey-darken-2" class="mx-1">
                     mdi-chevron-right
                   </v-icon>
                 </div>
               </div>
 
-              <v-btn
-                size="large"
-                variant="outlined"
-                color="white"
-                rounded="pill"
-                class="px-8 font-weight-bold"
-                @click="generateGuide(selectedKey)"
-              >
+              <v-btn size="large" variant="outlined" color="white" rounded="pill" class="px-8 font-weight-bold"
+                @click="generateGuide(selectedKey)">
                 <v-icon start>mdi-refresh</v-icon> 다시 뽑기
               </v-btn>
             </div>
@@ -693,18 +415,8 @@
   </v-container>
   <v-dialog v-model="imageDialog" max-width="90vw">
     <v-card class="bg-transparent shadow-none text-right">
-      <v-btn
-        icon="mdi-close"
-        color="white"
-        variant="text"
-        @click="imageDialog = false"
-      ></v-btn>
-      <v-img
-        :src="selectedImage"
-        max-height="85vh"
-        contain
-        class="rounded-lg shadow-lg"
-      ></v-img>
+      <v-btn icon="mdi-close" color="white" variant="text" @click="imageDialog = false"></v-btn>
+      <v-img :src="selectedImage" max-height="85vh" contain class="rounded-lg shadow-lg"></v-img>
     </v-card>
   </v-dialog>
 </template>
@@ -1554,24 +1266,29 @@ const handlePaste = async (event) => {
   position: absolute !important;
   right: -10px !important;
   bottom: -15px !important;
-  font-size: 100px !important; /* 크기를 살짝 더 키워서 존재감 확보 */
+  font-size: 100px !important;
+  /* 크기를 살짝 더 키워서 존재감 확보 */
   transform: rotate(-15deg);
   z-index: 1;
   transition: all 0.3s ease;
-  pointer-events: none; /* 아이콘 때문에 텍스트 선택 방해 안 되게 */
+  pointer-events: none;
+  /* 아이콘 때문에 텍스트 선택 방해 안 되게 */
 }
 
 /* --- 라이트 모드 아이콘 가시성 --- */
 .theme--light .rank-bg-icon {
-  color: rgba(0, 0, 0, 0.08) !important; /* 검정색 투명도 */
+  color: rgba(0, 0, 0, 0.08) !important;
+  /* 검정색 투명도 */
 }
 
 /* --- 다크 모드 아이콘 가시성 (여기가 핵심!) --- */
 .theme--dark .rank-bg-icon {
   /* 다크모드 카드 배경이 검정색이므로 하얀색 계열로 대비를 줍니다 */
   color: rgba(255, 255, 255, 1) !important;
-  opacity: 0.1 !important; /* 투명도를 0.1 정도로 주면 은은하게 보입니다 */
-  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.05)); /* 미세한 광택감 */
+  opacity: 0.1 !important;
+  /* 투명도를 0.1 정도로 주면 은은하게 보입니다 */
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.05));
+  /* 미세한 광택감 */
 }
 
 /* 마우스 호버 시 효과 */
@@ -1596,10 +1313,12 @@ const handlePaste = async (event) => {
   background: linear-gradient(135deg, #fffde7 0%, #fff9c4 100%) !important;
   border-color: #ffd700 !important;
 }
+
 .theme--light.medal-rank-2 {
   background: linear-gradient(135deg, #f5f5f5 0%, #eeeeee 100%) !important;
   border-color: #c0c0c0 !important;
 }
+
 .theme--light.medal-rank-3 {
   background: linear-gradient(135deg, #efebe9 0%, #d7ccc8 100%) !important;
   border-color: #cd7f32 !important;
@@ -1608,16 +1327,21 @@ const handlePaste = async (event) => {
 .theme--light .medal-label {
   color: #5d4037 !important;
 }
+
 .theme--light .ranking-name {
   color: #212121 !important;
 }
+
 .theme--light .ranking-count {
   color: #b71c1c !important;
   font-size: 1rem;
-} /* GOLD 15 숫자색 */
+}
+
+/* GOLD 15 숫자색 */
 .theme--light .total-label {
   color: #757575 !important;
 }
+
 .theme--light .roster-chip {
   background-color: rgba(0, 0, 0, 0.08) !important;
   color: #424242 !important;
@@ -1627,14 +1351,17 @@ const handlePaste = async (event) => {
 .theme--dark.ranking-medal-card {
   border-width: 3px !important;
 }
+
 .theme--dark.medal-rank-1 {
   background: linear-gradient(135deg, #2c2601 0%, #000000 100%) !important;
   border-color: #ffd700 !important;
 }
+
 .theme--dark.medal-rank-2 {
   background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%) !important;
   border-color: #c0c0c0 !important;
 }
+
 .theme--dark.medal-rank-3 {
   background: linear-gradient(135deg, #1d1109 0%, #000000 100%) !important;
   border-color: #cd7f32 !important;
@@ -1643,16 +1370,21 @@ const handlePaste = async (event) => {
 .theme--dark .medal-label {
   color: #eeeeee !important;
 }
+
 .theme--dark .ranking-name {
   color: #ffffff !important;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
 }
+
 .theme--dark .ranking-count {
   color: #ff5252 !important;
-} /* 다크모드에선 더 밝은 빨강 */
+}
+
+/* 다크모드에선 더 밝은 빨강 */
 .theme--dark .total-label {
   color: #bdbdbd !important;
 }
+
 .theme--dark .roster-chip {
   background-color: rgba(255, 255, 255, 0.15) !important;
   color: #ffffff !important;

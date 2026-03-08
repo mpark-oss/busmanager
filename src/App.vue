@@ -1,41 +1,18 @@
 <template>
   <v-app :theme="theme">
-    <v-app-bar
-      :color="theme === 'light' ? 'primary' : '#111111'"
-      elevation="2"
-      border
-    >
-      <v-app-bar-title
-        class="font-weight-black"
-        style="flex: none !important; margin-right: 24px"
-      >
+    <v-app-bar :color="theme === 'light' ? 'primary' : '#111111'" elevation="2" border>
+      <v-app-bar-title class="font-weight-black" style="flex: none !important; margin-right: 24px">
         <div class="d-flex flex-row align-center">
-          <v-img
-            src="/stamp_logo.png"
-            alt="흐흣 로고"
-            width="50"
-            height="50"
-            class="me-3 rounded-lg border border-opacity-25"
-            cover
-          ></v-img>
+          <v-img src="/stamp_logo.png" alt="흐흣 로고" width="50" height="50"
+            class="me-3 rounded-lg border border-opacity-25" cover></v-img>
           <span class="text-h6">흐흣 수용소</span>
         </div>
       </v-app-bar-title>
 
       <div class="d-flex align-center">
-        <v-menu
-          v-if="mainCharSlots.length > 0"
-          offset-y
-          transition="scale-transition"
-        >
+        <v-menu v-if="mainCharSlots.length > 0" offset-y transition="scale-transition">
           <template v-slot:activator="{ props }">
-            <v-btn
-              v-bind="props"
-              variant="flat"
-              color="blue-darken-2"
-              class="rounded-pill px-4"
-              size="small"
-            >
+            <v-btn v-bind="props" variant="flat" color="blue-darken-2" class="rounded-pill px-4" size="small">
               <v-avatar size="24" class="me-2" v-if="getCurrentSlot">
                 <v-img :src="getCurrentSlot.img" cover></v-img>
               </v-avatar>
@@ -47,49 +24,28 @@
           </template>
 
           <v-list class="pa-2 rounded-xl mt-2" min-width="200" elevation="10">
-            <v-list-item
-              v-for="char in mainCharSlots"
-              :key="char.name"
-              @click="switchAccount(char.name)"
-              :class="
-                currentMainName === char.name
-                  ? 'bg-orange-lighten-5 text-orange-darken-4'
-                  : ''
-              "
-              class="rounded-lg mb-1"
-            >
+            <v-list-item v-for="char in mainCharSlots" :key="char.name" @click="switchAccount(char.name)" :class="currentMainName === char.name
+                ? 'bg-orange-lighten-5 text-orange-darken-4'
+                : ''
+              " class="rounded-lg mb-1">
               <template v-slot:prepend>
-                <v-avatar size="32" border
-                  ><v-img :src="char.img" cover></v-img
-                ></v-avatar>
+                <v-avatar size="32" border><v-img :src="char.img" cover></v-img></v-avatar>
               </template>
               <v-list-item-title class="font-weight-black text-body-2">{{
                 char.name
               }}</v-list-item-title>
-              <v-list-item-subtitle style="font-size: 0.65rem"
-                >Lv. {{ char.level }}</v-list-item-subtitle
-              >
+              <v-list-item-subtitle style="font-size: 0.65rem">Lv. {{ char.level }}</v-list-item-subtitle>
             </v-list-item>
 
             <v-divider class="my-2"></v-divider>
 
-            <v-list-item
-              prepend-icon="mdi-cog-outline"
-              title="계정 추가/삭제"
-              @click="charSettingDialog = true"
-              class="rounded-lg"
-            ></v-list-item>
+            <v-list-item prepend-icon="mdi-cog-outline" title="계정 추가/삭제" @click="charSettingDialog = true"
+              class="rounded-lg"></v-list-item>
           </v-list>
         </v-menu>
 
-        <v-btn
-          v-else
-          variant="tonal"
-          color="orange-darken-2"
-          prepend-icon="mdi-account-plus"
-          class="rounded-pill font-weight-black"
-          @click="charSettingDialog = true"
-        >
+        <v-btn v-else variant="tonal" color="orange-darken-2" prepend-icon="mdi-account-plus"
+          class="rounded-pill font-weight-black" @click="charSettingDialog = true">
           대표 캐릭터를 설정하세요
         </v-btn>
       </div>
@@ -97,15 +53,9 @@
       <v-spacer></v-spacer>
 
       <v-btn to="/" prepend-icon="mdi-sword-cross">공격대 만들기</v-btn>
-      <v-btn to="/schedule" prepend-icon="mdi-calendar-clock"
-        >버스 스케줄</v-btn
-      >
-      <v-btn prepend-icon="mdi-clipboard-check-multiple" to="/homework"
-        >숙제 스케줄</v-btn
-      >
-      <v-btn to="/homework-schedule" prepend-icon="mdi-format-list-checks"
-        >개인 숙제 관리</v-btn
-      >
+      <v-btn to="/schedule" prepend-icon="mdi-calendar-clock">버스 스케줄</v-btn>
+      <v-btn prepend-icon="mdi-clipboard-check-multiple" to="/homework">숙제 스케줄</v-btn>
+      <v-btn to="/homework-schedule" prepend-icon="mdi-format-list-checks">개인 숙제 관리</v-btn>
       <v-btn to="/board" prepend-icon="mdi-calculator">쌀산기</v-btn>
       <v-btn to="/guestbook" prepend-icon="mdi-message-draw">커뮤니티</v-btn>
 
@@ -124,59 +74,27 @@
         </v-card-title>
         <v-card-text>
           <div class="d-flex align-center gap-2 mb-4">
-            <v-text-field
-              v-model="searchCharName"
-              label="새 대표 캐릭터명"
-              variant="outlined"
-              hide-details
-              density="compact"
-              color="orange-darken-2"
-              @keyup.enter="addNewSlot"
-            ></v-text-field>
-            <v-btn
-              color="orange-darken-2"
-              icon="mdi-account-search"
-              variant="flat"
-              class="ms-2"
-              :loading="isFetching"
-              @click="addNewSlot"
-            ></v-btn>
+            <v-text-field v-model="searchCharName" label="새 대표 캐릭터명" variant="outlined" hide-details density="compact"
+              color="orange-darken-2" @keyup.enter="addNewSlot"></v-text-field>
+            <v-btn color="orange-darken-2" icon="mdi-account-search" variant="flat" class="ms-2" :loading="isFetching"
+              @click="addNewSlot"></v-btn>
           </div>
           <v-divider v-if="mainCharSlots.length > 0" class="my-4"></v-divider>
           <v-list v-if="mainCharSlots.length > 0" class="bg-transparent pa-0">
-            <v-list-item
-              v-for="char in mainCharSlots"
-              :key="char.name"
-              class="bg-grey-darken-4 rounded-lg mb-2 pa-2"
-            >
-              <template v-slot:prepend
-                ><v-avatar size="40" border
-                  ><v-img :src="char.img" cover></v-img></v-avatar
-              ></template>
+            <v-list-item v-for="char in mainCharSlots" :key="char.name" class="bg-grey-darken-4 rounded-lg mb-2 pa-2">
+              <template v-slot:prepend><v-avatar size="40" border><v-img :src="char.img"
+                    cover></v-img></v-avatar></template>
               <v-list-item-title class="font-weight-bold text-subtitle-2">{{
                 char.name
               }}</v-list-item-title>
-              <v-list-item-subtitle class="text-caption"
-                >Lv. {{ char.level }}</v-list-item-subtitle
-              >
-              <template v-slot:append
-                ><v-btn
-                  icon="mdi-delete-outline"
-                  variant="text"
-                  color="error"
-                  size="small"
-                  @click="removeSlot(char.name)"
-                ></v-btn
-              ></template>
+              <v-list-item-subtitle class="text-caption">Lv. {{ char.level }}</v-list-item-subtitle>
+              <template v-slot:append><v-btn icon="mdi-delete-outline" variant="text" color="error" size="small"
+                  @click="removeSlot(char.name)"></v-btn></template>
             </v-list-item>
           </v-list>
         </v-card-text>
-        <v-card-actions
-          ><v-spacer></v-spacer
-          ><v-btn variant="text" @click="charSettingDialog = false"
-            >닫기</v-btn
-          ></v-card-actions
-        >
+        <v-card-actions><v-spacer></v-spacer><v-btn variant="text"
+            @click="charSettingDialog = false">닫기</v-btn></v-card-actions>
       </v-card>
     </v-dialog>
 
@@ -184,15 +102,8 @@
       <router-view></router-view>
 
       <v-fade-transition>
-        <v-btn
-          v-show="showFab"
-          icon="mdi-chevron-up"
-          color="primary"
-          size="large"
-          elevation="8"
-          class="scroll-to-top"
-          @click="scrollToTop"
-        ></v-btn>
+        <v-btn v-show="showFab" icon="mdi-chevron-up" color="primary" size="large" elevation="8" class="scroll-to-top"
+          @click="scrollToTop"></v-btn>
       </v-fade-transition>
     </v-main>
   </v-app>

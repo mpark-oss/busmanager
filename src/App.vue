@@ -78,7 +78,7 @@
         <v-btn to="/board" prepend-icon="mdi-calculator">쌀산기</v-btn>
         <v-btn to="/guestbook" prepend-icon="mdi-message-draw">커뮤니티</v-btn>
 
-        <v-btn icon @click="handleLogout" class="ms-2" color="error" variant="text" title="로그아웃">
+        <v-btn icon @click="handleLogout" class="ms-2" color="" variant="text" title="로그아웃">
           <v-icon>mdi-logout</v-icon>
         </v-btn>
 

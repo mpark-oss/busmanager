@@ -189,7 +189,7 @@ const handleLogin = async () => {
     if (isMember) {
       isLoggedIn.value = true;
     } else {
-      alert("우리 길드 멤버만 이용 가능합니다.");
+      alert("흐흣 길드 멤버만 이용 가능합니다.");
       await logout(); // 서버 미가입 시 강제 로그아웃
       isLoggedIn.value = false;
     }

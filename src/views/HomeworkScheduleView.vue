@@ -65,16 +65,18 @@
               <span class="text-grey">/</span>
               <span class="text-grey-darken-1">{{ getMaxPossibleGold().toLocaleString() }}G</span>
 
-              <v-chip size="x-small" :color="getMaxPossibleGold() - getTotalGrossGold() > 0
-                ? 'error'
-                : 'success'
-                " variant="flat" class="font-weight-black num-style">
-                {{
-                  getMaxPossibleGold() - getPureRaidGold() > 0
-                    ? "레이드 남은 수익: " + (getMaxPossibleGold() - getPureRaidGold()).toLocaleString() + "G"
-                : "주간 레이드 목표 완료"
-                }}
+              <v-chip size="x-small"
+                :color="(getMaxPossibleGold() - (getPureRaidGold() - getTotalMoreCost())) > 0 ? 'error' : 'success'"
+                variant="flat" class="font-weight-black num-style">
+                <template v-if="(getMaxPossibleGold() - (getPureRaidGold() - getTotalMoreCost())) > 0">
+                  레이드 남은 수익: {{ Math.max(0, getMaxPossibleGold() - (getPureRaidGold() -
+                    getTotalMoreCost())).toLocaleString() }}G
+                </template>
+                <template v-else>
+                  주간 레이드 목표 완료
+                </template>
               </v-chip>
+
             </div>
           </div>
           <v-spacer></v-spacer>
@@ -392,12 +394,12 @@
                                         ? 'amber-accent-3'
                                         : 'grey-lighten-1'
                                         " @click.stop="
-                                            toggleGoldGate(
-                                              char,
-                                              raid.name,
-                                              gate.g,
-                                            )
-                                            ">
+                                          toggleGoldGate(
+                                            char,
+                                            raid.name,
+                                            gate.g,
+                                          )
+                                          ">
                                         <v-icon size="18">
                                           {{
                                             isGoldGateSelected(

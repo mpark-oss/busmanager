@@ -166,7 +166,12 @@ const topRosterCount = ref(0);
 const showFab = ref(false);
 
 // App.vue 스크립트 부분
-const MY_GUILD_ID = "1376571141556277380"; // 
+//const MY_GUILD_ID = "1376571141556277380"; // "1295559813001908301"
+
+const ALLOWED_GUILD_IDS = [
+  "1376571141556277380", // 기존 길드 서버
+  "1295559813001908301"  // 새로 추가할 길드 서버
+];
 
 // App.vue 내 handleLogin 함수 부분
 const handleLogin = async () => {
@@ -183,8 +188,13 @@ const handleLogin = async () => {
       headers: { Authorization: `Bearer ${accessToken}` }
     });
 
+
+
     const guilds = res.data;
-    const isMember = guilds.some(guild => guild.id === MY_GUILD_ID);
+
+    console.log(guilds);
+
+    const isMember = guilds.some(guild => ALLOWED_GUILD_IDS.includes(guild.id));
 
     if (isMember) {
       isLoggedIn.value = true;

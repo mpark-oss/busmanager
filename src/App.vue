@@ -66,14 +66,19 @@
           style="flex: none !important; margin-right: 24px"
         >
           <div class="d-flex flex-row align-center">
-            <v-img
-              src="/stamp_logo.png"
-              alt="흐흣 로고"
+            <v-card
               width="50"
               height="50"
-              class="me-3 rounded-lg border border-opacity-25"
-              cover
-            ></v-img>
+              class="me-3 rounded-lg d-flex align-center justify-center elevation-0"
+              style="background-color: transparent !important"
+            >
+              <v-img
+                src="/stamp_logo.png"
+                width="100%"
+                height="100%"
+                class="stamp-no-bg"
+              ></v-img>
+            </v-card>
             <span class="text-h6">흐흣 수용소</span>
           </div>
         </v-app-bar-title>
@@ -569,5 +574,16 @@ body {
   /* 이미지 자체의 미세한 검은 테두리가 있다면 1~2px 정도 안쪽으로 잘라냅니다 */
   clip-path: inset(1px);
   object-fit: contain;
+}
+
+.clean-appbar-logo :deep(img) {
+  /* 1. 이미지 비율을 유지하며 컨테이너 안에 쏙 들어가게 합니다 (cover 제거 효과) */
+  object-fit: contain !important;
+
+  /* 2. 로그인 오버레이처럼 미세한 검은 테두리를 깎아냅니다 */
+  clip-path: inset(1px);
+
+  /* 3. 혹시나 배경색이 남아있다면 투명하게 강제합니다 */
+  /*background: transparent !important;*/
 }
 </style>

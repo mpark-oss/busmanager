@@ -289,7 +289,7 @@ import { ref, onMounted, computed, provide, onUnmounted } from "vue";
 import axios from "axios";
 // [수정] auth 추가 임포트
 import { db, auth } from "./firebase";
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, getRedirectResult, getAuth } from "firebase/auth";
 import { loginWithDiscord, logout } from "./auth";
 import {
   collection,
@@ -378,27 +378,27 @@ onMounted(async () => {
   // 1. 리다이렉트 로그인 결과 확인 (signInWithRedirect 사용 시 필수)
   // 라우터 가드 이후, 돌아온 페이지에서 토큰을 처리하기 위해 가장 먼저 실행합니다.
   try {
-    const loginResult = await handleRedirectResult();
+    // [수정] getRedirectResult() 안에 'auth'를 반드시 넣어줘야 합니다.
+    const loginResult = await getRedirectResult(auth);
+
     if (loginResult) {
-      await processLoginSuccess(loginResult);
+      // 만약 processLoginSuccess라는 함수를 따로 만드셨다면 호출하고,
+      // 없다면 handleLogin 로직을 타게 하거나 직접 처리해야 합니다.
+      console.log("리다이렉트 로그인 성공:", loginResult.user);
+      isLoggedIn.value = true;
     }
   } catch (error) {
+    // 여기서 초기화 관련 에러가 발생했다면 auth 객체가 제대로 생성되지 않은 것입니다.
     console.error("리다이렉트 처리 중 오류:", error);
   }
-
   // 2. 파이어베이스 인증 상태 감시
   onAuthStateChanged(auth, (user) => {
     if (user) {
       isLoggedIn.value = true;
-      console.log("인증 완료:", user.displayName);
-
-      // ✅ 로그인 된 상태에서만 실행해야 하는 로직들
-      setupFirestoreSnapshots(); // 인증 안 된 상태에서 스냅샷 돌면 에러 날 수 있음
+      setupFirestoreSnapshots();
     } else {
       isLoggedIn.value = false;
     }
-
-    // 💡 인증 체크가 한 번이라도 수행되었다면 로딩을 종료합니다.
     isAuthLoading.value = false;
   });
 

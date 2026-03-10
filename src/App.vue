@@ -676,22 +676,4 @@ body {
   justify-content: center;
   background-color: #121212; /* 배경을 다크하게 잡아주면 더 자연스럽습니다 */
 }
-
-@media (max-width: 600px) {
-  /* 모바일에서는 카드를 꽉 차게 보이게 해서 마치 독립 페이지처럼 느낌을 줍니다 */
-  .v-overlay__content .v-card {
-    width: 90vw !important; /* 화면 너비의 90% 사용 */
-    padding: 24px !important; /* 패딩 최적화 */
-  }
-
-  .v-card h2 {
-    font-size: 1.25rem !important; /* 제목 크기 조정 */
-  }
-
-  /* 로그인 버튼을 더 강조 */
-  .v-btn--size-x-large {
-    height: 64px !important;
-    font-size: 1.1rem !important;
-  }
-}
 </style>

@@ -647,9 +647,20 @@ body {
 
 .scroll-to-top {
   position: fixed !important;
-  bottom: 32px;
+  bottom: 32px; /* PC 기본 위치 */
   right: 32px;
   z-index: 99;
+  transition: bottom 0.3s ease; /* 위치 변경 시 부드럽게 이동 */
+}
+
+/* 모바일 환경 (v-bottom-navigation 높이를 고려) */
+@media (max-width: 600px) {
+  .scroll-to-top {
+    /* 하단 바 높이가 보통 56px~64px 정도이므로, 
+       그보다 높은 위치(약 80px~100px)로 설정합니다 */
+    bottom: 80px !important;
+    right: 16px; /* 모바일은 화면이 좁으니 우측 여백도 살짝 줄임 */
+  }
 }
 
 .stamp-no-bg :deep(img) {

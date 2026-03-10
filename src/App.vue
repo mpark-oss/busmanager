@@ -60,6 +60,28 @@
             </template>
             Discord Login
           </v-btn>
+          <v-btn
+            v-else
+            block
+            color="#FEE500"
+            size="x-large"
+            variant="flat"
+            class="font-weight-black rounded-lg text-black"
+            @click="forceOpenExternal"
+          >
+            <template #prepend>
+              <v-icon>mdi-open-in-new</v-icon>
+            </template>
+            외부 브라우저로 로그인하기
+          </v-btn>
+
+          <p
+            v-if="isKakaotalk"
+            class="text-caption text-error mt-4 font-weight-bold text-center"
+          >
+            카카오톡 인앱에서는 로그인이 지원되지 않습니다.<br />
+            위 버튼을 눌러 Safari 또는 Chrome으로 이동해주세요.
+          </p>
         </v-card>
       </v-overlay>
 
@@ -344,22 +366,17 @@ const ALLOWED_GUILD_IDS = [
   "1295559813001908301", // 새로 추가할 길드 서버
 ];
 
+const forceOpenExternal = () => {
+  const currentUrl = window.location.href;
+  if (isIOS) {
+    window.location.href = `kakaotalk://web/openExternalApp?url=${encodeURIComponent(currentUrl)}`;
+  } else if (isAndroid) {
+    window.location.href = `intent://${currentUrl.replace(/https?:\/\//, "")}#Intent;scheme=https;package=com.android.chrome;end`;
+  }
+};
+
 // App.vue 내 handleLogin 함수 부분
 const handleLogin = async () => {
-  const ua = navigator.userAgent.toLowerCase();
-  const isKakaotalk = ua.includes("kakaotalk");
-  const currentUrl = window.location.href;
-
-  // 1. 카카오톡 인앱 브라우저 탈출 로직 (최우선)
-  if (isKakaotalk) {
-    if (ua.includes("iphone") || ua.includes("ipad") || ua.includes("ipod")) {
-      window.location.href = `kakaotalk://web/openExternalApp?url=${encodeURIComponent(currentUrl)}`;
-    } else {
-      window.location.href = `intent://${currentUrl.replace(/https?:\/\//, "")}#Intent;scheme=https;package=com.android.chrome;end`;
-    }
-    return; // 카톡 내에서는 아래 로그인 로직을 아예 실행하지 않음
-  }
-
   try {
     const loginResult = await loginWithDiscord();
     if (!loginResult || !loginResult.accessToken) {

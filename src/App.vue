@@ -167,21 +167,22 @@
 
           <v-spacer></v-spacer>
 
-          <v-btn to="/" prepend-icon="mdi-sword-cross">공격대 만들기</v-btn>
-          <v-btn to="/schedule" prepend-icon="mdi-calendar-clock"
-            >버스 스케줄</v-btn
-          >
-          <v-btn prepend-icon="mdi-clipboard-check-multiple" to="/homework"
-            >숙제 스케줄</v-btn
-          >
-          <v-btn to="/homework-schedule" prepend-icon="mdi-format-list-checks"
-            >개인 숙제 관리</v-btn
-          >
-          <v-btn to="/board" prepend-icon="mdi-calculator">쌀산기</v-btn>
-          <v-btn to="/guestbook" prepend-icon="mdi-message-draw"
-            >커뮤니티</v-btn
-          >
-
+          <template v-if="!mobile">
+            <v-btn to="/" prepend-icon="mdi-sword-cross">공격대 만들기</v-btn>
+            <v-btn to="/schedule" prepend-icon="mdi-calendar-clock"
+              >버스 스케줄</v-btn
+            >
+            <v-btn prepend-icon="mdi-clipboard-check-multiple" to="/homework"
+              >숙제 스케줄</v-btn
+            >
+            <v-btn to="/homework-schedule" prepend-icon="mdi-format-list-checks"
+              >개인 숙제 관리</v-btn
+            >
+            <v-btn to="/board" prepend-icon="mdi-calculator">쌀산기</v-btn>
+            <v-btn to="/guestbook" prepend-icon="mdi-message-draw"
+              >커뮤니티</v-btn
+            >
+          </template>
           <v-btn
             icon
             @click="handleLogout"
@@ -199,6 +200,18 @@
             }}</v-icon>
           </v-btn>
         </v-app-bar>
+
+        <v-bottom-navigation v-if="mobile" color="primary" grow border-top>
+          <v-btn to="/homework-schedule">
+            <v-icon>mdi-format-list-checks</v-icon>
+            <span>개인 숙제 관리</span>
+          </v-btn>
+
+          <v-btn to="/guestbook">
+            <v-icon>mdi-message-draw</v-icon>
+            <span>커뮤니티</span>
+          </v-btn>
+        </v-bottom-navigation>
 
         <v-main>
           <router-view></router-view>
@@ -299,6 +312,12 @@ import {
   onSnapshot,
   where,
 } from "firebase/firestore";
+import { useDisplay } from "vuetify";
+import { useRouter } from "vue-router";
+const router = useRouter();
+
+// ... 기존 ref들 ...
+const { mobile } = useDisplay(); //
 
 // --- 인증 관련 상태 ---
 const isLoggedIn = ref(false);
@@ -327,13 +346,29 @@ const ALLOWED_GUILD_IDS = [
 
 // App.vue 내 handleLogin 함수 부분
 const handleLogin = async () => {
+  const currentUrl = window.location.href;
+  const cleanUrl = currentUrl.replace(/^https?:\/\//, ""); // 프로토콜 제거
+
+  if (isKakaotalk) {
+    const currentUrl = window.location.href;
+
+    if (ua.includes("iphone") || ua.includes("ipad") || ua.includes("ipod")) {
+      // 1. iOS 카카오톡: 외부 브라우저 호출 스키마
+      window.location.href = `kakaotalk://web/openExternalApp?url=${encodeURIComponent(currentUrl)}`;
+      return;
+    } else if (ua.includes("android")) {
+      window.location.href = `intent://${cleanUrl}#Intent;scheme=https;package=com.android.chrome;end`;
+      return;
+    }
+  }
+
   try {
     const loginResult = await loginWithDiscord();
     if (!loginResult || !loginResult.accessToken) {
       throw new Error("토큰을 가져오지 못했습니다.");
     }
 
-    const { user, accessToken } = loginResult;
+    const { accessToken } = loginResult;
 
     // 디스코드 가입 서버 목록 요청
     const res = await axios.get("https://discord.com/api/users/@me/guilds", {
@@ -342,14 +377,15 @@ const handleLogin = async () => {
 
     const guilds = res.data;
 
-    console.log(guilds);
-
     const isMember = guilds.some((guild) =>
       ALLOWED_GUILD_IDS.includes(guild.id),
     );
 
     if (isMember) {
       isLoggedIn.value = true;
+      if (mobile.value) {
+        router.push("/homework-schedule");
+      }
     } else {
       alert("흐흣 길드 멤버만 이용 가능합니다.");
       await logout(); // 서버 미가입 시 강제 로그아웃
@@ -623,5 +659,23 @@ body {
   align-items: center;
   justify-content: center;
   background-color: #121212; /* 배경을 다크하게 잡아주면 더 자연스럽습니다 */
+}
+
+@media (max-width: 600px) {
+  /* 모바일에서는 카드를 꽉 차게 보이게 해서 마치 독립 페이지처럼 느낌을 줍니다 */
+  .v-overlay__content .v-card {
+    width: 90vw !important; /* 화면 너비의 90% 사용 */
+    padding: 24px !important; /* 패딩 최적화 */
+  }
+
+  .v-card h2 {
+    font-size: 1.25rem !important; /* 제목 크기 조정 */
+  }
+
+  /* 로그인 버튼을 더 강조 */
+  .v-btn--size-x-large {
+    height: 64px !important;
+    font-size: 1.1rem !important;
+  }
 }
 </style>

@@ -4,9 +4,7 @@ import ScheduleView from '../views/ScheduleView.vue';
 import BoardView from '../views/BoardView.vue';
 import GuestbookView from '../views/GuestbookView.vue';
 import HellAbyss from '../views/HellAbyssCalcView.vue';
-// 기존 메뉴
 import HomeworkView from '../views/HomeworkView.vue';
-// 신규 메뉴 (추가)
 import HomeworkScheduleView from '../views/HomeworkScheduleView.vue';
 
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
@@ -17,9 +15,8 @@ const routes = [
   { path: '/board', component: BoardView },
   { path: '/guestbook', component: GuestbookView },
   { path: '/hell-abyss', component: HellAbyss },
-  // 두 메뉴가 모두 살아있도록 설정
-  { path: '/homework', component: HomeworkView }, // 기존
-  { path: '/homework-schedule', component: HomeworkScheduleView }, // 신규
+  { path: '/homework', component: HomeworkView },
+  { path: '/homework-schedule', component: HomeworkScheduleView },
 ];
 
 const router = createRouter({
@@ -41,10 +38,19 @@ const getCurrentUser = () => {
   });
 };
 
-// 💡 네비게이션 가드: 페이지를 이동하기 전에 먼저 실행됨
+// 네비게이션 가드 수정
 router.beforeEach(async (to, from, next) => {
-  // 인증 정보를 가져올 때까지 라우터가 여기서 기다립니다.
-  await getCurrentUser(); 
+  // 1. 인증 정보 대기
+  await getCurrentUser();
+
+  // 2. 모바일 여부 판별 (Vuetify 기준 또는 범용 모바일 체크)
+  const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) || window.innerWidth < 1264;
+
+  // 3. 모바일이면서 루트('/')로 접속했을 경우 리다이렉트
+  if (isMobile && to.path === '/') {
+    return next('/homework-schedule');
+  }
+
   next();
 });
 

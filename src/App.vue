@@ -344,6 +344,11 @@ const ALLOWED_GUILD_IDS = [
   "1295559813001908301", // 새로 추가할 길드 서버
 ];
 
+const ua = navigator.userAgent.toLowerCase();
+const isKakaotalk = ua.includes("kakaotalk");
+const isIOS = /iphone|ipad|ipod/.test(ua);
+const isAndroid = ua.includes("android");
+
 // App.vue 내 handleLogin 함수 부분
 const handleLogin = async () => {
   const currentUrl = window.location.href;
@@ -351,13 +356,11 @@ const handleLogin = async () => {
 
   if (isKakaotalk) {
     const currentUrl = window.location.href;
-
-    if (ua.includes("iphone") || ua.includes("ipad") || ua.includes("ipod")) {
-      // 1. iOS 카카오톡: 외부 브라우저 호출 스키마
+    if (isIOS) {
       window.location.href = `kakaotalk://web/openExternalApp?url=${encodeURIComponent(currentUrl)}`;
       return;
-    } else if (ua.includes("android")) {
-      window.location.href = `intent://${cleanUrl}#Intent;scheme=https;package=com.android.chrome;end`;
+    } else if (isAndroid) {
+      window.location.href = `intent://${currentUrl.replace(/https?:\/\//, "")}#Intent;scheme=https;package=com.android.chrome;end`;
       return;
     }
   }

@@ -325,12 +325,7 @@ import { ref, onMounted, computed, provide, onUnmounted } from "vue";
 import axios from "axios";
 // [수정] auth 추가 임포트
 import { db, auth } from "./firebase";
-import {
-  onAuthStateChanged,
-  getRedirectResult,
-  getAuth,
-  OAuthProvider,
-} from "firebase/auth";
+import { onAuthStateChanged, getRedirectResult, getAuth } from "firebase/auth";
 import { loginWithDiscord, logout } from "./auth";
 import {
   collection,
@@ -367,11 +362,6 @@ const showFab = ref(false);
 // App.vue 스크립트 부분
 //const MY_GUILD_ID = "1376571141556277380"; // "1295559813001908301"
 
-const ua = navigator.userAgent.toLowerCase();
-const isIOS = /iphone|ipad|ipod/.test(ua);
-const isAndroid = ua.includes("android");
-const isKakaotalk = ua.includes("kakaotalk");
-
 const ALLOWED_GUILD_IDS = [
   "1376571141556277380", // 기존 길드 서버
   "1295559813001908301", // 새로 추가할 길드 서버
@@ -389,39 +379,33 @@ const forceOpenExternal = () => {
 // App.vue 내 handleLogin 함수 부분
 const handleLogin = async () => {
   try {
-    if (mobile.value) {
-      // 1. 모바일: 앱 호출을 유도하는 리다이렉트 실행
-      await loginWithDiscordRedirect();
-      // 리다이렉트는 페이지가 이동되므로 이 아래 코드는 실행되지 않습니다.
+    const loginResult = await loginWithDiscord();
+    if (!loginResult || !loginResult.accessToken) {
+      throw new Error("토큰을 가져오지 못했습니다.");
+    }
+
+    const { accessToken } = loginResult;
+
+    // 디스코드 가입 서버 목록 요청
+    const res = await axios.get("https://discord.com/api/users/@me/guilds", {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    const guilds = res.data;
+
+    const isMember = guilds.some((guild) =>
+      ALLOWED_GUILD_IDS.includes(guild.id),
+    );
+
+    if (isMember) {
+      isLoggedIn.value = true;
+      if (mobile.value) {
+        router.push("/homework-schedule");
+      }
     } else {
-      const loginResult = await loginWithDiscord();
-      if (!loginResult || !loginResult.accessToken) {
-        throw new Error("토큰을 가져오지 못했습니다.");
-      }
-
-      const { accessToken } = loginResult;
-
-      // 디스코드 가입 서버 목록 요청
-      const res = await axios.get("https://discord.com/api/users/@me/guilds", {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-
-      const guilds = res.data;
-
-      const isMember = guilds.some((guild) =>
-        ALLOWED_GUILD_IDS.includes(guild.id),
-      );
-
-      if (isMember) {
-        isLoggedIn.value = true;
-        if (mobile.value) {
-          router.push("/homework-schedule");
-        }
-      } else {
-        alert("흐흣 길드 멤버만 이용 가능합니다.");
-        await logout(); // 서버 미가입 시 강제 로그아웃
-        isLoggedIn.value = false;
-      }
+      alert("흐흣 길드 멤버만 이용 가능합니다.");
+      await logout(); // 서버 미가입 시 강제 로그아웃
+      isLoggedIn.value = false;
     }
   } catch (error) {
     console.error("인증 실패:", error);
@@ -443,19 +427,20 @@ const handleLogout = async () => {
 };
 
 onMounted(async () => {
+  // 1. 리다이렉트 로그인 결과 확인 (signInWithRedirect 사용 시 필수)
+  // 라우터 가드 이후, 돌아온 페이지에서 토큰을 처리하기 위해 가장 먼저 실행합니다.
   try {
+    // [수정] getRedirectResult() 안에 'auth'를 반드시 넣어줘야 합니다.
     const loginResult = await getRedirectResult(auth);
-    if (loginResult) {
-      // [핵심] 리다이렉트 결과에서 accessToken을 추출합니다.
-      const credential = OAuthProvider.credentialFromResult(loginResult);
-      const accessToken =
-        credential?.accessToken || loginResult._tokenResponse?.oauthAccessToken;
 
-      if (accessToken) {
-        await checkGuildAndLogin(accessToken);
-      }
+    if (loginResult) {
+      // 만약 processLoginSuccess라는 함수를 따로 만드셨다면 호출하고,
+      // 없다면 handleLogin 로직을 타게 하거나 직접 처리해야 합니다.
+      console.log("리다이렉트 로그인 성공:", loginResult.user);
+      isLoggedIn.value = true;
     }
   } catch (error) {
+    // 여기서 초기화 관련 에러가 발생했다면 auth 객체가 제대로 생성되지 않은 것입니다.
     console.error("리다이렉트 처리 중 오류:", error);
   }
   // 2. 파이어베이스 인증 상태 감시
@@ -479,31 +464,6 @@ onMounted(async () => {
   checkWeeklyReset();
   window.addEventListener("scroll", handleScroll);
 });
-
-const checkGuildAndLogin = async (accessToken) => {
-  if (!accessToken) return;
-  try {
-    const res = await axios.get("https://discord.com/api/users/@me/guilds", {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    const isMember = res.data.some((guild) =>
-      ALLOWED_GUILD_IDS.includes(guild.id),
-    );
-
-    if (isMember) {
-      isLoggedIn.value = true;
-      if (mobile.value) router.push("/homework-schedule");
-    } else {
-      alert("흐흣 길드 멤버만 이용 가능합니다.");
-      await logout();
-      isLoggedIn.value = false;
-    }
-  } catch (error) {
-    console.error("길드 체크 실패:", error);
-    await logout();
-    isLoggedIn.value = false;
-  }
-};
 
 const setupFirestoreSnapshots = () => {
   // 빌런 추적

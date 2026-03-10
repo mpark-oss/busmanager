@@ -344,25 +344,20 @@ const ALLOWED_GUILD_IDS = [
   "1295559813001908301", // 새로 추가할 길드 서버
 ];
 
-const ua = navigator.userAgent.toLowerCase();
-const isKakaotalk = ua.includes("kakaotalk");
-const isIOS = /iphone|ipad|ipod/.test(ua);
-const isAndroid = ua.includes("android");
-
 // App.vue 내 handleLogin 함수 부분
 const handleLogin = async () => {
+  const ua = navigator.userAgent.toLowerCase();
+  const isKakaotalk = ua.includes("kakaotalk");
   const currentUrl = window.location.href;
-  const cleanUrl = currentUrl.replace(/^https?:\/\//, ""); // 프로토콜 제거
 
+  // 1. 카카오톡 인앱 브라우저 탈출 로직 (최우선)
   if (isKakaotalk) {
-    const currentUrl = window.location.href;
-    if (isIOS) {
+    if (ua.includes("iphone") || ua.includes("ipad") || ua.includes("ipod")) {
       window.location.href = `kakaotalk://web/openExternalApp?url=${encodeURIComponent(currentUrl)}`;
-      return;
-    } else if (isAndroid) {
+    } else {
       window.location.href = `intent://${currentUrl.replace(/https?:\/\//, "")}#Intent;scheme=https;package=com.android.chrome;end`;
-      return;
     }
+    return; // 카톡 내에서는 아래 로그인 로직을 아예 실행하지 않음
   }
 
   try {

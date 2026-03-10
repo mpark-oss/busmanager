@@ -38,6 +38,7 @@
           </p>
 
           <v-btn
+            v-if="!isKakaotalk"
             block
             color="#5865F2"
             size="x-large"

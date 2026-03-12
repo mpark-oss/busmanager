@@ -245,8 +245,8 @@
                         }}</v-list-item-title>
                         <v-list-item-subtitle
                           >Lv.{{ element.level }}
-                          {{ element.className }}</v-list-item-subtitle
-                        >
+                          {{ element.className }}
+                        </v-list-item-subtitle>
                       </v-list-item>
                     </template>
                   </draggable>
@@ -400,11 +400,6 @@
                             class="ms-2 px-1 pulse-badge"
                           >
                             <v-icon size="14" color="white">mdi-skull</v-icon>
-                            <span
-                              class="ms-1 font-weight-bold"
-                              style="font-size: 0.7rem !important"
-                              >흐사게스타</span
-                            >
                           </v-chip>
                         </template>
                         <span>원정대 누적 신고 {{ topRosterCount }}회!</span>

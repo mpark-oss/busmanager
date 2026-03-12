@@ -40,15 +40,15 @@
                   </div>
 
                   <div
-                    class="d-flex flex-column gap-2"
-                    style="min-width: 180px"
+                    class="d-flex flex-column gap-1"
+                    style="min-width: 200px"
                   >
                     <div class="d-flex justify-space-between align-center">
                       <div class="d-flex align-center white-text">
                         <v-icon size="16" color="amber" class="me-2"
                           >mdi-sword-cross</v-icon
                         >
-                        <span>레이드</span>
+                        <span class="font-weight-bold">레이드</span>
                       </div>
                       <span
                         class="text-amber-accent-2 font-weight-bold num-style"
@@ -56,6 +56,36 @@
                         +{{ getPureRaidGold().toLocaleString() }}G
                       </span>
                     </div>
+
+                    <div
+                      class="d-flex justify-space-between align-center ps-6 pe-1 text-caption"
+                      style="opacity: 0.8"
+                    >
+                      <span class="white-text">ㄴ 일반 골드</span>
+                      <span class="white-text num-style"
+                        >{{
+                          getTotalGoldBreakdown().tradeable.toLocaleString()
+                        }}G</span
+                      >
+                    </div>
+                    <div
+                      class="d-flex justify-space-between align-center ps-6 pe-1 text-caption"
+                      style="opacity: 0.8"
+                    >
+                      <span class="text-light-green-accent-1"
+                        >ㄴ 귀속 골드</span
+                      >
+                      <span class="text-light-green-accent-1 num-style"
+                        >{{
+                          getTotalGoldBreakdown().bound.toLocaleString()
+                        }}G</span
+                      >
+                    </div>
+
+                    <v-divider
+                      class="my-1 border-opacity-25"
+                      color="white"
+                    ></v-divider>
 
                     <div class="d-flex justify-space-between align-center">
                       <div class="d-flex align-center white-text">
@@ -647,12 +677,18 @@
                                         label
                                         class="me-1 text-white font-weight-black px-1"
                                         style="
-                                          min-width: 24px;
+                                          min-width: 40px;
                                           justify-content: center;
                                           height: 16px;
                                         "
                                       >
-                                        {{ getDifficulty(raid.name).text[0] }}
+                                        {{
+                                          getDifficulty(
+                                            raid.name,
+                                          ).text.startsWith("Lv")
+                                            ? getDifficulty(raid.name).text
+                                            : getDifficulty(raid.name).text[0]
+                                        }}
                                       </v-chip>
                                       <span
                                         class="text-overline font-weight-black"
@@ -1171,7 +1207,7 @@ const isToday = (dateInput) => {
 
 const raidList = [
   {
-    group: "지평",
+    group: "지평의 성당",
     name: "어비스: 지평의 성당(3단계)",
     level: 1750,
     gold: 50000,
@@ -1181,7 +1217,7 @@ const raidList = [
     ],
   },
   {
-    group: "지평",
+    group: "지평의 성당",
     name: "어비스: 지평의 성당(2단계)",
     level: 1720,
     gold: 40000,
@@ -1191,7 +1227,7 @@ const raidList = [
     ],
   },
   {
-    group: "지평",
+    group: "지평의 성당",
     name: "어비스: 지평의 성당(1단계)",
     level: 1700,
     gold: 30000,
@@ -1570,6 +1606,18 @@ const openCharSettings = (char) => {
       hiddenTaskIds: [],
       showWeekly: true,
     };
+  }
+
+  if (char.settings.visibleGroups) {
+    char.settings.visibleGroups = char.settings.visibleGroups.filter((g) =>
+      currentRaidGroups.includes(g),
+    );
+  }
+
+  if (char.settings.groupOrder) {
+    char.settings.groupOrder = char.settings.groupOrder.filter((g) =>
+      currentRaidGroups.includes(g),
+    );
   }
 
   tempSettings.value = JSON.parse(JSON.stringify(char.settings));
@@ -2155,6 +2203,38 @@ const getPureRaidGold = () => {
     });
     return sum + charRaidGold;
   }, 0);
+};
+
+// [추가] 상단 툴팁 상세용: 전체 레이드 수익을 일반/귀속으로 분류
+const getTotalGoldBreakdown = () => {
+  let tradeable = 0;
+  let bound = 0;
+
+  characters.value.forEach((char) => {
+    if (!char.isGoldCharacter) return;
+
+    const selected = char.settings?.goldSelectedGates || [];
+    const completed = char.completedTasks || [];
+
+    selected.forEach((id) => {
+      if (completed.includes(id)) {
+        const [rName, gNum] = id.split("_G");
+        const raid = raidList.find((r) => r.name === rName);
+        const gate = raid?.gates.find((g) => g.g === parseInt(gNum));
+
+        if (gate) {
+          // 이름에 싱글, 1단계, 2단계, 3단계가 포함되면 귀속골드로 분류
+          if (/싱글|1단계|2단계|3단계/.test(raid.name)) {
+            bound += Number(gate.gold);
+          } else {
+            tradeable += Number(gate.gold);
+          }
+        }
+      }
+    });
+  });
+
+  return { tradeable, bound };
 };
 
 // 2. 원정대 전체 버스 수지 합산

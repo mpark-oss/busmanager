@@ -190,7 +190,7 @@
 
           <v-spacer></v-spacer>
 
-          <template v-if="!mobile">
+          <template v-if="!isMobileMode">
             <v-btn to="/" prepend-icon="mdi-sword-cross">공격대 만들기</v-btn>
             <v-btn to="/schedule" prepend-icon="mdi-calendar-clock"
               >버스 스케줄</v-btn
@@ -224,7 +224,12 @@
           </v-btn>
         </v-app-bar>
 
-        <v-bottom-navigation v-if="mobile" color="primary" grow border-top>
+        <v-bottom-navigation
+          v-if="isMobileMode"
+          color="primary"
+          grow
+          border-top
+        >
           <v-btn to="/homework-schedule">
             <v-icon>mdi-format-list-checks</v-icon>
             <span>개인 숙제 관리</span>
@@ -335,12 +340,23 @@ import {
   onSnapshot,
   where,
 } from "firebase/firestore";
-import { useDisplay } from "vuetify";
 import { useRouter } from "vue-router";
-const router = useRouter();
 
-// ... 기존 ref들 ...
-const { mobile } = useDisplay(); //
+import { useDisplay } from "vuetify";
+
+const { mobile, width } = useDisplay();
+
+const isMobileDevice = computed(() => {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent,
+  );
+});
+
+const isMobileMode = computed(() => {
+  return isMobileDevice.value || width.value < 600;
+});
+
+const router = useRouter();
 
 // --- 인증 관련 상태 ---
 const isLoggedIn = ref(false);

@@ -342,6 +342,21 @@
                         style="max-width: 130px"
                         >{{ char.name }}</span
                       >
+                      <div
+                        class="d-flex align-center text-caption font-weight-bold text-medium-emphasis"
+                        style="margin: 0.5rem"
+                      >
+                        <v-icon size="14" class="me-1" color="grey-darken-1"
+                          >mdi-sword-cross</v-icon
+                        >
+                        <span class="num-style">
+                          {{
+                            typeof char.cbPower === "number"
+                              ? char.cbPower.toLocaleString()
+                              : char.cbPower
+                          }}
+                        </span>
+                      </div>
                       <v-tooltip
                         v-if="topRosterMembers.includes(char.name)"
                         location="top"
@@ -1579,8 +1594,18 @@ const openCharSettings = (char) => {
 
 const saveCharSettings = () => {
   if (targetChar.value) {
+    // 1. 드래그로 변경된 전체 그룹 순서를 저장
     tempSettings.value.groupOrder = tempSettings.value.allGroups;
+
+    // 2. 🔥 핵심 수정: visibleGroups의 순서를 groupOrder(allGroups) 순서와 일치시킵니다.
+    // 현재 선택된(눈이 켜진) 그룹들만 필터링하되, 순서는 드래그한 순서를 따릅니다.
+    tempSettings.value.visibleGroups = tempSettings.value.allGroups.filter(
+      (group) => tempSettings.value.visibleGroups.includes(group),
+    );
+
+    // 3. 최종 데이터를 캐릭터 객체에 반영
     targetChar.value.settings = JSON.parse(JSON.stringify(tempSettings.value));
+
     saveToLocal();
     charSettingsDialog.value = false;
   }
@@ -1622,36 +1647,37 @@ const updateDailyRestGauges = () => {
   const today6AM = new Date(now);
   if (now.getHours() < 6) today6AM.setDate(today6AM.getDate() - 1);
   today6AM.setHours(6, 0, 0, 0);
+
   characters.value.forEach((char) => {
-    if (!char.restGauges) char.restGauges = { chaos: 0, guardian: 0 };
     if (!char.lastDailyUpdate) {
       char.lastDailyUpdate = today6AM.getTime();
       return;
     }
+
     const daysDiff = Math.floor(
       (today6AM.getTime() - new Date(char.lastDailyUpdate).getTime()) /
         (1000 * 60 * 60 * 24),
     );
+
     if (daysDiff > 0) {
       dailyTasks.forEach((task) => {
         let currentRest = char.restGauges[task.id] || 0;
-        if ((char.completedTasks || []).includes(task.id)) {
-          if (currentRest >= 40) currentRest -= 40;
+        // 🎯 핵심: 이 시점의 completedTasks에는 주간 초기화 전의 기록이 남아있음
+        if (char.completedTasks.includes(task.id)) {
+          // 숙제 완료 시 휴게 소모 (로직에 따라 가감)
         } else {
-          currentRest = Math.min(200, currentRest + 20);
+          currentRest = Math.min(200, currentRest + 20 * daysDiff);
         }
-        if (daysDiff > 1)
-          for (let i = 1; i < daysDiff; i++)
-            currentRest = Math.min(200, currentRest + 20);
         char.restGauges[task.id] = currentRest;
       });
-      char.completedTasks = (char.completedTasks || []).filter(
-        (id) => !["chaos", "guardian"].includes(id),
+
+      // 일일 체크박스만 초기화
+      char.completedTasks = char.completedTasks.filter(
+        (id) => id !== "chaos" && id !== "guardian",
       );
       char.lastDailyUpdate = today6AM.getTime();
     }
   });
-  saveToLocal();
 };
 
 const getCurrentWeekId = () => {
@@ -1684,6 +1710,8 @@ const fetchMyExpedition = async (charName) => {
       },
     );
 
+    console.log("RES ::: ", res);
+
     if (res.data && Array.isArray(res.data)) {
       const blacklist = JSON.parse(
         localStorage.getItem(getBlacklistKey()) || "[]",
@@ -1692,22 +1720,26 @@ const fetchMyExpedition = async (charName) => {
         localStorage.getItem(getAccountKey()) || "[]",
       );
 
+      // ✅ [추가/수정] API 데이터 매핑 전, 로컬 데이터 기반으로 일일 숙제 정산부터 수행
+      // 그래야 수요일 초기화로 레이드가 날아가기 전 상태의 '일일 숙제' 여부를 체크할 수 있습니다.
+      characters.value = savedData;
+      updateDailyRestGauges();
+
       const currentWeek = getCurrentWeekId();
       const lastSavedWeek = localStorage.getItem(
         `last_week_id_${localStorage.getItem("current_main_name")}`,
       );
       const isNewWeek = lastSavedWeek !== currentWeek;
 
-      // 1. 먼저 API 데이터를 객체화하여 매핑 준비
+      // 1. API 데이터 필터링 (원본 유지)
       const apiChars = res.data.filter(
         (char) => !blacklist.includes(char.CharacterName),
       );
 
-      // 2. 저장된 데이터(savedData)의 순서를 기준으로 리스트 재구성
+      // 2. 저장된 순서(savedData) 기준 리스트 재구성 (원본 유지)
       let newList = [];
-
-      // 기존에 저장된 순서대로 먼저 채우기
-      savedData.forEach((saved) => {
+      // characters.value에는 이미 위에서 정산된 데이터가 들어있음
+      characters.value.forEach((saved) => {
         const apiMatch = apiChars.find((ac) => ac.CharacterName === saved.name);
         if (apiMatch) {
           newList.push(
@@ -1716,11 +1748,10 @@ const fetchMyExpedition = async (charName) => {
         }
       });
 
-      // 저장된 데이터에 없는 새로운 캐릭터(또는 복구된 캐릭터) 추가
+      // 신규 캐릭터 추가 로직 (원본 유지)
       const newChars = apiChars.filter(
         (ac) => !newList.some((nc) => nc.name === ac.CharacterName),
       );
-      // 새 캐릭터들은 레벨순 정렬 후 뒤에 붙임
       newChars.sort(
         (a, b) =>
           parseFloat(b.ItemAvgLevel.replace(",", "")) -
@@ -1741,9 +1772,13 @@ const fetchMyExpedition = async (charName) => {
         saveToLocal();
       }
 
-      updateDailyRestGauges();
+      // ✅ [삭제] 기존 맨 아래에 있던 updateDailyRestGauges()는 위로 이동했으므로 여기서는 뺍니다.
+
+      // 이미지 및 전투력 업데이트 (원본 유지)
       characters.value.forEach((c, i) => {
-        if (!c.img) updateCharImage(c.name, i);
+        if (!c.img || !c.cbPower || c.cbPower === 0 || c.cbPower === "0") {
+          updateCharImage(c.name, i);
+        }
       });
     }
   } catch (e) {
@@ -1753,18 +1788,33 @@ const fetchMyExpedition = async (charName) => {
   }
 };
 
-// 캐릭터 데이터 매핑 헬퍼 함수 (중복 코드 방지)
 const mapCharacterData = (apiChar, existing, isNewWeek, index) => {
+  let currentTasks = existing?.completedTasks || [];
+  if (isNewWeek) {
+    currentTasks = currentTasks.filter(
+      (id) => id === "chaos" || id === "guardian",
+    );
+  }
+
   return {
     name: apiChar.CharacterName,
     className: apiChar.CharacterClassName,
     level: apiChar.ItemAvgLevel,
+    cbPower: existing?.cbPower || 0, // 이전에 추가한 전투력 유지
     img: existing?.img || "",
-    completedTasks: isNewWeek ? [] : existing?.completedTasks || [],
-    moreTasks: existing?.moreTasks || [],
+
+    // 🔥 정제된 숙제 리스트 적용
+    completedTasks: currentTasks,
+
+    // 더보기도 주간 단위이므로 isNewWeek일 때 초기화
+    moreTasks: isNewWeek ? [] : existing?.moreTasks || [],
+
+    // 버스 설정도 주간 단위 초기화 (이미 작성하신 로직 유지)
     busTasks: isNewWeek ? {} : existing?.busTasks || {},
+
     restGauges: existing?.restGauges || { chaos: 0, guardian: 0 },
     lastDailyUpdate: existing?.lastDailyUpdate || null,
+
     settings: existing?.settings || {
       visibleGroups: [],
       selectedGateIds: [],
@@ -1786,11 +1836,31 @@ const updateCharImage = async (name, index) => {
       `/api/armories/characters/${encodeURIComponent(name)}/profiles`,
       { headers: { authorization: `bearer ${API_KEY.trim()}` } },
     );
-    if (res.data?.CharacterImage && characters.value[index]) {
-      characters.value[index].img = res.data.CharacterImage;
+
+    if (res.data && characters.value[index]) {
+      // 1. 이미지 업데이트
+      if (res.data.CharacterImage) {
+        characters.value[index].img = res.data.CharacterImage;
+      }
+
+      // 2. 전투력(CombatPower) 추출 (최상위 객체에서 바로 가져오기)
+      // res.data.CombatPower 가 문자열("1,620,000")일 수도 있으니 정제 로직 포함
+      const rawCp = res.data.CombatPower;
+
+      if (rawCp !== undefined && rawCp !== null) {
+        // 숫자와 소수점 외 문자 제거 후 정수 변환
+        const pureValue = String(rawCp).replace(/[^0-9.]/g, "");
+        characters.value[index].cbPower =
+          Math.floor(parseFloat(pureValue)) || 0;
+      } else {
+        characters.value[index].cbPower = 0;
+      }
+
       saveToLocal();
     }
-  } catch (e) {}
+  } catch (e) {
+    console.error(`${name} 프로필 업데이트 실패:`, e);
+  }
 };
 
 const fetchSchedules = () => {
@@ -1854,13 +1924,20 @@ const getGoldRaidCount = (char) => {
   return raidGoldList.sort((a, b) => b.gold - a.gold).slice(0, 3).length;
 };
 
-onMounted(() => {
+onMounted(async () => {
+  // <--- 함수 앞에 async를 붙여줍니다.
   const main = localStorage.getItem("current_main_name");
-  if (main) fetchMyExpedition(main);
+  if (main) {
+    await fetchMyExpedition(main);
+    updateAllCombatPowers();
+  }
+
   fetchSchedules();
-  window.addEventListener("main-char-changed", (e) =>
-    fetchMyExpedition(e.detail),
-  );
+
+  window.addEventListener("main-char-changed", async (e) => {
+    await fetchMyExpedition(e.detail);
+    updateAllCombatPowers();
+  });
 });
 
 // [추가] 캐릭터별 더보기 차감 전 '순수 획득 골드' 계산 (상단 대시보드용)
@@ -2248,6 +2325,21 @@ const loadFromCloud = async () => {
     alert("데이터를 가져오는 중 오류가 발생했습니다.");
   } finally {
     isSyncing.value = false;
+  }
+};
+
+const updateAllCombatPowers = async () => {
+  if (characters.value.length === 0) return;
+
+  // API 호출 제한을 피하기 위해 순차적으로 실행
+  for (let i = 0; i < characters.value.length; i++) {
+    const char = characters.value[i];
+
+    // 너무 잦은 호출 방지 (0.2초 대기)
+    await new Promise((resolve) => setTimeout(resolve, 200));
+
+    // 기존에 만든 updateCharImage 함수 호출 (내부에 cbPower 갱신 로직 포함됨)
+    await updateCharImage(char.name, i);
   }
 };
 </script>

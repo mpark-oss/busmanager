@@ -44,8 +44,8 @@
               </v-col>
               <v-col cols="12" sm="9">
                 <v-text-field v-model="newMessage" :label="!newName
-                    ? '상단 메뉴에서 대표 캐릭터를 먼저 설정해주세요!'
-                    : '자유롭게 한마디 남겨주세요!'
+                  ? '상단 메뉴에서 대표 캐릭터를 먼저 설정해주세요!'
+                  : '자유롭게 한마디 남겨주세요!'
                   " variant="outlined" density="compact" :disabled="!newName" append-inner-icon="mdi-send"
                   @click:append-inner="addMessage" hide-details></v-text-field>
               </v-col>
@@ -58,8 +58,8 @@
             <v-fade-transition group>
               <v-list-item v-for="msg in messages" :key="msg.id" class="mb-4 pa-4 rounded-lg border transition-swing"
                 :class="theme.global.current.value.dark
-                    ? 'bg-grey-darken-3'
-                    : 'bg-grey-lighten-5'
+                  ? 'bg-grey-darken-3'
+                  : 'bg-grey-lighten-5'
                   ">
                 <template v-slot:prepend>
                   <v-avatar color="primary" variant="tonal">
@@ -76,8 +76,8 @@
                 </v-list-item-title>
 
                 <v-list-item-subtitle class="text-body-1 mt-1" :class="theme.global.current.value.dark
-                    ? 'text-white'
-                    : 'text-black'
+                  ? 'text-white'
+                  : 'text-black'
                   " style="opacity: 1">
                   {{ msg.content }}
                 </v-list-item-subtitle>
@@ -251,8 +251,8 @@
             <v-fade-transition group>
               <v-list-item v-for="report in searchedKeyword ? searchResults : reports" :key="report.id"
                 class="mb-4 pa-4 rounded-lg border incident-item" :class="theme.global.current.value.dark
-                    ? 'bg-red-darken-4'
-                    : 'bg-red-lighten-5'
+                  ? 'bg-red-darken-4'
+                  : 'bg-red-lighten-5'
                   ">
                 <div class="d-flex justify-space-between align-center mb-2">
                   <span class="text-h6 font-weight-black text-error">🚨 대상: {{ report.targetName }}</span>
@@ -279,8 +279,8 @@
                   </template>
                 </v-img>
                 <div class="text-caption font-weight-bold" :class="theme.global.current.value.dark
-                    ? 'text-red-lighten-3'
-                    : 'text-red-darken-2'
+                  ? 'text-red-lighten-3'
+                  : 'text-red-darken-2'
                   ">
                   올바른 길드 생활을 위해 반성하세요.
                 </div>
@@ -835,7 +835,7 @@ const submitReport = async () => {
   isReporting.value = true;
 
   try {
-    // 2. 이미지 업로드 처리 (선택 사항)
+    // 2. 이미지 업로드 처리
     let imageUrl = "";
     if (reportForm.value.imageFile) {
       const file = Array.isArray(reportForm.value.imageFile)
@@ -843,25 +843,37 @@ const submitReport = async () => {
         : reportForm.value.imageFile;
 
       if (file) {
-        const fileRef = storageRef(
-          storage,
-          `reports/${Date.now()}_${file.name}`,
-        );
+        const fileRef = storageRef(storage, `reports/${Date.now()}_${file.name}`);
         const snapshot = await uploadBytes(fileRef, file);
         imageUrl = await getDownloadURL(snapshot.ref);
       }
     }
 
-    // 3. 원정대 키 생성 (searchTarget에서 미리 받아온 리스트 활용)
-    // 중복 제거 후 가나다순 정렬하여 고유한 키 생성
-    const rosterList = tempRosterList.value;
-    const rosterKey = [...new Set(rosterList)].sort().join(",");
+    // 3. 원정대 식별 로직 (교집합 찾기)
+    const currentRoster = [...new Set(tempRosterList.value)].sort();
+    let finalRosterKey = "";
 
-    // 4. 개별 신고 내역 저장 (imageUrl 포함)
+    // 🔥 핵심: 기존에 등록된 원정대 중 현재 명단과 한 명이라도 겹치는 게 있는지 확인
+    // array-contains-any는 최대 10개까지 비교 가능하므로 상위 10개만 추출해서 비교
+    const searchSample = currentRoster.slice(0, 10);
+    const statsRef = collection(db, "roster_stats");
+    const q = query(statsRef, where("members", "array-contains-any", searchSample));
+    const querySnapshot = await getDocs(q);
+
+    if (!querySnapshot.empty) {
+      // A. 기존 데이터가 있다면 그 문서의 ID를 그대로 사용 (캐릭 삭제 대응)
+      finalRosterKey = querySnapshot.docs[0].id;
+    } else {
+      // B. 완전히 처음 보는 원정대라면 새로운 고유 키 생성
+      finalRosterKey = currentRoster.join(",");
+    }
+
+    // 4. 개별 신고 내역 저장
+    // 나중에 검색을 위해 현재 시점의 rosterKey도 함께 저장합니다.
     await addDoc(collection(db, "reports"), {
-      targetName: reportForm.value.targetName,
-      rosterKey: rosterKey,
-      rosterList: rosterList,
+      targetName: reportForm.value.targetName.trim(),
+      rosterKey: finalRosterKey,
+      rosterList: currentRoster,
       reason: reportForm.value.reason,
       password: reportForm.value.password,
       imageUrl: imageUrl,
@@ -870,21 +882,20 @@ const submitReport = async () => {
     });
 
     // 5. 원정대 통합 통계 업데이트
-    const rosterRef = doc(db, "roster_stats", rosterKey);
+    const rosterRef = doc(db, "roster_stats", finalRosterKey);
     await setDoc(
       rosterRef,
       {
         totalCount: increment(1),
-        members: rosterList,
+        members: currentRoster, // 명단은 삭제/추가가 반영된 최신 상태로 갱신
         lastUpdated: serverTimestamp(),
-        lastTargetName: reportForm.value.targetName,
+        lastTargetName: reportForm.value.targetName.trim(),
       },
-      { merge: true },
+      { merge: true }
     );
 
     // 6. 성공 알림 및 폼 초기화
-
-    // 상태 초기화 (다음 신고를 위해 검색 상태도 리셋)
+    alert("신고가 성공적으로 등록되었습니다.");
     isSearched.value = false;
     tempRosterList.value = [];
     reportForm.value = {
@@ -896,12 +907,16 @@ const submitReport = async () => {
     };
   } catch (e) {
     console.error("신고 저장 중 오류 발생:", e);
-    alert("신고 등록 중 오류가 발생했습니다. 콘솔을 확인하세요.");
+    // 만약 인덱스 설정이 안 되어 있다면 여기서 에러가 날 수 있습니다.
+    if (e.message.includes("index")) {
+      alert("데이터베이스 색인 설정이 필요합니다. 콘솔의 링크를 확인하세요.");
+    } else {
+      alert("신고 등록 중 오류가 발생했습니다.");
+    }
   } finally {
     isReporting.value = false;
   }
 };
-
 /**
  * [1회성] 기존 reports 데이터를 분석하여
  * roster_stats의 lastTargetName을 "가장 많이 신고된 이름"으로 업데이트합니다.

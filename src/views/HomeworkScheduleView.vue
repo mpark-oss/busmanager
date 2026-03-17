@@ -1029,7 +1029,23 @@ const isGateDisabled = (char, raid, gate) => {
 
 const toggleGate = (char, raid, gate) => {
   const taskId = raid.name + "_G" + gate.g;
+  
+  // 1. 만약 체크가 된 상태라면
   if (char.completedTasks.includes(taskId)) {
+    // [추가된 로직] 현재 클릭한 관문이 해당 레이드의 마지막 관문인지 확인
+    const isLastGate = gate.g === raid.gates[raid.gates.length - 1].g;
+
+    if (isLastGate) {
+      // 마지막 관문을 체크했다면 해당 레이드의 모든 관문을 배열에 추가 (중복 방지)
+      raid.gates.forEach(g => {
+        const targetId = raid.name + "_G" + g.g;
+        if (!char.completedTasks.includes(targetId)) {
+          char.completedTasks.push(targetId);
+        }
+      });
+    }
+
+    // [기존 유지 로직] 같은 그룹 내의 다른 난이도/단계 관문들 해제 (예: 하드 1관 체크 시 노말 1관 해제)
     raidList
       .filter((r) => r.group === raid.group && r.name !== raid.name)
       .forEach((otherRaid) => {
@@ -1038,7 +1054,17 @@ const toggleGate = (char, raid, gate) => {
           (id) => id !== otherGateId,
         );
       });
+  } else {
+    // 마지막 관문 체크 해제 시 해당 레이드 모든 관문 해제 (선택 사항)
+    const isLastGate = gate.g === raid.gates[raid.gates.length - 1].g;
+    if (isLastGate) {
+      raid.gates.forEach(g => {
+        const targetId = raid.name + "_G" + g.g;
+        char.completedTasks = char.completedTasks.filter(id => id !== targetId);
+      });
+    }
   }
+  
   saveToLocal();
 };
 

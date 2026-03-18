@@ -528,7 +528,7 @@
         <v-card-text>
           <v-select
             v-model="tempRaid"
-            :items="['2막', '3막', '4막', '종막', '세르카']"
+            :items="['2막', '3막', '4막', '종막', '세르카', '지평']"
             label="레이드 선택"
             variant="outlined"
             class="mb-2"
@@ -540,6 +540,16 @@
             label="난이도 선택"
             variant="outlined"
           ></v-select>
+          <v-textarea
+            v-model="tempMemo"
+            label="메모 수정"
+            placeholder="특이사항을 입력하세요."
+            variant="outlined"
+            density="comfortable"
+            rows="3"
+            prepend-inner-icon="mdi-note-edit-outline"
+            hide-details
+          ></v-textarea>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -593,6 +603,7 @@ const selectedBus = ref(null);
 const editRaidDialog = ref(false);
 const tempRaid = ref("");
 const tempDifficulty = ref("");
+const tempMemo = ref("");
 
 const unlockedIds = ref([]);
 
@@ -626,6 +637,7 @@ const openRaidPicker = (bus) => {
   selectedBus.value = bus;
   tempRaid.value = bus.raid;
   tempDifficulty.value = bus.difficulty;
+  tempMemo.value = bus.memo || "";
   editRaidDialog.value = true;
 };
 
@@ -636,6 +648,7 @@ const saveRaidInfo = async () => {
     await updateDoc(busRef, {
       raid: tempRaid.value,
       difficulty: tempDifficulty.value,
+      memo: tempMemo.value || null,
     });
     editRaidDialog.value = false;
   }

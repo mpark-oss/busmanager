@@ -292,7 +292,7 @@
                       {{ hw.difficulty }}
                     </v-chip>
 
-                    <v-tooltip v-if="bus.memo" location="top" max-width="300">
+                    <v-tooltip v-if="hw.memo" location="top" max-width="300">
                       <template v-slot:activator="{ props }">
                         <v-icon
                           v-bind="props"
@@ -307,7 +307,7 @@
                         <div class="text-caption font-weight-black mb-1">
                           MEMO
                         </div>
-                        <div class="text-body-2">{{ bus.memo }}</div>
+                        <div class="text-body-2">{{ hw.memo }}</div>
                       </div>
                     </v-tooltip>
 

@@ -704,6 +704,20 @@
                     density="compact"
                   ></v-text-field>
                 </v-card-text>
+                <v-card-text class="pa-4 pt-0">
+                  <v-textarea
+                    v-model="bus.memo"
+                    label="MEMO"
+                    placeholder="공략 방식이나 특이사항을 적어주세요."
+                    variant="outlined"
+                    density="compact"
+                    rows="2"
+                    hide-details
+                    prepend-inner-icon="mdi-note-edit-outline"
+                    class="rounded-lg text-caption"
+                  ></v-textarea>
+                </v-card-text>
+
                 <v-card-actions class="pa-3 d-flex align-center">
                   <v-btn
                     :icon="
@@ -1004,6 +1018,7 @@ const confirmAndUpload = async (bus, index) => {
       members: JSON.parse(JSON.stringify(bus.members)),
       createdAt: new Date(),
       isHomework: bus.isHomework,
+      memo: bus.memo || null,
       password:
         bus.password && bus.password.trim() !== "" ? bus.password : null,
     };
@@ -1064,6 +1079,7 @@ const addBusSlot = () => {
     dateTime: "",
     isHomework: false,
     password: "", // [추가] 초기값 설정
+    memo: "",
   });
 };
 

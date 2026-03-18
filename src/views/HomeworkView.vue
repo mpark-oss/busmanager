@@ -292,6 +292,25 @@
                       {{ hw.difficulty }}
                     </v-chip>
 
+                    <v-tooltip v-if="bus.memo" location="top" max-width="300">
+                      <template v-slot:activator="{ props }">
+                        <v-icon
+                          v-bind="props"
+                          color="amber-lighten-3"
+                          size="small"
+                          class="ms-2 pulse-memo-icon"
+                        >
+                          mdi-note-text
+                        </v-icon>
+                      </template>
+                      <div class="pa-1">
+                        <div class="text-caption font-weight-black mb-1">
+                          MEMO
+                        </div>
+                        <div class="text-body-2">{{ bus.memo }}</div>
+                      </div>
+                    </v-tooltip>
+
                     <v-icon
                       v-if="!isLocked(hw)"
                       size="small"
@@ -1009,5 +1028,32 @@ const getDifficultyColor = (difficulty) => {
 
 :deep(.v-theme--dark) .dropzone-area {
   background-color: #1b2e1b !important;
+}
+
+.pulse-memo-icon {
+  animation: memo-glow 2s infinite ease-in-out;
+  filter: drop-shadow(0 0 2px rgba(255, 213, 79, 0.5));
+}
+
+@keyframes memo-glow {
+  0% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+}
+
+/* 툴팁 내부 텍스트 줄바꿈 허용 */
+:deep(.v-tooltip__content) {
+  white-space: pre-wrap !important;
+  word-break: break-all !important;
+  line-height: 1.4 !important;
 }
 </style>

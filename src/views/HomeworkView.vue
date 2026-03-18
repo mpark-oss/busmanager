@@ -315,7 +315,7 @@
                       v-if="!isLocked(hw)"
                       size="small"
                       class="ms-1 opacity-60"
-                      >mdi-pencil-circle</v-icon
+                      >mdi-pencil</v-icon
                     >
 
                     <v-chip

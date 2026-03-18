@@ -308,7 +308,7 @@
                         size="small"
                         class="ms-1 opacity-60"
                         v-if="!isLocked(bus)"
-                        >mdi-pencil-circle</v-icon
+                        >mdi-pencil</v-icon
                       >
                       <v-chip
                         v-if="isToday(bus.dateTime)"

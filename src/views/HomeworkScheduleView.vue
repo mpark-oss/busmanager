@@ -493,7 +493,7 @@
                               hide-details
                               density="compact"
                               color="orange"
-                              @change="saveToLocal"
+                              @change="handleDailyCheck(char, task.id)"
                               class="custom-chk flex-grow-1"
                             ></v-checkbox>
                             <div class="rest-input-wrapper">
@@ -1698,6 +1698,24 @@ const saveToLocal = () => {
     settings: char.settings || {},
   }));
   localStorage.setItem(getAccountKey(), JSON.stringify(dataToSave));
+};
+
+// [추가] 일일 숙제 체크 시 휴식 게이지 40단위 소모 로직
+const handleDailyCheck = (char, taskId) => {
+  // 1. 체크박스를 '체크'한 경우에만 게이지 소모 판단
+  if (char.completedTasks.includes(taskId)) {
+    const currentRest = char.restGauges[taskId] || 0;
+
+    // 🔥 핵심: 게이지가 40 이상일 때만 딱 40 소모
+    // 20이 있다면 소모 안 됨, 60이 있다면 20이 남음
+    if (currentRest >= 40) {
+      char.restGauges[taskId] = currentRest - 40;
+    }
+  }
+  // 2. 체크를 해제한 경우(실수 등)에 대한 복구 로직은
+  // 게이지를 다시 돌려주는 것이 게임 데이터와 일치하지 않을 수 있어 넣지 않았습니다.
+
+  saveToLocal(); // 변경사항 저장
 };
 
 const getTotalGold = () =>

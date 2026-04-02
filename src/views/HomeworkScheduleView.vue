@@ -414,9 +414,7 @@
                           :class="
                             char.isGoldCharacter
                               ? 'text-amber-darken-4'
-                              : getCharGold(char) !== 0
-                                ? 'text-light-blue-darken-2'
-                                : 'text-grey-lighten-1'
+                              : 'text-light-blue-darken-2'
                           "
                         >
                           {{ getCharGold(char).toLocaleString() }} G
@@ -446,16 +444,18 @@
                         @click="openCharSettings(char)"
                       ></v-btn>
 
-                      <v-fade-transition>
-                        <v-btn
-                          v-if="isHovering"
-                          icon="mdi-delete-outline"
-                          variant="text"
-                          color="error"
-                          size="small"
-                          @click.stop="deleteCharacter(char.name)"
-                        ></v-btn>
-                      </v-fade-transition>
+                      <div style="width: 40px" class="d-flex justify-center">
+                        <v-fade-transition>
+                          <v-btn
+                            v-if="isHovering || isMobileMode"
+                            icon="mdi-delete-outline"
+                            variant="text"
+                            color="error"
+                            size="small"
+                            @click.stop="deleteCharacter(char.name)"
+                          ></v-btn>
+                        </v-fade-transition>
+                      </div>
                     </div>
                   </template>
                 </v-list-item>
@@ -1148,7 +1148,7 @@ import {
 } from "firebase/firestore";
 
 import { inject } from "vue";
-// App.vue에서 제공한 빌런 리스트 주입
+
 const topVillains = inject("topVillains", []);
 const topRosterMembers = inject("topRosterMembers", ref([]));
 const topRosterCount = inject("topRosterCount", ref(0)); // [추가]
@@ -1186,7 +1186,8 @@ const specialTasks = [
   { id: "show", label: "증명" },
   { id: "hell", label: "지옥" },
   { id: "hall", label: "할" },
-  { id: "hyulsuk", label: "혈석교환" },
+  { id: "hyulsuk", label: "혈석" },
+  { id: "singlecoin", label: "싱코" },
 ];
 
 const isToday = (dateInput) => {
@@ -1463,32 +1464,18 @@ const isGateDisabled = (char, raid, gate) => {
 const toggleGate = (char, raid, gate) => {
   const taskId = raid.name + "_G" + gate.g;
 
-  // 1. 만약 체크가 된 상태라면
-  if (char.completedTasks.includes(taskId)) {
-    // [추가된 로직] 현재 클릭한 관문이 해당 레이드의 마지막 관문인지 확인
-    const isLastGate = gate.g === raid.gates[raid.gates.length - 1].g;
-
-    if (isLastGate) {
-      // 마지막 관문을 체크했다면 해당 레이드의 모든 관문을 배열에 추가 (중복 방지)
+  // 1. 체크박스를 해제하는 경우
+  if (!char.completedTasks.includes(taskId)) {
+    // 🔥 [추가] 만약 1관문을 해제했다면, 해당 레이드의 모든 관문을 해제합니다.
+    if (gate.g === 1) {
       raid.gates.forEach((g) => {
         const targetId = raid.name + "_G" + g.g;
-        if (!char.completedTasks.includes(targetId)) {
-          char.completedTasks.push(targetId);
-        }
-      });
-    }
-
-    // [기존 유지 로직] 같은 그룹 내의 다른 난이도/단계 관문들 해제 (예: 하드 1관 체크 시 노말 1관 해제)
-    raidList
-      .filter((r) => r.group === raid.group && r.name !== raid.name)
-      .forEach((otherRaid) => {
-        const otherGateId = otherRaid.name + "_G" + gate.g;
         char.completedTasks = char.completedTasks.filter(
-          (id) => id !== otherGateId,
+          (id) => id !== targetId,
         );
       });
-  } else {
-    // 마지막 관문 체크 해제 시 해당 레이드 모든 관문 해제 (선택 사항)
+    }
+    // (선택 사항) 마지막 관문 체크 해제 시 전체 해제하고 싶다면 기존 로직 유지
     const isLastGate = gate.g === raid.gates[raid.gates.length - 1].g;
     if (isLastGate) {
       raid.gates.forEach((g) => {
@@ -1498,6 +1485,29 @@ const toggleGate = (char, raid, gate) => {
         );
       });
     }
+  }
+  // 2. 체크박스를 체크하는 경우
+  else {
+    // [기존 로직] 마지막 관문을 체크하면 이전 모든 관문 자동 체크
+    const isLastGate = gate.g === raid.gates[raid.gates.length - 1].g;
+    if (isLastGate) {
+      raid.gates.forEach((g) => {
+        const targetId = raid.name + "_G" + g.g;
+        if (!char.completedTasks.includes(targetId)) {
+          char.completedTasks.push(targetId);
+        }
+      });
+    }
+
+    // [기존 유지] 같은 그룹 내의 다른 난이도 관문들 해제 (예: 하드1관 체크 시 노말1관 제거)
+    raidList
+      .filter((r) => r.group === raid.group && r.name !== raid.name)
+      .forEach((otherRaid) => {
+        const otherGateId = otherRaid.name + "_G" + gate.g;
+        char.completedTasks = char.completedTasks.filter(
+          (id) => id !== otherGateId,
+        );
+      });
   }
 
   saveToLocal();
@@ -1582,19 +1592,96 @@ const validateAndSaveRest = (char) => {
 const toggleExpand = (group) => {
   expandedGroup.value = expandedGroup.value === group ? null : group;
 };
+
 const toggleGroupSelection = (group) => {
   const idx = tempSettings.value.visibleGroups.indexOf(group);
-  if (idx > -1) tempSettings.value.visibleGroups.splice(idx, 1);
-  else tempSettings.value.visibleGroups.push(group);
+
+  if (idx > -1) {
+    // 1. [그룹 숨기기 처리]
+    tempSettings.value.visibleGroups.splice(idx, 1);
+
+    // 🔥 [핵심 추가] 해당 그룹에 속한 모든 레이드와 관문 ID를 가져옴
+    const raidsInGroup = getRaidsByGroup(group);
+    const allGateIdsInGroup = [];
+
+    raidsInGroup.forEach((raid) => {
+      raid.gates.forEach((gate) => {
+        allGateIdsInGroup.push(`${raid.name}_G${gate.g}`);
+      });
+    });
+
+    // 2. 설정창 임시 데이터(tempSettings)에서 골드 선택 해제
+    if (tempSettings.value.goldSelectedGates) {
+      tempSettings.value.goldSelectedGates =
+        tempSettings.value.goldSelectedGates.filter(
+          (gid) => !allGateIdsInGroup.includes(gid),
+        );
+    }
+
+    // 3. 가시성 선택 리스트(selectedGateIds)에서도 제거 (관문 눈 아이콘들도 꺼지게 함)
+    if (tempSettings.value.selectedGateIds) {
+      tempSettings.value.selectedGateIds =
+        tempSettings.value.selectedGateIds.filter(
+          (gid) => !allGateIdsInGroup.includes(gid),
+        );
+    }
+
+    // 4. 실제 캐릭터 데이터의 더보기 및 완료 내역 즉시 정리
+    if (targetChar.value) {
+      // 더보기 해제
+      if (targetChar.value.moreTasks) {
+        targetChar.value.moreTasks = targetChar.value.moreTasks.filter(
+          (mid) => !allGateIdsInGroup.some((gid) => mid === gid + "_More"),
+        );
+      }
+      // 숙제 완료 체크 해제
+      if (targetChar.value.completedTasks) {
+        targetChar.value.completedTasks =
+          targetChar.value.completedTasks.filter(
+            (cid) => !allGateIdsInGroup.includes(cid),
+          );
+      }
+    }
+  } else {
+    // 5. [그룹 보이기 처리]
+    tempSettings.value.visibleGroups.push(group);
+  }
 };
 
 const toggleGateVisibility = (raidName, gateNum) => {
   const id = raidName + "_G" + gateNum;
   if (!tempSettings.value.selectedGateIds)
     tempSettings.value.selectedGateIds = [];
+
   const idx = tempSettings.value.selectedGateIds.indexOf(id);
-  if (idx > -1) tempSettings.value.selectedGateIds.splice(idx, 1);
-  else {
+
+  if (idx > -1) {
+    // 1. [숨기기 처리] 관문 가시성 제거
+    tempSettings.value.selectedGateIds.splice(idx, 1);
+
+    // 🔥 [핵심 수정] 설정창 임시 데이터(tempSettings) 내의 골드 선택 리스트에서도 즉시 제거
+    if (tempSettings.value.goldSelectedGates) {
+      tempSettings.value.goldSelectedGates =
+        tempSettings.value.goldSelectedGates.filter((gid) => gid !== id);
+    }
+
+    // 2. 실제 캐릭터 데이터의 더보기 및 완료 내역도 즉시 정리 (이건 즉시 반영됨)
+    if (targetChar.value) {
+      // 더보기 해제
+      if (targetChar.value.moreTasks) {
+        const moreTaskId = id + "_More";
+        targetChar.value.moreTasks = targetChar.value.moreTasks.filter(
+          (mid) => mid !== moreTaskId,
+        );
+      }
+      // 숙제 완료 체크 해제
+      if (targetChar.value.completedTasks) {
+        targetChar.value.completedTasks =
+          targetChar.value.completedTasks.filter((cid) => cid !== id);
+      }
+    }
+  } else {
+    // 3. [보이기 처리]
     tempSettings.value.selectedGateIds.push(id);
     const parentRaid = raidList.find((r) => r.name === raidName);
     if (
@@ -1999,20 +2086,42 @@ const formatScheduleTime = (t) =>
       })
     : "시간 미정";
 
+// [수정] 골드 보상으로 지정된 레이드 중 완료된 레이드 개수만 카운트
 const getGoldRaidCount = (char) => {
-  const visibleGroups = char.settings?.visibleGroups || [];
-  const raidGoldList = [];
-  visibleGroups.forEach((groupName) => {
-    let goldSum = 0;
-    getRaidsByGroup(groupName).forEach((raid) => {
-      (raid.gates || []).forEach((gate) => {
-        if ((char.completedTasks || []).includes(raid.name + "_G" + gate.g))
-          goldSum += gate.gold;
-      });
-    });
-    if (goldSum > 0) raidGoldList.push({ name: groupName, gold: goldSum });
+  if (
+    !char.settings?.goldSelectedGates ||
+    char.settings.goldSelectedGates.length === 0
+  )
+    return 0;
+
+  const completed = char.completedTasks || [];
+  const goldSelected = char.settings.goldSelectedGates;
+
+  // 골드 선택된 관문 ID들에서 레이드 이름만 추출 (중복 제거)
+  // 예: ['에기르_G1', '에기르_G2'] -> ['에기르']
+  const goldRaidNames = [
+    ...new Set(goldSelected.map((id) => id.split("_G")[0])),
+  ];
+
+  let completedGoldRaidCount = 0;
+
+  goldRaidNames.forEach((raidName) => {
+    // 해당 레이드에 속한 관문들 중 골드 선택된 관문 리스트 추출
+    const selectedGatesInThisRaid = goldSelected.filter((id) =>
+      id.startsWith(raidName),
+    );
+
+    // 선택된 모든 관문이 완료(completed) 되었는지 확인
+    const isRaidFullyFinished = selectedGatesInThisRaid.every((id) =>
+      completed.includes(id),
+    );
+
+    if (isRaidFullyFinished) {
+      completedGoldRaidCount++;
+    }
   });
-  return raidGoldList.sort((a, b) => b.gold - a.gold).slice(0, 3).length;
+
+  return completedGoldRaidCount;
 };
 
 onMounted(async () => {

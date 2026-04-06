@@ -165,6 +165,17 @@
           <v-spacer></v-spacer>
           <div class="d-flex align-center mb-6">
             <v-btn
+              prepend-icon="mdi-account-group"
+              color="amber-darken-3"
+              variant="flat"
+              rounded="lg"
+              class="me-2"
+              @click="fixedPartyModal = true"
+            >
+              내 고정 공격대 보기
+            </v-btn>
+
+            <v-btn
               prepend-icon="mdi-account-edit-outline"
               color="primary"
               variant="flat"
@@ -1130,6 +1141,150 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <v-dialog v-model="fixedPartyModal" max-width="900" scrollable>
+      <v-card class="rounded-xl pa-4">
+        <v-card-title
+          class="text-h5 font-weight-black d-flex align-center pb-4"
+        >
+          <v-icon color="amber-darken-3" class="me-2">mdi-shield-check</v-icon>
+          내 원정대 고정 공격대
+          <v-spacer></v-spacer>
+          <v-btn
+            icon="mdi-close"
+            variant="text"
+            @click="fixedPartyModal = false"
+          ></v-btn>
+        </v-card-title>
+
+        <v-card-text class="pa-2">
+          <v-row v-if="myFixedParties.length > 0">
+            <v-col v-for="party in myFixedParties" :key="party.id" cols="12">
+              <v-card
+                border
+                variant="flat"
+                class="rounded-xl pa-5 mb-4 bg-grey-lighten-5 position-relative"
+                style="transition: none !important"
+              >
+                <div class="d-flex justify-space-between align-start mb-6">
+                  <div>
+                    <div class="d-flex align-center flex-wrap gap-2 mb-2">
+                      <v-chip
+                        size="small"
+                        :color="party.isHomework ? 'success' : 'error'"
+                        variant="flat"
+                        label
+                        class="font-weight-black"
+                      >
+                        {{ party.isHomework ? "숙제" : "버스" }}
+                      </v-chip>
+                      <v-chip
+                        size="small"
+                        color="orange-darken-1"
+                        label
+                        class="font-weight-black text-white"
+                        >{{ party.difficulty }}</v-chip
+                      >
+                      <v-chip
+                        size="small"
+                        color="primary"
+                        label
+                        class="font-weight-black"
+                        >{{ party.raid }} | {{ party.title }}</v-chip
+                      >
+                    </div>
+                  </div>
+
+                  <v-btn
+                    :color="party.isCleared ? 'success' : 'primary'"
+                    :variant="party.isCleared ? 'flat' : 'tonal'"
+                    size="large"
+                    rounded="lg"
+                    class="font-weight-black px-6"
+                    @click="togglePartyClear(party)"
+                  >
+                    <v-icon start>{{
+                      party.isCleared
+                        ? "mdi-check-circle"
+                        : "mdi-circle-outline"
+                    }}</v-icon>
+                    {{ party.isCleared ? "Done" : "Undone" }}
+                  </v-btn>
+                </div>
+
+                <div
+                  class="d-flex flex-wrap gap-3 mt-2"
+                  style="overflow: hidden"
+                >
+                  <v-card
+                    v-for="(member, idx) in party.members"
+                    :key="idx"
+                    variant="flat"
+                    border
+                    class="d-flex align-center pa-2 rounded-lg"
+                    style="
+                      width: 220px;
+                      height: 60px;
+                      flex: 0 0 220px;
+                      overflow: hidden;
+                      transition: none !important;
+                    "
+                  >
+                    <v-avatar size="36" class="me-2 border-sm flex-shrink-0">
+                      <v-img :src="member.img" cover></v-img>
+                    </v-avatar>
+
+                    <div
+                      class="flex-grow-1 d-flex flex-column justify-center overflow-hidden"
+                      style="height: 40px"
+                    >
+                      <div
+                        class="text-caption font-weight-black fixed-card-text"
+                      >
+                        {{ member.name }}
+                      </div>
+
+                      <div
+                        class="text-overline opacity-60 text-truncate"
+                        :class="
+                          theme === 'dark'
+                            ? 'text-grey-lighten-1'
+                            : 'text-grey-darken-1'
+                        "
+                        style="
+                          font-size: 0.6rem !important;
+                          line-height: 1;
+                          height: 0.8rem;
+                        "
+                      >
+                        {{ member.job }}
+                      </div>
+                    </div>
+
+                    <v-icon
+                      v-if="myCharNames.includes(member.name)"
+                      color="amber-darken-3"
+                      size="small"
+                      class="ms-1 flex-shrink-0"
+                      >mdi-star</v-icon
+                    >
+                  </v-card>
+                </div>
+              </v-card>
+            </v-col>
+          </v-row>
+
+          <div v-else class="text-center py-12">
+            <v-icon size="80" color="grey-lighten-2"
+              >mdi-shield-off-outline</v-icon
+            >
+            <div class="text-h6 mt-4 text-grey-lighten-1 font-weight-bold">
+              참여 중인 고정 공격대가 없습니다.
+            </div>
+          </div>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -1145,9 +1300,18 @@ import {
   getDoc,
   serverTimestamp,
   doc,
+  query, // <--- 추가
+  orderBy, // <--- 추가 (이미 있다면 패스)
+  where,
+  updateDoc,
 } from "firebase/firestore";
 
 import { inject } from "vue";
+
+import { useDisplay } from "vuetify";
+
+const { mobile } = useDisplay();
+const isMobileMode = computed(() => mobile.value);
 
 const topVillains = inject("topVillains", []);
 const topRosterMembers = inject("topRosterMembers", ref([]));
@@ -1175,6 +1339,70 @@ const allSchedules = ref([]);
 const scheduleDialog = ref(false);
 const activeCharName = ref("");
 const activeSchedules = ref([]);
+
+const checkAndResetWeekly = async (parties) => {
+  const now = new Date();
+  const lastWednesday = new Date();
+  const day = lastWednesday.getDay();
+  const diff =
+    day < 3 || (day === 3 && lastWednesday.getHours() < 6) ? day + 4 : day - 3;
+  lastWednesday.setDate(lastWednesday.getDate() - diff);
+  lastWednesday.setHours(6, 0, 0, 0);
+
+  for (const party of parties) {
+    // 1. lastUpdated가 없는 신규 데이터는 패스
+    if (!party.lastUpdated) continue;
+
+    // 2. Firestore Timestamp를 Date 객체로 안전하게 변환
+    const lastUpdateDate = party.lastUpdated?.toDate
+      ? party.lastUpdated.toDate()
+      : new Date(party.lastUpdated);
+
+    // 3. 조건: 마지막 업데이트가 수요일 06시 이전인데, 아직 데이터가 남아있는 경우만!
+    if (
+      lastUpdateDate < lastWednesday &&
+      (party.departureTime !== "일정미정" || party.isCleared === true)
+    ) {
+      console.log(`[초기화 실행] ${party.raid}`);
+      try {
+        const partyRef = doc(db, "fixed_parties", party.id);
+        await updateDoc(partyRef, {
+          departureTime: "일정미정",
+          isCleared: false,
+          // 여기서 lastUpdated를 수요일 06시 1초 후로 설정해서 중복 초기화 방지
+          lastUpdated: lastWednesday.getTime() + 1000,
+        });
+      } catch (e) {
+        console.error("초기화 오류:", e);
+      }
+    }
+  }
+};
+
+const togglePartyClear = async (party) => {
+  if (!party.id) return;
+
+  try {
+    const partyRef = doc(db, "fixed_parties", party.id);
+    // 현재 상태 반전 (undefined일 경우 false로 처리)
+    const currentState = party.isCleared === true;
+    const nextState = !currentState;
+
+    // UI 즉시 반영 (낙관적 업데이트)
+    party.isCleared = nextState;
+
+    await updateDoc(partyRef, {
+      isCleared: nextState,
+      lastUpdated: serverTimestamp(),
+    });
+
+    console.log("상태 변경 완료:", nextState);
+  } catch (e) {
+    console.error("CLEAR 토글 실패:", e);
+    // 실패 시 롤백
+    party.isCleared = !party.isCleared;
+  }
+};
 
 const dailyTasks = [
   { id: "chaos", name: "카오스 던전" },
@@ -1511,6 +1739,43 @@ const toggleGate = (char, raid, gate) => {
   }
 
   saveToLocal();
+};
+
+// [추가] 고정 공격대 관련 상태 변수
+const fixedParties = ref([]); // 전체 고정 공격대 리스트
+const fixedPartyModal = ref(false); // 모달 제어
+
+// [추가] 내 원정대 캐릭터 이름 리스트 (필터링용)
+const myCharNames = computed(() => characters.value.map((c) => c.name));
+
+const myFixedParties = computed(() => {
+  if (fixedParties.value.length === 0) return [];
+
+  // 내 원정대 캐릭터 중 하나라도 포함되어 있는지 검사
+  return fixedParties.value.filter((party) => {
+    return party.members?.some((m) => myCharNames.value.includes(m.name));
+  });
+});
+
+let isFirstLoad = true;
+
+const fetchFixedParties = () => {
+  const q = query(collection(db, "fixed_parties"), orderBy("raid", "desc"));
+
+  onSnapshot(q, (snapshot) => {
+    const data = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    // 🔥 핵심: 데이터를 처음 불러올 때만 초기화 로직 실행 (버튼 클릭 시엔 실행 안 함)
+    if (isFirstLoad && data.length > 0) {
+      checkAndResetWeekly(data);
+      isFirstLoad = false;
+    }
+
+    fixedParties.value = data;
+  });
 };
 
 const toggleMoreReward = (char, raidName, gateG) => {
@@ -2138,6 +2403,8 @@ onMounted(async () => {
     await fetchMyExpedition(e.detail);
     updateAllCombatPowers();
   });
+
+  fetchFixedParties();
 });
 
 // [추가] 캐릭터별 더보기 차감 전 '순수 획득 골드' 계산 (상단 대시보드용)
@@ -2856,5 +3123,31 @@ const updateAllCombatPowers = async () => {
 
 .white-text {
   color: white !important;
+}
+
+/* 텍스트 취소선으로 인한 높이 변화 방지 */
+.fixed-card-text {
+  position: relative;
+  display: inline-block;
+  line-height: 1.2;
+  height: 1.2rem; /* 높이 강제 고정 */
+  transition: opacity 0.2s ease;
+}
+
+/* 완료 시 실제 선을 긋는 대신 스타일로 처리 */
+.is-cleared-text {
+  opacity: 0.4 !important;
+}
+
+/* 텍스트 중앙에 물리적인 선을 가상 요소로 배치 (레이아웃에 영향 X) */
+.is-cleared-text::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 100%;
+  height: 1px;
+  background-color: currentColor;
+  transform: translateY(-50%);
 }
 </style>

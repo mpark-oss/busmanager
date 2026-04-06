@@ -154,16 +154,93 @@
             <v-icon class="me-2" color="primary">mdi-sword-cross</v-icon> 캐릭터
             정보 / 공격대 만들기
           </h2>
-          <v-btn
-            color="primary"
-            prepend-icon="mdi-plus"
-            rounded="lg"
-            size="large"
-            elevation="2"
-            @click="addBusSlot"
-          >
-            새 공대 만들기
-          </v-btn>
+          <div class="d-flex align-center" style="gap: 12px">
+            <v-menu transition="scale-transition" location="bottom end">
+              <template v-slot:activator="{ props }">
+                <v-btn
+                  v-bind="props"
+                  color="amber-darken-3"
+                  variant="flat"
+                  prepend-icon="mdi-shield-star"
+                  rounded="lg"
+                  size="large"
+                  class="font-weight-black"
+                  :disabled="myFixedParties.length === 0"
+                >
+                  고정 공격대 목록
+                  <v-icon end size="small">mdi-chevron-down</v-icon>
+                </v-btn>
+              </template>
+
+              <v-list
+                class="rounded-xl pa-2 mt-2"
+                min-width="280"
+                elevation="12"
+                border
+              >
+                <v-list-subheader class="font-weight-black text-primary px-4"
+                  >나의 고정 팟 목록</v-list-subheader
+                >
+                <v-divider class="mb-2"></v-divider>
+
+                <v-list-item
+                  v-for="party in myFixedParties"
+                  :key="party.id"
+                  @click="loadFixedPartyToEdit(party)"
+                  class="rounded-lg mb-1 pa-2"
+                  :hover="true"
+                >
+                  <template v-slot:prepend>
+                    <v-chip
+                      size="x-small"
+                      :color="party.isHomework ? 'success' : 'error'"
+                      variant="flat"
+                      class="me-2 font-weight-black px-1"
+                      style="min-width: 30px; justify-content: center"
+                    >
+                      {{ party.isHomework ? "숙제" : "버스" }}
+                    </v-chip>
+                  </template>
+
+                  <v-list-item-title class="font-weight-bold text-body-2">
+                    {{ party.raid }} | {{ party.title }}
+                  </v-list-item-title>
+                  <v-list-item-subtitle class="text-caption">
+                    {{ party.difficulty }} | {{ party.members.length }}명
+                  </v-list-item-subtitle>
+
+                  <template v-slot:append>
+                    <v-btn
+                      icon="mdi-delete-outline"
+                      size="x-small"
+                      color="error"
+                      variant="text"
+                      @click.stop="deleteFixedParty(party.id)"
+                    ></v-btn>
+                  </template>
+                </v-list-item>
+
+                <div
+                  v-if="myFixedParties.length === 0"
+                  class="pa-4 text-center text-caption text-grey"
+                >
+                  저장된 고정 공격대가 없습니다.
+                </div>
+              </v-list>
+            </v-menu>
+
+            <v-btn
+              color="primary"
+              prepend-icon="mdi-plus"
+              rounded="lg"
+              size="large"
+              elevation="2"
+              class="font-weight-black"
+              @click="addBusSlot"
+            >
+              새 공대 만들기
+            </v-btn>
+          </div>
         </div>
 
         <v-card
@@ -593,6 +670,17 @@
                     ></v-switch>
                   </div>
 
+                  <div class="d-flex align-center me-2">
+                    <span class="text-caption me-2 text-white">고정 등록</span>
+                    <v-switch
+                      v-model="bus.isFixedParty"
+                      hide-details
+                      density="compact"
+                      color="amber-accent-3"
+                      inset
+                    ></v-switch>
+                  </div>
+
                   <v-btn
                     icon="mdi-close"
                     size="x-small"
@@ -601,6 +689,16 @@
                   ></v-btn>
                 </v-toolbar>
                 <v-card-text class="pa-4">
+                  <v-row class="ma-0 pa-2 border-b">
+                    <v-text-field
+                      v-model="bus.title"
+                      label="고정 파티명"
+                      variant="underlined"
+                      density="compact"
+                      hide-details
+                      v-if="bus.isFixedParty"
+                    ></v-text-field>
+                  </v-row>
                   <v-select
                     v-model="bus.raid"
                     :items="['2막', '3막', '4막', '종막', '세르카', '지평']"
@@ -801,6 +899,9 @@ import {
   orderBy,
   deleteDoc,
   doc,
+  setDoc, // <--- 추가
+  serverTimestamp, // <--- 추가
+  where,
 } from "firebase/firestore";
 import { useTheme } from "vuetify";
 
@@ -868,6 +969,47 @@ const timeOptions = computed(() => {
   return times;
 });
 
+const myFixedParties = ref([]);
+
+// 내 고정 공격대 가져오기 (owner 기준)
+const fetchMyFixedParties = () => {
+  const currentMain = localStorage.getItem("current_main_name");
+  const q = query(
+    collection(db, "fixed_parties"),
+    where("owner", "==", currentMain),
+  );
+
+  onSnapshot(q, (snapshot) => {
+    myFixedParties.value = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+  });
+};
+
+// 고정 공격대 삭제
+const deleteFixedParty = async (id) => {
+  if (confirm("이 고정 공격대 템플릿을 삭제하시겠습니까?")) {
+    await deleteDoc(doc(db, "fixed_parties", id));
+  }
+};
+
+const loadFixedPartyToEdit = (party) => {
+  localBuses.value.push({
+    localId: Date.now() + Math.random(),
+    dbId: party.id, // 🔥 [추가] 원래 DB에 저장된 문서 ID를 저장
+    raid: party.raid,
+    difficulty: party.difficulty,
+    members: JSON.parse(JSON.stringify(party.members)),
+    dateTime: party.departureTime === "일정미정" ? "" : party.departureTime,
+    isHomework: party.isHomework,
+    isFixedParty: true,
+    password: party.password || "",
+    memo: party.memo || "",
+    title: party.title || "",
+  });
+};
+
 onMounted(() => {
   const qChar = query(
     collection(db, "characters"),
@@ -887,6 +1029,7 @@ onMounted(() => {
       ...doc.data(),
     }));
   });
+  fetchMyFixedParties();
 });
 
 const selectCharacter = async (charName) => {
@@ -1009,24 +1152,63 @@ const filteredAccessories = computed(() => {
 
 const confirmAndUpload = async (bus, index) => {
   if (bus.members.length === 0) return;
+  const currentMain = localStorage.getItem("current_main_name") || "unknown";
+
   try {
     isLoading.value = true;
-    const scheduleData = {
-      raid: bus.raid,
-      difficulty: bus.difficulty,
-      dateTime: bus.dateTime || "",
-      members: JSON.parse(JSON.stringify(bus.members)),
-      createdAt: new Date(),
-      isHomework: bus.isHomework,
-      memo: bus.memo || null,
-      password:
-        bus.password && bus.password.trim() !== "" ? bus.password : null,
-    };
-    const targetCollection = bus.isHomework ? "homeworks" : "schedules";
-    await addDoc(collection(db, targetCollection), scheduleData);
+
+    if (bus.isFixedParty) {
+      // --- [고정 공격대 전용 로직] ---
+      // 일반 스케줄(schedules/homeworks)에는 절대 저장하지 않음!
+      let fixedPartyId = bus.dbId;
+      if (!fixedPartyId) {
+        const memberFingerprint = bus.members
+          .map((m) => m.name)
+          .sort()
+          .join("_");
+        fixedPartyId = `${currentMain}_${bus.raid}_${memberFingerprint}`;
+      }
+
+      const fixedPartyData = {
+        owner: currentMain,
+        raid: bus.raid,
+        difficulty: bus.difficulty,
+        members: JSON.parse(JSON.stringify(bus.members)),
+        isHomework: bus.isHomework, // 숙제/버스 구분값은 유지 (UI 표시용)
+        departureTime: bus.dateTime || "일정미정",
+        createdAt: serverTimestamp(),
+        lastUpdated: serverTimestamp(),
+        title: bus.title || "",
+        type: "fixed",
+      };
+
+      await setDoc(doc(db, "fixed_parties", fixedPartyId), fixedPartyData, {
+        merge: true,
+      });
+      alert("📅 고정 공격대 스케줄 저장 완료");
+    } else {
+      // --- [일반 일회성 스케줄 로직] ---
+      const scheduleData = {
+        raid: bus.raid,
+        difficulty: bus.difficulty,
+        dateTime: bus.dateTime || "",
+        members: JSON.parse(JSON.stringify(bus.members)),
+        createdAt: new Date(),
+        isHomework: bus.isHomework,
+        memo: bus.memo || null,
+        password:
+          bus.password && bus.password.trim() !== "" ? bus.password : null,
+      };
+
+      const targetCol = bus.isHomework ? "homeworks" : "schedules";
+      await addDoc(collection(db, targetCol), scheduleData);
+      alert("🚀 일반 레이드 스케줄 저장 완료.");
+    }
+
     localBuses.value.splice(index, 1);
   } catch (e) {
-    console.error(e);
+    console.error("등록 오류:", e);
+    alert("저장 중 오류가 발생했습니다.");
   } finally {
     isLoading.value = false;
   }
@@ -1078,6 +1260,7 @@ const addBusSlot = () => {
     members: [],
     dateTime: "",
     isHomework: false,
+    isFixedParty: false,
     password: "", // [추가] 초기값 설정
     memo: "",
   });

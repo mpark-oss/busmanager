@@ -6,6 +6,7 @@ import GuestbookView from '../views/GuestbookView.vue';
 import HellAbyss from '../views/HellAbyssCalcView.vue';
 import HomeworkView from '../views/HomeworkView.vue';
 import HomeworkScheduleView from '../views/HomeworkScheduleView.vue';
+import FixedScheduleView from '../views/FixedScheduleView.vue';
 
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 
@@ -17,6 +18,11 @@ const routes = [
   { path: '/hell-abyss', component: HellAbyss },
   { path: '/homework', component: HomeworkView },
   { path: '/homework-schedule', component: HomeworkScheduleView },
+  { 
+    path: '/fixed-schedule', 
+    name: 'fixed-schedule', 
+    component: FixedScheduleView 
+  },
 ];
 
 const router = createRouter({

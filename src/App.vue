@@ -198,6 +198,9 @@
             <v-btn prepend-icon="mdi-clipboard-check-multiple" to="/homework"
               >숙제 스케줄</v-btn
             >
+            <v-btn to="/fixed-schedule" prepend-icon="mdi-shield-star">
+              고정 스케줄
+            </v-btn>
             <v-btn to="/homework-schedule" prepend-icon="mdi-format-list-checks"
               >개인 숙제 관리</v-btn
             >
@@ -453,14 +456,13 @@ onMounted(async () => {
     console.log("⚠️ 파라미터에 의해 인증이 우회되었습니다.");
     isLoggedIn.value = true;
     isAuthLoading.value = false;
-    
+
     // 파라미터 로그인의 경우 Firestore 스냅샷 등을 바로 실행해줘야 합니다.
     setupFirestoreSnapshots();
-    
+
     // URL에서 파라미터를 깔끔하게 제거하고 싶다면 아래 주석 해제 (새로고침 시 로그인 풀림 방지 필요시 주의)
     //window.history.replaceState({}, document.title, window.location.pathname);
   }
-
 
   // 1. 리다이렉트 로그인 결과 확인 (signInWithRedirect 사용 시 필수)
   // 라우터 가드 이후, 돌아온 페이지에서 토큰을 처리하기 위해 가장 먼저 실행합니다.
@@ -477,10 +479,9 @@ onMounted(async () => {
   }
   // 2. 파이어베이스 인증 상태 감시
   onAuthStateChanged(auth, (user) => {
-
     if (isLoggedIn.value) {
       isAuthLoading.value = false;
-      return; 
+      return;
     }
 
     if (user) {

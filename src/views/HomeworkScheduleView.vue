@@ -172,7 +172,7 @@
               class="me-2"
               @click="fixedPartyModal = true"
             >
-              내 고정 공격대 보기
+              내 고정 팟 보기
             </v-btn>
 
             <v-btn

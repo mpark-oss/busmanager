@@ -202,7 +202,7 @@
                       {{ formatDateTime(party.departureTime) }}
                     </div>
                     <v-btn
-                      v-if="isOwner(party)"
+                      v-if="isMyCharInParty(party)"
                       size="small"
                       variant="tonal"
                       color="primary"
@@ -319,6 +319,10 @@ const myCharNames = computed(() => {
   );
   return saved.map((c) => c.name);
 });
+
+const isMyCharInParty = (party) => {
+  return party.members?.some((m) => myCharNames.value.includes(m.name));
+};
 
 const isMyChar = (name) => myCharNames.value.includes(name);
 
@@ -453,9 +457,8 @@ const onDateDrop = async (event, targetDate) => {
     const party = event.added.element;
 
     // [규칙 1] 소유주 권한 체크
-    if (!isOwner(party)) {
-      alert("공격대 생성 대표캐릭터만 일정을 변경할 수 있습니다.");
-      // 권한이 없으면 화면에서 위치가 바뀌지 않도록 데이터를 다시 불러오거나 강제 새로고침이 필요할 수 있습니다.
+    if (!isMyCharInParty(party)) {
+      alert("해당 파티의 멤버만 일정을 변경할 수 있습니다.");
       return;
     }
 

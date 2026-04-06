@@ -1044,7 +1044,6 @@ const selectCharacter = async (charName) => {
       },
     });
     if (response.data) selectedChar.value = response.data;
-    console.log(selectedChar.value);
   } catch (e) {
     console.error(e);
   } finally {

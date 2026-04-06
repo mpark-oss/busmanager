@@ -1193,6 +1193,23 @@
                         >{{ party.raid }} | {{ party.title }}</v-chip
                       >
                     </div>
+                    <div
+                      class="text-h6 font-weight-black d-flex align-center pb-4"
+                      :class="
+                        party.isCleared
+                          ? 'text-grey opacity-60'
+                          : 'text-high-emphasis'
+                      "
+                    >
+                      <v-icon
+                        class="me-2"
+                        size="small"
+                        :color="party.isCleared ? 'grey' : 'primary'"
+                      >
+                        mdi-clock-outline
+                      </v-icon>
+                      {{ formatDateTime(party.departureTime) }}
+                    </div>
                   </div>
 
                   <v-btn
@@ -2622,6 +2639,18 @@ const getPureRaidGold = () => {
     });
     return sum + charRaidGold;
   }, 0);
+};
+
+const formatDateTime = (val) => {
+  if (!val || val === "일정미정") return "일정 미정";
+  const date = new Date(val);
+  return date.toLocaleString("ko-KR", {
+    month: "short",
+    day: "numeric",
+    weekday: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 };
 
 // [추가] 상단 툴팁 상세용: 전체 레이드 수익을 일반/귀속으로 분류

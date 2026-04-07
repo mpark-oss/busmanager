@@ -323,7 +323,7 @@
                         {{ party.isCleared ? "" : "Clear" }}
                       </v-btn>
                       <v-chip size="x-small" variant="text" class="opacity-50">
-                        대표캐릭터(방장): {{ party.owner }}
+                        생성자: {{ party.owner }}
                       </v-chip>
                     </div>
                   </v-card-text>

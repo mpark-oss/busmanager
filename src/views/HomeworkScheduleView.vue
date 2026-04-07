@@ -1405,13 +1405,70 @@ const checkAndResetWeekly = async (parties) => {
 
 const togglePartyClear = async (party) => {
   try {
+    const newStatus = !party.isCleared; // 바뀔 상태 (true/false)
     const partyRef = doc(db, "fixed_parties", party.id);
+
+    // 1. DB 업데이트 (Firestore)
     await updateDoc(partyRef, {
-      isCleared: !party.isCleared,
+      isCleared: newStatus,
       lastUpdated: serverTimestamp(),
     });
+
+    // 2. 로컬 스토리지 데이터 동기화
+    const mainCharName = localStorage.getItem("current_main_name");
+    if (mainCharName) {
+      const storageKey = `hw_chars_${mainCharName}`;
+      // 로컬 스토리지에서 데이터 가져오기
+      let localData = JSON.parse(localStorage.getItem(storageKey) || "[]");
+
+      const raidName = party.raid; // 고정 공대 레이드명 (예: "지평", "종막")
+
+      // 파티 멤버 중 내 원정대에 포함된 캐릭터들만 찾아서 숙제 체크/해제
+      party.members.forEach((member) => {
+        const targetChar = localData.find((c) => c.name === member.name);
+
+        if (
+          targetChar &&
+          targetChar.settings &&
+          targetChar.settings.selectedGateIds
+        ) {
+          // 해당 레이드 키워드가 포함된 관문 ID들 필터링
+          const targetGates = targetChar.settings.selectedGateIds.filter((id) =>
+            id.includes(raidName),
+          );
+
+          targetGates.forEach((gateId) => {
+            if (newStatus) {
+              // [클리어] completedTasks에 ID 추가
+              if (!targetChar.completedTasks.includes(gateId)) {
+                targetChar.completedTasks.push(gateId);
+              }
+            } else {
+              // [초기화] completedTasks에서 ID 제거
+              targetChar.completedTasks = targetChar.completedTasks.filter(
+                (id) => id !== gateId,
+              );
+            }
+          });
+        }
+      });
+
+      // 3. 수정된 데이터를 로컬 스토리지에 다시 저장
+      localStorage.setItem(storageKey, JSON.stringify(localData));
+
+      // 4. 🔥 현재 화면의 캐릭터 리스트 변수 즉시 갱신 (반응형 반영)
+      // 변수명이 'characters'인지 'myExpedition'인지 확인 후 교체하세요!
+      if (typeof characters !== "undefined") {
+        characters.value = [...localData];
+      }
+
+      console.log(
+        `[동기화 완료] ${raidName} 레이드 상태가 로컬 숙제 데이터에 반영되었습니다.`,
+      );
+    }
   } catch (e) {
     console.error("클리어 상태 업데이트 실패:", e);
+    alert("업데이트 중 오류가 발생했습니다.");
   }
 };
 
@@ -2414,11 +2471,6 @@ onMounted(async () => {
   });
 
   fetchFixedParties();
-
-  window.addEventListener("storage-sync", () => {
-    loadLocalData();
-    console.log("고정 공대 데이터와 동기화되었습니다.");
-  });
 });
 
 // [추가] 캐릭터별 더보기 차감 전 '순수 획득 골드' 계산 (상단 대시보드용)

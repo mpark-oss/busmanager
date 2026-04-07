@@ -121,148 +121,216 @@
 
           <v-divider class="mb-8"></v-divider>
 
-          <v-row>
-            <v-col
-              v-for="party in myFixedParties"
-              :key="party.id"
-              cols="12"
-              md="6"
-              xl="4"
-            >
-              <v-card
-                :id="`party-card-${party.id}`"
-                border
-                class="rounded-xl overflow-hidden mb-6 bus-card transition-all"
-                :class="{
-                  'today-card': isToday(party.departureTime),
-                  'cleared-card': party.isCleared,
-                }"
-              >
-                <v-toolbar
-                  :color="
-                    party.isCleared
-                      ? 'success'
-                      : isToday(party.departureTime)
-                        ? 'deep-purple-accent-3'
-                        : 'primary'
-                  "
-                  density="compact"
-                  flat
+          <div
+            v-for="(parties, raidName) in groupedParties"
+            :key="raidName"
+            class="mb-12"
+          >
+            <v-col cols="12" class="px-0 mb-6">
+              <div class="d-flex flex-column items-start">
+                <div
+                  class="text-h4 font-weight-black px-5 py-1 rounded-r-xl d-flex align-center"
+                  :style="{
+                    borderLeft: `12px solid ${getRaidThemeColor(raidName)}`,
+                    backgroundColor: 'rgba(var(--v-theme-primary), 0.05)',
+                    color: getRaidThemeColor(raidName),
+                  }"
                 >
-                  <v-icon size="small" class="ms-3 me-2"
-                    >mdi-shield-star</v-icon
+                  <v-icon
+                    class="me-3"
+                    :color="getRaidThemeColor(raidName)"
+                    size="32"
+                    >mdi-sword-cross</v-icon
                   >
+                  {{ raidName }}
+                </div>
 
-                  <span class="text-subtitle-1 font-weight-black">
-                    <v-chip
-                      size="x-small"
-                      :color="
-                        party.isHomework ? 'blue-darken-2' : 'amber-darken-3'
-                      "
-                      variant="flat"
-                      class="ms-3 font-weight-black"
-                      label
-                    >
-                      {{ party.isHomework ? "숙제" : "버스" }}
-                    </v-chip>
-                    <v-chip
-                      size="x-small"
-                      :color="getDifficultyColor(party.difficulty)"
-                      variant="flat"
-                      class="ms-2 font-weight-black border"
-                    >
-                      {{ party.difficulty }}
-                    </v-chip>
-                    {{ party.raid }} | {{ party.title }}
+                <div class="ms-8 mt-1 d-flex align-center">
+                  <v-icon size="14" color="grey-darken-1" class="me-1"
+                    >mdi-tray-full</v-icon
+                  >
+                  <span
+                    class="text-subtitle-2 text-grey-darken-1 font-weight-bold"
+                  >
+                    총 {{ parties.length }}개의 파티
                   </span>
-
-                  <v-spacer></v-spacer>
-                  <v-btn
-                    v-if="isOwner(party)"
-                    icon="mdi-delete-outline"
-                    size="small"
-                    @click="deleteParty(party)"
-                  ></v-btn>
-                  <v-btn
-                    :icon="party.isCleared ? 'mdi-refresh' : 'mdi-check-bold'"
-                    size="small"
-                    @click="togglePartyClear(party)"
-                  ></v-btn>
-                </v-toolbar>
-
-                <v-card-text class="pa-5">
-                  <div class="d-flex align-center justify-space-between mb-4">
-                    <div
-                      class="text-h6 font-weight-bold d-flex align-center"
-                      :class="party.isCleared ? 'text-grey' : ''"
-                    >
-                      <v-icon class="me-2" size="small"
-                        >mdi-clock-outline</v-icon
-                      >
-                      {{ formatDateTime(party.departureTime) }}
-                    </div>
-                    <v-btn
-                      v-if="isMyCharInParty(party)"
-                      size="small"
-                      variant="tonal"
-                      color="primary"
-                      @click="openTimePicker(party)"
-                      :disabled="party.isCleared"
-                    >
-                      시간수정
-                    </v-btn>
-                  </div>
-
-                  <v-divider class="mb-4"></v-divider>
-
-                  <div class="text-subtitle-2 mb-2 font-weight-bold text-grey">
-                    참여 멤버
-                  </div>
-                  <div class="d-flex flex-wrap gap-2">
-                    <v-card
-                      v-for="(member, idx) in party.members"
-                      :key="idx"
-                      variant="outlined"
-                      class="pa-2 rounded-lg d-flex align-center"
-                      :style="
-                        isMyChar(member.name)
-                          ? 'border: 2px solid #FFB300; background: rgba(255,179,0,0.05)'
-                          : 'border: 1px solid rgba(128,128,128,0.2)'
-                      "
-                      style="width: calc(50% - 4px); height: 52px"
-                    >
-                      <v-avatar size="30" class="me-2"
-                        ><v-img :src="member.img"></v-img
-                      ></v-avatar>
-                      <div class="overflow-hidden">
-                        <div
-                          class="text-caption font-weight-bold text-truncate"
-                          :class="{
-                            'text-decoration-line-through opacity-40':
-                              party.isCleared,
-                          }"
-                        >
-                          {{ member.name }}
-                        </div>
-                        <div
-                          class="text-overline"
-                          style="font-size: 0.55rem !important; line-height: 1"
-                        >
-                          {{ member.job }}
-                        </div>
-                      </div>
-                    </v-card>
-                  </div>
-
-                  <div class="mt-4 text-right">
-                    <v-chip size="x-small" variant="text" class="opacity-50">
-                      대표캐릭터: {{ party.owner }}
-                    </v-chip>
-                  </div>
-                </v-card-text>
-              </v-card>
+                </div>
+              </div>
             </v-col>
-          </v-row>
+
+            <v-row>
+              <v-col
+                v-for="party in parties"
+                :key="party.id"
+                cols="12"
+                md="6"
+                xl="4"
+              >
+                <v-card
+                  :id="`party-card-${party.id}`"
+                  border
+                  class="rounded-xl overflow-hidden mb-6 bus-card transition-all shadow-sm"
+                  :class="{
+                    'today-card': isToday(party.departureTime),
+                    'cleared-card': party.isCleared, // CSS 스타일 적용
+                  }"
+                >
+                  <div v-if="party.isCleared" class="cleared-overlay">
+                    <div class="cleared-text">CLEAR</div>
+                  </div>
+                  <v-toolbar
+                    :color="
+                      party.isCleared
+                        ? 'success'
+                        : getRaidThemeColor(party.raid)
+                    "
+                    density="compact"
+                    flat
+                    dark
+                  >
+                    <v-icon size="small" class="ms-3 me-2"
+                      >mdi-shield-star</v-icon
+                    >
+                    <span
+                      class="text-subtitle-1 font-weight-black text-truncate"
+                    >
+                      <v-chip
+                        size="x-small"
+                        :color="
+                          party.isHomework ? 'blue-darken-2' : 'amber-darken-3'
+                        "
+                        variant="flat"
+                        class="me-2 font-weight-black border"
+                        label
+                      >
+                        {{ party.isHomework ? "숙제" : "버스" }}
+                      </v-chip>
+                      <v-chip
+                        size="x-small"
+                        color="white"
+                        variant="outlined"
+                        class="me-2 font-weight-black"
+                        style="border-width: 1.5px !important"
+                        label
+                      >
+                        {{ party.difficulty }}
+                      </v-chip>
+
+                      {{ party.title || party.raid }}
+                    </span>
+
+                    <v-spacer></v-spacer>
+
+                    <v-tooltip text="일반 스케줄로 복사" location="top">
+                      <template v-slot:activator="{ props }">
+                        <v-btn
+                          v-bind="props"
+                          icon="mdi-export-variant"
+                          size="small"
+                          @click="exportToGeneralSchedule(party)"
+                        ></v-btn>
+                      </template>
+                    </v-tooltip>
+
+                    <v-btn
+                      v-if="isOwner(party)"
+                      icon="mdi-delete-outline"
+                      size="small"
+                      @click="deleteParty(party)"
+                    ></v-btn>
+                  </v-toolbar>
+
+                  <v-card-text class="pa-5">
+                    <div class="d-flex align-center justify-space-between mb-4">
+                      <div
+                        class="text-h6 font-weight-bold d-flex align-center"
+                        :class="party.isCleared ? 'text-grey' : ''"
+                      >
+                        <v-icon class="me-2" size="small"
+                          >mdi-clock-outline</v-icon
+                        >
+                        {{ formatDateTime(party.departureTime) }}
+                      </div>
+                      <v-btn
+                        v-if="isMyCharInParty(party)"
+                        size="small"
+                        variant="tonal"
+                        color="primary"
+                        @click="openTimePicker(party)"
+                        :disabled="party.isCleared"
+                      >
+                        시간수정
+                      </v-btn>
+                    </div>
+
+                    <v-divider class="mb-4"></v-divider>
+
+                    <div
+                      class="text-subtitle-2 mb-2 font-weight-bold text-grey"
+                    >
+                      참여 멤버
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                      <v-card
+                        v-for="(member, idx) in party.members"
+                        :key="idx"
+                        variant="outlined"
+                        class="pa-2 rounded-lg d-flex align-center"
+                        :style="
+                          isMyChar(member.name)
+                            ? 'border: 2px solid #FFB300; background: rgba(255,179,0,0.05)'
+                            : 'border: 1px solid rgba(128,128,128,0.2)'
+                        "
+                        style="width: calc(50% - 4px); height: 52px"
+                      >
+                        <v-avatar size="30" class="me-2">
+                          <v-img :src="member.img"></v-img>
+                        </v-avatar>
+                        <div class="overflow-hidden">
+                          <div
+                            class="text-caption font-weight-bold text-truncate"
+                            :class="{
+                              'text-decoration-line-through opacity-40':
+                                party.isCleared,
+                            }"
+                          >
+                            {{ member.name }}
+                          </div>
+                          <div
+                            class="text-overline"
+                            style="
+                              font-size: 0.55rem !important;
+                              line-height: 1;
+                            "
+                          >
+                            {{ member.job }}
+                          </div>
+                        </div>
+                      </v-card>
+                    </div>
+
+                    <div class="mt-4 text-right">
+                      <v-btn
+                        :color="party.isCleared ? 'white' : 'success'"
+                        variant="flat"
+                        size="x-small"
+                        class="font-weight-black px-2"
+                        @click="togglePartyClear(party)"
+                      >
+                        <v-icon start size="14">{{
+                          party.isCleared ? "mdi-refresh" : "mdi-check-bold"
+                        }}</v-icon>
+                        {{ party.isCleared ? "" : "Clear" }}
+                      </v-btn>
+                      <v-chip size="x-small" variant="text" class="opacity-50">
+                        대표캐릭터(방장): {{ party.owner }}
+                      </v-chip>
+                    </div>
+                  </v-card-text>
+                </v-card>
+              </v-col>
+            </v-row>
+          </div>
         </v-card>
       </v-col>
     </v-row>
@@ -301,6 +369,7 @@ import {
   updateDoc,
   deleteDoc,
   serverTimestamp,
+  setDoc,
 } from "firebase/firestore";
 
 const theme = ref(localStorage.getItem("theme") || "light");
@@ -378,6 +447,71 @@ const checkWeeklyReset = async (parties) => {
         console.error("초기화 오류:", e);
       }
     }
+  }
+};
+
+const groupedParties = computed(() => {
+  const groups = {};
+
+  // 내 고정 파티들을 레이드명 기준으로 묶음
+  myFixedParties.value.forEach((party) => {
+    const key = party.raid;
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(party);
+  });
+
+  // 레이드 내에서는 난이도 순(하드 -> 노말)으로 정렬
+  Object.keys(groups).forEach((key) => {
+    groups[key].sort((a, b) => {
+      const diffScore = { 하드: 2, 노말: 1, "3단계": 3 }; // 우선순위
+      return (diffScore[b.difficulty] || 0) - (diffScore[a.difficulty] || 0);
+    });
+  });
+
+  return groups;
+});
+
+const exportToGeneralSchedule = async (party) => {
+  // 1. 목적지 컬렉션 결정
+  const targetCol = party.isHomework ? "homeworks" : "schedules";
+
+  // 2. 문서 ID 생성 (샘플처럼 Firestore 자동 생성 ID 느낌을 주거나 고유 ID 부여)
+  const newId = doc(collection(db, targetCol)).id;
+
+  // 3. 샘플 데이터 구조와 100% 일치화 작업
+  const exportData = {
+    // 필수 기본 필드
+    id: newId,
+    raid: party.raid,
+    difficulty: party.difficulty,
+    isHomework: party.isHomework ?? targetCol === "homeworks",
+
+    // 🔥 중요: 시간 필드명 매핑 (departureTime -> dateTime)
+    // 샘플 데이터처럼 일정이 없으면 빈 문자열(""), 있으면 해당 시간 문자열
+    dateTime:
+      party.departureTime === "일정미정" || !party.departureTime
+        ? ""
+        : party.departureTime,
+
+    // 멤버 데이터 (이미 배열 형태이므로 그대로 복사)
+    members: JSON.parse(JSON.stringify(party.members)),
+
+    // 샘플에 포함된 기타 필수 필드 강제 주입
+    memo: null,
+    password: null,
+    createdAt: serverTimestamp(),
+  };
+
+  try {
+    // 4. Firestore 저장
+    await setDoc(doc(db, targetCol, newId), exportData);
+
+    // 5. 성공 알림
+    const menuName = party.isHomework ? "숙제 스케줄" : "버스 스케줄";
+    alert(`✅ ${menuName} 내보내기 완료`);
+  } catch (e) {
+    console.error("내보내기 실패 상세:", e);
+    alert("내보내기 중 오류가 발생했습니다.");
   }
 };
 
@@ -548,6 +682,23 @@ const scrollToDetail = (id) => {
   const el = document.getElementById(`party-card-${id}`);
   if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
 };
+
+const getRaidThemeColor = (raidName) => {
+  const themes = {
+    // 카제로스 레이드 시리즈 (전반적으로 묵직하고 강렬한 색상)
+    "2막": "#2E7D32", // 진한 초록 (부패/독소 느낌)
+    "3막": "#C62828", // 진한 빨강 (업화/불꽃 느낌)
+    "4막": "#1565C0", // 진한 파랑 (심해/냉기 느낌)
+    종막: "#4527A0", // 진한 보라 (종말/혼돈 느낌)
+
+    // 에피소드 레이드 (신비롭고 날카로운 느낌)
+    세르카: "#00695C", // 청록색 (신비로운 유적 느낌)
+    지평: "#37474F", // 차가운 그레이 (경계/지평선 느낌)
+  };
+
+  // 목록에 없는 레이드일 경우 기본 브랜드 컬러인 primary(남색 계열)를 반환합니다.
+  return themes[raidName] || "#5E35B1";
+};
 </script>
 
 <style scoped>
@@ -597,5 +748,77 @@ const scrollToDetail = (id) => {
 }
 .gap-2 {
   gap: 8px;
+}
+
+/* style scoped 맨 아래 추가 */
+
+.bus-card {
+  position: relative; /* 도장 오버레이 배치를 위해 카드 자체를 기준으로 설정 */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cleared-card {
+  filter: grayscale(0.5);
+  opacity: 0.6;
+  /* pointer-events: none; 를 삭제하세요! */
+}
+
+/* 추가로, 도장이 버튼을 가려도 클릭이 되도록 overlay 설정 확인 */
+.cleared-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-15deg);
+  z-index: 10;
+  pointer-events: none; /* 👈 도장은 마우스에 잡히지 않아야 버튼이 눌립니다. */
+}
+
+/* 🔥 'CLEAR' 텍스트 도장 모양 */
+.cleared-text {
+  font-size: 3.5rem; /* 도장 크기 */
+  font-weight: 900; /* 아주 굵은 글씨 */
+  color: #4caf50; /* 완료를 상징하는 초록색 (Sucess 컬러) */
+  border: 6px solid #4caf50; /* 도장 테두리 */
+  padding: 5px 25px; /* 테두리와 글씨 사이 여백 */
+  border-radius: 12px; /* 모서리 둥글게 */
+  opacity: 0.6; /* 너무 튀지 않게 약간 투명하게 */
+  letter-spacing: 5px; /* 글자 사이 간격 넓게 (도장 느낌) */
+  text-shadow: 0 0 10px rgba(76, 175, 80, 0.5); /* 은은한 네온 효과 */
+}
+
+/* 개인 숙제 페이지용 고정 공대 카드 스타일 */
+.bus-card {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+/* 완료된 카드 효과 */
+.cleared-card {
+  filter: grayscale(0.6);
+  opacity: 0.7;
+  /* pointer-events: none; 은 절대 넣지 마세요! */
+}
+
+/* 도장 오버레이 */
+.cleared-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-12deg);
+  z-index: 5;
+  pointer-events: none;
+}
+
+/* 'CLEAR' 도장 디자인 (약간 작게 조정) */
+.cleared-text {
+  font-size: 2.5rem; /* 크기 조정 */
+  font-weight: 900;
+  color: #4caf50;
+  border: 4px solid #4caf50;
+  padding: 2px 15px;
+  border-radius: 10px;
+  opacity: 0.6;
+  letter-spacing: 3px;
+  white-space: nowrap;
 }
 </style>

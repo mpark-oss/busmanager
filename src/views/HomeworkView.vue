@@ -539,6 +539,21 @@
           수정
         </v-card-title>
         <v-card-text>
+          <v-btn-toggle
+            v-model="tempIsHomework"
+            mandatory
+            color="success"
+            variant="outlined"
+            class="mb-4 w-100"
+            density="compact"
+          >
+            <v-btn :value="false" class="flex-grow-1">
+              <v-icon start>mdi-bus</v-icon>버스
+            </v-btn>
+            <v-btn :value="true" class="flex-grow-1">
+              <v-icon start>mdi-clipboard-check</v-icon>숙제
+            </v-btn>
+          </v-btn-toggle>
           <v-select
             v-model="tempRaid"
             :items="['2막', '3막', '4막', '종막', '세르카', '지평']"
@@ -598,6 +613,7 @@ import {
   deleteDoc,
   doc,
   updateDoc,
+  setDoc,
 } from "firebase/firestore";
 
 import { inject } from "vue";
@@ -626,6 +642,8 @@ const tempDifficulty = ref("");
 const tempMemo = ref("");
 
 const unlockedIds = ref([]);
+
+const tempIsHomework = ref(true);
 
 // [추가] 현재 숙제가 잠겨있는지 확인
 const isLocked = (hw) => {
@@ -657,6 +675,7 @@ const openRaidPicker = (hw) => {
   tempRaid.value = hw.raid;
   tempDifficulty.value = hw.difficulty;
   tempMemo.value = hw.memo || "";
+  tempIsHomework.value = hw.isHomework !== undefined ? hw.isHomework : true;
   editRaidDialog.value = true;
 };
 
@@ -668,20 +687,53 @@ const getDifficultyList = (raidName) => {
   return ["노말", "하드"];
 };
 
-// DB 업데이트
 const saveRaidInfo = async () => {
-  if (selectedHw.value && tempRaid.value) {
-    try {
-      const hwRef = doc(db, "homeworks", selectedHw.value.id);
-      await updateDoc(hwRef, {
+  if (!selectedHw.value || !tempRaid.value) return;
+
+  const oldIsHomework =
+    selectedHw.value.isHomework !== undefined
+      ? selectedHw.value.isHomework
+      : true;
+  const newIsHomework = tempIsHomework.value;
+  const docId = selectedHw.value.id;
+
+  // 저장/이동할 전체 데이터 구성
+  const updatedData = {
+    ...selectedHw.value,
+    raid: tempRaid.value,
+    difficulty: tempDifficulty.value,
+    memo: tempMemo.value || null,
+    isHomework: newIsHomework,
+  };
+
+  try {
+    // 1. 숙제 <-> 버스 테이블 이동이 필요한 경우
+    if (oldIsHomework !== newIsHomework) {
+      const sourceCol = oldIsHomework ? "homeworks" : "schedules";
+      const targetCol = newIsHomework ? "homeworks" : "schedules";
+
+      // 새 컬렉션에 복사
+      await setDoc(doc(db, targetCol, docId), updatedData);
+
+      // 기존 컬렉션에서 삭제
+      await deleteDoc(doc(db, sourceCol, docId));
+
+      console.log(`[이동 완료] ${sourceCol} -> ${targetCol}`);
+    } else {
+      // 2. 동일 테이블 내 단순 수정
+      const currentCol = newIsHomework ? "homeworks" : "schedules";
+      await updateDoc(doc(db, currentCol, docId), {
         raid: tempRaid.value,
         difficulty: tempDifficulty.value,
         memo: tempMemo.value || null,
+        isHomework: newIsHomework,
       });
-      editRaidDialog.value = false;
-    } catch (e) {
-      alert("수정 실패: " + e.message);
     }
+
+    editRaidDialog.value = false;
+  } catch (e) {
+    console.error("수정 실패:", e);
+    alert("수정 실패: " + e.message);
   }
 };
 

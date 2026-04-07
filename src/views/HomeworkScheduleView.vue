@@ -741,11 +741,7 @@
                                             : 'grey-lighten-1'
                                         "
                                         @click.stop="
-                                          toggleGoldGate(
-                                            char,
-                                            raid.name,
-                                            gate.g,
-                                          )
+                                          toggleGoldGate(char, raid, gate.g)
                                         "
                                       >
                                         <v-icon size="18">
@@ -1163,10 +1159,18 @@
               <v-card
                 border
                 variant="flat"
-                class="rounded-xl pa-5 mb-4 bg-grey-lighten-5 position-relative"
+                class="rounded-xl pa-5 mb-4 bg-grey-lighten-5 position-relative bus-card"
+                :class="{ 'cleared-card': party.isCleared }"
                 style="transition: none !important"
               >
-                <div class="d-flex justify-space-between align-start mb-6">
+                <div v-if="party.isCleared" class="cleared-overlay">
+                  <div class="cleared-text">CLEAR</div>
+                </div>
+
+                <div
+                  class="d-flex justify-space-between align-start mb-6"
+                  style="position: relative; z-index: 2"
+                >
                   <div>
                     <div class="d-flex align-center flex-wrap gap-2 mb-2">
                       <v-chip
@@ -1183,16 +1187,19 @@
                         color="orange-darken-1"
                         label
                         class="font-weight-black text-white"
-                        >{{ party.difficulty }}</v-chip
                       >
+                        {{ party.difficulty }}
+                      </v-chip>
                       <v-chip
                         size="small"
                         color="primary"
                         label
                         class="font-weight-black"
-                        >{{ party.raid }} | {{ party.title }}</v-chip
                       >
+                        {{ party.raid }} | {{ party.title }}
+                      </v-chip>
                     </div>
+
                     <div
                       class="text-h6 font-weight-black d-flex align-center pb-4"
                       :class="
@@ -1218,20 +1225,19 @@
                     size="large"
                     rounded="lg"
                     class="font-weight-black px-6"
-                    @click="togglePartyClear(party)"
+                    style="z-index: 10"
+                    @click.stop="togglePartyClear(party)"
                   >
-                    <v-icon start>{{
-                      party.isCleared
-                        ? "mdi-check-circle"
-                        : "mdi-circle-outline"
-                    }}</v-icon>
-                    {{ party.isCleared ? "Done" : "Undone" }}
+                    <v-icon start>
+                      {{ party.isCleared ? "mdi-refresh" : "mdi-check-bold" }}
+                    </v-icon>
+                    {{ party.isCleared ? "" : "CLEAR" }}
                   </v-btn>
                 </div>
 
                 <div
                   class="d-flex flex-wrap gap-3 mt-2"
-                  style="overflow: hidden"
+                  style="overflow: hidden; position: relative; z-index: 2"
                 >
                   <v-card
                     v-for="(member, idx) in party.members"
@@ -1283,8 +1289,9 @@
                       color="amber-darken-3"
                       size="small"
                       class="ms-1 flex-shrink-0"
-                      >mdi-star</v-icon
                     >
+                      mdi-star
+                    </v-icon>
                   </v-card>
                 </div>
               </v-card>
@@ -1397,27 +1404,14 @@ const checkAndResetWeekly = async (parties) => {
 };
 
 const togglePartyClear = async (party) => {
-  if (!party.id) return;
-
   try {
     const partyRef = doc(db, "fixed_parties", party.id);
-    // 현재 상태 반전 (undefined일 경우 false로 처리)
-    const currentState = party.isCleared === true;
-    const nextState = !currentState;
-
-    // UI 즉시 반영 (낙관적 업데이트)
-    party.isCleared = nextState;
-
     await updateDoc(partyRef, {
-      isCleared: nextState,
+      isCleared: !party.isCleared,
       lastUpdated: serverTimestamp(),
     });
-
-    console.log("상태 변경 완료:", nextState);
   } catch (e) {
-    console.error("CLEAR 토글 실패:", e);
-    // 실패 시 롤백
-    party.isCleared = !party.isCleared;
+    console.error("클리어 상태 업데이트 실패:", e);
   }
 };
 
@@ -2170,7 +2164,6 @@ const fetchMyExpedition = async (charName) => {
       },
     );
 
-    console.log("RES ::: ", res);
 
     if (res.data && Array.isArray(res.data)) {
       const blacklist = JSON.parse(
@@ -2471,9 +2464,13 @@ const getSelectedRaidTypeCount = (char) => {
   return new Set(raidNames).size;
 };
 
-// [신규] 골드 획득 관문 토글 함수 (캐릭터당 최대 3개 레이드 제한 로직 포함)
-const toggleGoldGate = (char, raidName, gateG) => {
-  // 1. 설정 데이터가 없을 경우를 대비한 초기화
+const toggleGoldGate = (char, raid, gateG) => {
+  // 0. 기초 데이터 추출 (전체 관문 수 파악을 위해 raid 객체 사용)
+  const raidName = raid.name; // 예: "에기르"
+  const allGates = raid.gates; // 예: [ {name: '1관문'}, {name: '2관문'} ]
+  const totalGateCount = allGates.length;
+
+  // 1. 설정 데이터 초기화 (기존 로직 유지)
   if (!char.settings) {
     char.settings = {
       goldSelectedGates: [],
@@ -2489,29 +2486,51 @@ const toggleGoldGate = (char, raidName, gateG) => {
   const taskId = raidName + "_G" + gateG;
   const idx = char.settings.goldSelectedGates.indexOf(taskId);
 
+  // 2. 현재 누른 관문이 마지막 관문인지 확인 (gateG는 보통 1부터 시작하므로)
+  const isLastGate = parseInt(gateG) === totalGateCount;
+
   if (idx > -1) {
-    // 2. 이미 지정된 경우: 리스트에서 제거 (해제)
-    char.settings.goldSelectedGates.splice(idx, 1);
+    // [해제 로직]
+    if (isLastGate) {
+      // 마지막 관문 해제 시: 해당 레이드의 모든 관문("에기르_G1", "에기르_G2" 등)을 한꺼번에 제거
+      char.settings.goldSelectedGates = char.settings.goldSelectedGates.filter(
+        (id) => !id.startsWith(raidName + "_G"),
+      );
+    } else {
+      // 일반 관문 해제 시: 해당 관문만 제거
+      char.settings.goldSelectedGates.splice(idx, 1);
+    }
   } else {
-    // 3. 새로 지정할 경우: 캐릭터당 '레이드 종류' 기준 3개 제한 체크
-    // 현재 지정된 모든 관문 ID에서 레이드 이름만 추출하여 중복을 제거한 집합 생성
+    // [지정 로직]
     const selectedRaidNames = new Set(
       char.settings.goldSelectedGates.map((id) => id.split("_G")[0]),
     );
 
-    // 클릭한 레이드가 새로운 종류인데 이미 3종류를 선택했다면 경고 후 차단
+    // 3개 제한 체크 (기존 로직 유지)
     if (!selectedRaidNames.has(raidName) && selectedRaidNames.size >= 3) {
       alert("골드 보상은 캐릭터당 최대 3개의 레이드까지만 지정 가능합니다.");
       return;
     }
 
-    // 제한에 걸리지 않으면 리스트에 추가
-    char.settings.goldSelectedGates.push(taskId);
+    if (isLastGate) {
+      // 마지막 관문 지정 시: 1관문부터 마지막 관문까지 루프를 돌며 모두 추가
+      for (let i = 1; i <= totalGateCount; i++) {
+        const targetId = raidName + "_G" + i;
+        // 중복 추가 방지 체크 후 삽입
+        if (!char.settings.goldSelectedGates.includes(targetId)) {
+          char.settings.goldSelectedGates.push(targetId);
+        }
+      }
+    } else {
+      // 일반 관문 지정 시: 해당 관문만 추가
+      char.settings.goldSelectedGates.push(taskId);
+    }
   }
 
-  // 4. 변경된 데이터를 로컬 스토리지에 즉시 반영
+  // 4. 저장
   saveToLocal();
 };
+
 const getCharMaxPossibleGold = (char) => {
   if (!char.isGoldCharacter) return 0; // 골드 획득 캐릭터가 아니면 0원
 
@@ -3178,5 +3197,35 @@ const updateAllCombatPowers = async () => {
   height: 1px;
   background-color: currentColor;
   transform: translateY(-50%);
+}
+
+/* 완료된 카드 효과 */
+.cleared-card {
+  filter: grayscale(0.6);
+  opacity: 0.7;
+  /* pointer-events: none; 은 절대 넣지 마세요! */
+}
+
+/* 도장 오버레이 */
+.cleared-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-12deg);
+  z-index: 5;
+  pointer-events: none;
+}
+
+/* 'CLEAR' 도장 디자인 (약간 작게 조정) */
+.cleared-text {
+  font-size: 2.5rem; /* 크기 조정 */
+  font-weight: 900;
+  color: #4caf50;
+  border: 4px solid #4caf50;
+  padding: 2px 15px;
+  border-radius: 10px;
+  opacity: 0.6;
+  letter-spacing: 3px;
+  white-space: nowrap;
 }
 </style>

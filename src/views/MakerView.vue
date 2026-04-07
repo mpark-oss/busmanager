@@ -650,9 +650,21 @@
                   <v-toolbar-title
                     class="text-body-2 font-weight-bold text-white"
                   >
-                    {{ bus.isHomework ? "신규 숙제 편성" : "신규 버스 편성" }}
+                    {{ bus.isHomework ? "신규 숙제 팟" : "신규 버스 팟" }}
                   </v-toolbar-title>
-
+                  <v-tooltip location="top" text="공격대 구성 복사">
+                    <template v-slot:activator="{ props }">
+                      <v-btn
+                        v-bind="props"
+                        icon="mdi-content-copy"
+                        size="x-small"
+                        variant="text"
+                        color="primary"
+                        class="me-1"
+                        @click="copyBusCard(bus)"
+                      ></v-btn>
+                    </template>
+                  </v-tooltip>
                   <v-spacer></v-spacer>
 
                   <div class="d-flex align-center me-2">
@@ -1280,6 +1292,25 @@ const rankedCharList = computed(() => {
     .map((char) => ({ ...char, rank: 999 }));
   return [...top5, ...others];
 });
+
+const copyBusCard = (bus) => {
+  // 1. 현재 카드의 내용을 깊은 복사합니다 (멤버 리스트 포함)
+  const newBus = JSON.parse(JSON.stringify(bus));
+
+  // 2. 복사된 카드는 고유 ID를 새로 부여하여 충돌을 방지합니다.
+  newBus.id = `copy_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+
+  // 3. (선택 사항) 복사했다는 표시를 위해 타이틀 뒤에 문구를 추가할 수 있습니다.
+  if (newBus.title) {
+    newBus.title += " (복사본)";
+  }
+
+  // 4. 리스트의 현재 카드 바로 뒤에 삽입하거나 맨 뒤에 추가합니다.
+  localBuses.value.push(newBus);
+
+  // 5. 사용자 알림
+  // alert("공격대 구성이 복사되었습니다. 레이드와 난이도를 변경해주세요!");
+};
 
 // 스크립트 하단 적절한 위치에 추가
 const parseGemEffect = (tooltipJson) => {

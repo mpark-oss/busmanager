@@ -526,6 +526,21 @@
           정보 수정
         </v-card-title>
         <v-card-text>
+          <v-btn-toggle
+            v-model="tempIsHomework"
+            mandatory
+            color="primary"
+            variant="outlined"
+            class="mb-4 w-100"
+            density="compact"
+          >
+            <v-btn :value="false" class="flex-grow-1">
+              <v-icon start>mdi-bus</v-icon>버스
+            </v-btn>
+            <v-btn :value="true" class="flex-grow-1">
+              <v-icon start>mdi-clipboard-check</v-icon>숙제
+            </v-btn>
+          </v-btn-toggle>
           <v-select
             v-model="tempRaid"
             :items="['2막', '3막', '4막', '종막', '세르카', '지평']"
@@ -580,6 +595,7 @@ import {
   deleteDoc,
   doc,
   updateDoc,
+  setDoc,
 } from "firebase/firestore";
 import { inject } from "vue";
 // App.vue에서 제공한 빌런 리스트 주입
@@ -606,6 +622,8 @@ const tempDifficulty = ref("");
 const tempMemo = ref("");
 
 const unlockedIds = ref([]);
+
+const tempIsHomework = ref(false);
 
 // [추가] 현재 카드가 잠겨있는지 확인하는 함수
 const isLocked = (bus) => {
@@ -638,19 +656,57 @@ const openRaidPicker = (bus) => {
   tempRaid.value = bus.raid;
   tempDifficulty.value = bus.difficulty;
   tempMemo.value = bus.memo || "";
+  tempIsHomework.value = bus.isHomework || false;
   editRaidDialog.value = true;
 };
 
-// [추가] 레이드/난이도 정보 DB 업데이트
 const saveRaidInfo = async () => {
-  if (selectedBus.value) {
-    const busRef = doc(db, "schedules", selectedBus.value.id);
-    await updateDoc(busRef, {
-      raid: tempRaid.value,
-      difficulty: tempDifficulty.value,
-      memo: tempMemo.value || null,
-    });
+  if (!selectedBus.value) return;
+
+  // 1. 기존 상태와 새 상태 비교 (isHomework 필드 기준)
+  // 기존 데이터에 isHomework가 없으면 false(버스)로 간주합니다.
+  const oldIsHomework = selectedBus.value.isHomework || false;
+  const newIsHomework = tempIsHomework.value;
+  const docId = selectedBus.value.id;
+
+  // 2. 저장/이동할 데이터 객체 구성
+  // 스냅샷에 있는 필드들을 그대로 유지하면서 수정된 내용만 반영합니다.
+  const updatedData = {
+    ...selectedBus.value, // 기존 모든 데이터 복사 (members, createdAt 등)
+    raid: tempRaid.value,
+    difficulty: tempDifficulty.value,
+    memo: tempMemo.value || null,
+    isHomework: newIsHomework,
+  };
+
+  try {
+    // 3. 컬렉션(테이블) 이동이 필요한 경우
+    if (oldIsHomework !== newIsHomework) {
+      const sourceCol = oldIsHomework ? "homeworks" : "schedules";
+      const targetCol = newIsHomework ? "homeworks" : "schedules";
+
+      // 새 테이블에 복사 (setDoc은 ID가 같으면 덮어쓰기, 없으면 생성합니다)
+      await setDoc(doc(db, targetCol, docId), updatedData);
+
+      // 기존 테이블에서 삭제
+      await deleteDoc(doc(db, sourceCol, docId));
+
+      console.log(`${sourceCol}에서 ${targetCol}로 데이터 이동 완료`);
+    } else {
+      // 4. 동일 테이블 내에서 단순 수정인 경우
+      const currentCol = newIsHomework ? "homeworks" : "schedules";
+      await updateDoc(doc(db, currentCol, docId), {
+        raid: tempRaid.value,
+        difficulty: tempDifficulty.value,
+        memo: tempMemo.value || null,
+        isHomework: newIsHomework,
+      });
+    }
+
     editRaidDialog.value = false;
+  } catch (e) {
+    console.error("데이터 저장 중 오류 발생:", e);
+    alert("데이터를 저장하는 중 오류가 발생했습니다.");
   }
 };
 

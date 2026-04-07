@@ -523,7 +523,7 @@ onMounted(() => {
     // 🔥 최초 로드이거나, 데이터가 변경되었을 때만 초기화 체크 실행
     // 드래그 시에는 방어막 로직에 의해 무시됨
     checkWeeklyReset(data);
-    console.log(data);
+
     fixedParties.value = data;
   });
 });
@@ -630,10 +630,24 @@ const onDateDrop = async (event, targetDate) => {
 };
 
 const togglePartyClear = async (party) => {
-  await updateDoc(doc(db, "fixed_parties", party.id), {
-    isCleared: !party.isCleared,
-    lastUpdated: serverTimestamp(),
-  });
+  try {
+    const newStatus = !party.isCleared; // 바뀔 상태
+    const partyRef = doc(db, "fixed_parties", party.id);
+
+    // 1. DB 업데이트 (Firestore)
+    await updateDoc(partyRef, {
+      isCleared: newStatus,
+      lastUpdated: serverTimestamp(),
+    });
+
+    // 2. 로컬 스토리지 동기화 실행
+    // 업데이트된 party 객체를 전달 (함수 내에서 isCleared를 참조하므로)
+    syncFixedToLocal({ ...party, isCleared: newStatus });
+
+    window.dispatchEvent(new Event("sync-fixed-to-local"));
+  } catch (e) {
+    console.error("업데이트 실패:", e);
+  }
 };
 
 const openTimePicker = (party) => {
@@ -698,6 +712,59 @@ const getRaidThemeColor = (raidName) => {
 
   // 목록에 없는 레이드일 경우 기본 브랜드 컬러인 primary(남색 계열)를 반환합니다.
   return themes[raidName] || "#5E35B1";
+};
+
+const syncFixedToLocal = (party) => {
+  // 1. 대표 캐릭터명(Key의 핵심) 가져오기
+  const mainCharName = localStorage.getItem("current_main_name");
+  if (!mainCharName) return;
+
+  // 2. 동적 스토리지 키 생성 및 데이터 로드
+  const storageKey = `hw_chars_${mainCharName}`;
+  const localData = JSON.parse(localStorage.getItem(storageKey) || "[]");
+
+  if (localData.length === 0) return;
+
+  const raidName = party.raid; // 예: "지평", "세르카", "종막"
+  const isCleared = party.isCleared;
+
+  // 3. 파티 멤버들 순회하며 내 원정대 캐릭터 업데이트
+  party.members.forEach((member) => {
+    // 로컬 배열에서 이름이 일치하는 캐릭터 객체 찾기
+    const targetChar = localData.find((c) => c.name === member.name);
+
+    if (
+      targetChar &&
+      targetChar.settings &&
+      targetChar.settings.selectedGateIds
+    ) {
+      // 🎯 매칭 로직: selectedGateIds 중 레이드 이름이 포함된 모든 ID 추출
+      // 예: raidName "지평" -> "어비스: 지평의 성당(3단계)_G1", "어비스: 지평의 성당(3단계)_G2" 매칭
+      const targetGates = targetChar.settings.selectedGateIds.filter((id) =>
+        id.includes(raidName),
+      );
+
+      targetGates.forEach((gateId) => {
+        if (isCleared) {
+          // [완료 처리] completedTasks 배열에 ID 추가 (중복 체크)
+          if (!targetChar.completedTasks.includes(gateId)) {
+            targetChar.completedTasks.push(gateId);
+          }
+        } else {
+          // [초기화 처리] completedTasks 배열에서 해당 ID 제거
+          targetChar.completedTasks = targetChar.completedTasks.filter(
+            (id) => id !== gateId,
+          );
+        }
+      });
+    }
+  });
+
+  // 4. 수정된 전체 배열을 다시 로컬 스토리지에 덮어쓰기
+  localStorage.setItem(storageKey, JSON.stringify(localData));
+
+  // 5. 개인 숙제 페이지(리스너)에 신호 전송
+  window.dispatchEvent(new Event("sync-fixed-to-local"));
 };
 </script>
 

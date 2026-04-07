@@ -2164,7 +2164,6 @@ const fetchMyExpedition = async (charName) => {
       },
     );
 
-
     if (res.data && Array.isArray(res.data)) {
       const blacklist = JSON.parse(
         localStorage.getItem(getBlacklistKey()) || "[]",
@@ -2415,6 +2414,11 @@ onMounted(async () => {
   });
 
   fetchFixedParties();
+
+  window.addEventListener("storage-sync", () => {
+    loadLocalData();
+    console.log("고정 공대 데이터와 동기화되었습니다.");
+  });
 });
 
 // [추가] 캐릭터별 더보기 차감 전 '순수 획득 골드' 계산 (상단 대시보드용)

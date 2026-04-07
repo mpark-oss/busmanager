@@ -18,17 +18,33 @@
 
           <v-text-field
             v-model="searchName"
-            label="캐릭터 추가"
-            append-inner-icon="mdi-magnify"
-            @click:append-inner="fetchCharacter"
-            @keyup.enter="fetchCharacter"
+            :label="isExistingChar ? '검색 OR 추가' : '신규 캐릭터 이름 입력'"
+            :prepend-inner-icon="
+              isExistingChar ? 'mdi-magnify' : 'mdi-account-plus'
+            "
             :loading="isLoading"
             density="comfortable"
             variant="solo-filled"
             flat
             hide-details
             class="mb-4 rounded-lg custom-search-field"
-          ></v-text-field>
+            @keyup.enter="handleEnterKey"
+          >
+            <template v-slot:append-inner>
+              <v-fade-transition>
+                <v-btn
+                  v-if="searchName && !isExistingChar"
+                  color="primary"
+                  variant="flat"
+                  size="small"
+                  class="font-weight-black rounded-lg"
+                  @click="fetchCharacter"
+                >
+                  추가
+                </v-btn>
+              </v-fade-transition>
+            </template>
+          </v-text-field>
           <v-divider class="mb-4"></v-divider>
         </div>
 
@@ -1288,21 +1304,55 @@ const addBusSlot = () => {
   });
 };
 
+const isExistingChar = computed(() => {
+  if (!searchName.value) return true;
+  const q = searchName.value.toLowerCase().trim();
+  // 명단 전체(TOP 5 포함)에 이름이 있는지 확인
+  return charList.value.some(
+    (char) => char.name.toLowerCase() === q, // 정확히 일치하는 이름이 있는지 체크 (추가 방지용)
+  );
+});
+
 const rankedCharList = computed(() => {
-  const powerSorted = [...charList.value].sort((a, b) => {
+  // 1. 전체 명단에서 전투력순으로 정렬
+  const allSorted = [...charList.value].sort((a, b) => {
     const powerA = parseInt(a.combatPower?.replace(/,/g, "") || 0);
     const powerB = parseInt(b.combatPower?.replace(/,/g, "") || 0);
     return powerB - powerA;
   });
-  const top5Names = powerSorted.slice(0, 5).map((c) => c.name);
-  const top5 = powerSorted
-    .slice(0, 5)
-    .map((char, index) => ({ ...char, rank: index + 1 }));
-  const others = charList.value
-    .filter((c) => !top5Names.includes(c.name))
-    .map((char) => ({ ...char, rank: 999 }));
-  return [...top5, ...others];
+
+  // 2. 부동의 TOP 5 추출 (검색어와 상관없이 항상 노출)
+  const top5 = allSorted.slice(0, 5).map((char, index) => ({
+    ...char,
+    rank: index + 1,
+  }));
+  const top5Names = top5.map((c) => c.name);
+
+  // 3. TOP 5를 제외한 나머지 캐릭터들 중 검색어에 맞는 캐릭터만 필터링
+  const others = allSorted.filter((c) => !top5Names.includes(c.name));
+
+  let filteredOthers = others;
+  if (searchName.value) {
+    const q = searchName.value.toLowerCase().trim();
+    filteredOthers = others.filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) || c.job.toLowerCase().includes(q),
+    );
+  }
+
+  // 4. TOP 5 + 필터링된 나머지를 합쳐서 반환
+  // 검색 결과가 있든 없든 상위 5개는 항상 최상단에 유지됩니다.
+  return [...top5, ...filteredOthers.map((c) => ({ ...c, rank: 999 }))];
 });
+
+// [추가] 엔터키 핸들러
+const handleEnterKey = () => {
+  if (!searchName.value) return;
+  // 명단에 없는 이름일 때만 API 호출(추가) 수행
+  if (!isExistingChar.value) {
+    fetchCharacter();
+  }
+};
 
 const copyBusCard = (bus) => {
   // 1. 현재 카드의 내용을 깊은 복사합니다 (멤버 리스트 포함)
@@ -1595,18 +1645,17 @@ const parseGemEffect = (tooltipJson) => {
   }
 }
 
-/* 1. 검색창 스타일 */
-.custom-search-field :deep(.v-field__input) {
-  min-height: 70px !important;
-  padding-top: 0 !important;
-  padding-bottom: 0 !important;
+/* [수정] 검색창 내 버튼 간격 조정 */
+.custom-search-field :deep(.v-field__append-inner) {
   align-items: center;
-  font-size: 0.95rem;
+  padding-top: 0;
+  margin-top: 0;
 }
 
-.custom-search-field :deep(.v-field) {
-  height: 70px !important;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+/* 기존 CSS는 유지하되 검색창 패딩만 살짝 조절 */
+.custom-search-field :deep(.v-field__input) {
+  min-height: 70px !important;
+  padding-left: 16px !important;
 }
 
 /* 2. 스크롤바 스타일 */

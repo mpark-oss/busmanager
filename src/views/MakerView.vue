@@ -657,12 +657,23 @@
                       <v-btn
                         v-bind="props"
                         icon="mdi-content-copy"
-                        size="x-small"
+                        size="small"
                         variant="text"
-                        color="primary"
-                        class="me-1"
+                        color="white"
+                        class="me-2"
                         @click="copyBusCard(bus)"
-                      ></v-btn>
+                      >
+                        <v-icon
+                          size="15"
+                          style="
+                            text-shadow:
+                              0 0 1.5px rgba(var(--v-theme-primary), 0.8),
+                              0 0 1.5px rgba(var(--v-theme-primary), 0.8) !important;
+                          "
+                        >
+                          mdi-content-copy
+                        </v-icon>
+                      </v-btn>
                     </template>
                   </v-tooltip>
                   <v-spacer></v-spacer>

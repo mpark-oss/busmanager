@@ -405,6 +405,22 @@ const myFixedParties = computed(() => {
   );
 });
 
+const sortedFixedParties = computed(() => {
+  return [...myFixedParties.value].sort((a, b) => {
+    const timeA = a.departureTime;
+    const timeB = b.departureTime;
+
+    // 1. '일정미정' 처리 (가장 후순위)
+    if (timeA === "일정미정" && timeB !== "일정미정") return 1;
+    if (timeA !== "일정미정" && timeB === "일정미정") return -1;
+    if (timeA === "일정미정" && timeB === "일정미정") return 0;
+
+    // 2. 날짜 및 시간순 정렬 (ISO 8601 형식 문자열 비교)
+    // "2024-04-10T14:00" 형태이므로 문자열 비교(localeCompare)로 충분합니다.
+    return timeA.localeCompare(timeB);
+  });
+});
+
 const completedCount = computed(
   () => myFixedParties.value.filter((p) => p.isCleared).length,
 );
@@ -450,22 +466,16 @@ const checkWeeklyReset = async (parties) => {
   }
 };
 
+// 레이드별로 그룹화하되, 각 그룹 내 파티들을 시간순으로 정렬
 const groupedParties = computed(() => {
   const groups = {};
 
-  // 내 고정 파티들을 레이드명 기준으로 묶음
-  myFixedParties.value.forEach((party) => {
-    const key = party.raid;
-    if (!groups[key]) groups[key] = [];
-    groups[key].push(party);
-  });
-
-  // 레이드 내에서는 난이도 순(하드 -> 노말)으로 정렬
-  Object.keys(groups).forEach((key) => {
-    groups[key].sort((a, b) => {
-      const diffScore = { 하드: 2, 노말: 1, "3단계": 3 }; // 우선순위
-      return (diffScore[b.difficulty] || 0) - (diffScore[a.difficulty] || 0);
-    });
+  // 정렬된 리스트를 바탕으로 그룹 생성
+  sortedFixedParties.value.forEach((party) => {
+    if (!groups[party.raid]) {
+      groups[party.raid] = [];
+    }
+    groups[party.raid].push(party);
   });
 
   return groups;

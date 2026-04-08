@@ -173,6 +173,8 @@
                   :class="{
                     'today-card': isToday(party.departureTime),
                     'cleared-card': party.isCleared, // CSS 스타일 적용
+                    'highlight-card': activePartyId === party.id, // 하이라이트 클래스
+                    'cleared-card': party.isCleared,
                   }"
                 >
                   <div v-if="party.isCleared" class="cleared-overlay">
@@ -586,6 +588,14 @@ const calendarSchedules = computed(() => {
       if (map[dateKey]) map[dateKey].push(party);
     }
   });
+
+  Object.keys(map).forEach((dateKey) => {
+    map[dateKey].sort((a, b) => {
+      // "2024-04-10T14:00" vs "2024-04-10T09:00"
+      // 문자열 비교만으로도 시간순(오름차순) 정렬이 가능합니다.
+      return a.departureTime.localeCompare(b.departureTime);
+    });
+  });
   return map;
 });
 
@@ -702,9 +712,17 @@ const formatDateTime = (val) => {
 const isToday = (val) =>
   val?.split("T")[0] === new Date().toISOString().split("T")[0];
 
+const activePartyId = ref(null);
+
 const scrollToDetail = (id) => {
   const el = document.getElementById(`party-card-${id}`);
-  if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+  if (el) {
+    // 1. 해당 위치로 스크롤
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+
+    // 2. 하이라이트 ID 설정
+    activePartyId.value = id;
+  }
 };
 
 const getRaidThemeColor = (raidName) => {
@@ -828,6 +846,27 @@ const syncFixedToLocal = (party) => {
 }
 
 /* style scoped 맨 아래 추가 */
+
+.highlight-card {
+  /* 강렬한 테두리 색상과 그림자 */
+  border: 3px solid #ffeb3b !important; /* 노란색 계열 강조 */
+  box-shadow: 0 0 25px rgba(255, 235, 59, 0.6) !important;
+  transform: scale(1.02); /* 아주 살짝 커지는 효과 */
+  z-index: 100;
+  animation: pulse-highlight 1s infinite alternate; /* 깜빡이는 애니메이션 */
+}
+
+/* [추가] 하이라이트 깜빡임 애니메이션 */
+@keyframes pulse-highlight {
+  0% {
+    box-shadow: 0 0 10px rgba(255, 235, 59, 0.4);
+    border-color: #fbc02d;
+  }
+  100% {
+    box-shadow: 0 0 30px rgba(255, 235, 59, 0.8);
+    border-color: #ffeb3b;
+  }
+}
 
 .bus-card {
   position: relative; /* 도장 오버레이 배치를 위해 카드 자체를 기준으로 설정 */

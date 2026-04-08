@@ -1339,31 +1339,30 @@ const isExistingChar = computed(() => {
 });
 
 const rankedCharList = computed(() => {
-  // 1. 전체 명단을 전투력순으로 정렬하여 부동의 TOP 5 추출
+  // 1. [전투력 우선] 전체 명단을 전투력 순으로 정렬 (전투력 상승 시 여기서 순위 변동 발생)
   const powerSorted = [...charList.value].sort((a, b) => {
     const powerA = parseInt(a.combatPower?.replace(/,/g, "") || 0);
     const powerB = parseInt(b.combatPower?.replace(/,/g, "") || 0);
     return powerB - powerA;
   });
 
+  // 2. [TOP 5 확정] 전투력 1~5위 추출
   const top5 = powerSorted.slice(0, 5).map((char, index) => ({
     ...char,
     rank: index + 1,
   }));
   const top5Names = top5.map((c) => c.name);
 
-  // 2. TOP 5를 제외한 나머지 캐릭터들 추출
+  // 3. [6위 이하 최신순] 6위부터는 전투력이 낮더라도 방금 갱신된 캐릭을 먼저 보여줌
   const others = powerSorted.filter((c) => !top5Names.includes(c.name));
 
-  // 🔥 [핵심] 나머지 캐릭터들을 '최신 수정/추가순'으로 재정렬
-  // Firestore의 serverTimestamp를 사용하므로 updatedAt이 있는 경우 이를 비교합니다.
   const timeSortedOthers = others.sort((a, b) => {
     const timeA = a.updatedAt?.seconds || 0;
     const timeB = b.updatedAt?.seconds || 0;
-    return timeB - timeA; // 내림차순 (최신이 위로)
+    return timeB - timeA; // 최신 수정이 위로
   });
 
-  // 3. 검색어가 있을 경우 필터링 적용
+  // 4. [검색 필터링]
   let filteredOthers = timeSortedOthers;
   if (searchName.value) {
     const q = searchName.value.toLowerCase().trim();
@@ -1373,8 +1372,7 @@ const rankedCharList = computed(() => {
     );
   }
 
-  // 4. TOP 5 + 최신순 정렬된 나머지를 합쳐서 반환
-  // 이렇게 하면 6번째 칸(others의 첫 번째)에 방금 추가/갱신한 캐릭이 위치합니다.
+  // 5. 합치기
   return [...top5, ...filteredOthers.map((c) => ({ ...c, rank: 999 }))];
 });
 

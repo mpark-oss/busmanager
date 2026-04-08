@@ -1328,6 +1328,7 @@ import {
   orderBy, // <--- 추가 (이미 있다면 패스)
   where,
   updateDoc,
+  getDocs,
 } from "firebase/firestore";
 
 import { inject } from "vue";
@@ -2471,6 +2472,8 @@ onMounted(async () => {
   });
 
   fetchFixedParties();
+
+  await syncHomeworkWithFixedParties();
 });
 
 // [추가] 캐릭터별 더보기 차감 전 '순수 획득 골드' 계산 (상단 대시보드용)
@@ -2943,6 +2946,68 @@ const updateAllCombatPowers = async () => {
 
     // 기존에 만든 updateCharImage 함수 호출 (내부에 cbPower 갱신 로직 포함됨)
     await updateCharImage(char.name, i);
+  }
+};
+
+const syncHomeworkWithFixedParties = async () => {
+  const main = localStorage.getItem("current_main_name");
+  if (!main) return;
+
+  const storageKey = `hw_chars_${main}`;
+  let localData = JSON.parse(localStorage.getItem(storageKey) || "[]");
+  if (localData.length === 0) return;
+
+  try {
+    // 1. 내가 포함된 모든 고정 파티 정보 가져오기
+    // (내가 owner가 아니더라도 내 캐릭터가 members에 포함된 모든 파티)
+    const myCharNames = localData.map((c) => c.name);
+    const q = query(collection(db, "fixed_parties"));
+    const querySnapshot = await getDocs(q);
+
+    let isModified = false;
+
+    querySnapshot.forEach((doc) => {
+      const party = doc.data();
+
+      // 클리어된 파티만 확인
+      if (party.isCleared) {
+        const raidName = party.raid;
+
+        // 파티 멤버 중 내 캐릭터가 있는지 확인
+        party.members.forEach((member) => {
+          if (myCharNames.includes(member.name)) {
+            const targetChar = localData.find((c) => c.name === member.name);
+
+            if (targetChar && targetChar.settings?.selectedGateIds) {
+              // 해당 레이드의 관문 ID들 필터링
+              const targetGates = targetChar.settings.selectedGateIds.filter(
+                (id) => id.includes(raidName),
+              );
+
+              targetGates.forEach((gateId) => {
+                // 로컬 스토리지에 아직 체크가 안 되어 있다면 추가
+                if (!targetChar.completedTasks.includes(gateId)) {
+                  targetChar.completedTasks.push(gateId);
+                  isModified = true;
+                }
+              });
+            }
+          }
+        });
+      }
+    });
+
+    // 2. 변경사항이 있다면 로컬 스토리지 저장 및 화면 갱신
+    if (isModified) {
+      localStorage.setItem(storageKey, JSON.stringify(localData));
+      // 현재 페이지의 반응형 변수(예: characters) 업데이트
+      if (typeof characters !== "undefined") {
+        characters.value = [...localData];
+      }
+      console.log("고정 공대 클리어 내역이 숙제 관리와 동기화되었습니다.");
+    }
+  } catch (e) {
+    console.error("동기화 오류:", e);
   }
 };
 </script>

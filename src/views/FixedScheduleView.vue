@@ -25,6 +25,9 @@
                   v-for="day in daysOfWeek"
                   :key="day.fullDate"
                   class="calendar-day-column flex-grow-1"
+                  :class="{
+                    'past-day': isPast(day.fullDate) && !isToday(day.fullDate),
+                  }"
                 >
                   <div
                     class="day-header pa-2 text-center font-weight-bold"
@@ -547,25 +550,46 @@ onMounted(() => {
   });
 });
 
-// 달력 및 시간 로직
 const daysOfWeek = computed(() => {
   const days = [];
   const today = new Date();
+
+  // 1. 가장 최근의 수요일 찾기
+  // getDay(): 일(0), 월(1), 화(2), 수(3), 목(4), 금(5), 토(6)
+  const currentDay = today.getDay();
+  const diffToWednesday = currentDay >= 3 ? currentDay - 3 : currentDay + 4;
+
+  const startWednesday = new Date(today);
+  startWednesday.setDate(today.getDate() - diffToWednesday);
+  startWednesday.setHours(0, 0, 0, 0); // 시간 초기화
+
+  // 2. 수요일부터 화요일까지 7일 생성
   for (let i = 0; i < 7; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() + i);
-    const localFullDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const date = new Date(startWednesday);
+    date.setDate(startWednesday.getDate() + i);
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const fullDate = `${year}-${month}-${day}`;
+
+    // 요일 이름 (한글)
+    const dayName = ["일", "월", "화", "수", "목", "금", "토"][date.getDay()];
+
     days.push({
-      fullDate: localFullDate,
-      display: d.toLocaleDateString("ko-KR", {
-        month: "numeric",
-        day: "numeric",
-        weekday: "short",
-      }),
+      display: `${month}/${day} (${dayName})`,
+      fullDate: fullDate,
     });
   }
+
   return days;
 });
+
+const isPast = (dateStr) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return new Date(dateStr) < today;
+};
 
 const getDifficultyColor = (diff) => {
   if (!diff) return "grey";
@@ -943,5 +967,12 @@ const syncFixedToLocal = (party) => {
   opacity: 0.6;
   letter-spacing: 3px;
   white-space: nowrap;
+}
+
+.past-day {
+  background-color: rgba(0, 0, 0, 0.02); /* 배경을 살짝 어둡게 */
+}
+.past-day .day-header {
+  opacity: 0.5; /* 헤더 글자를 흐리게 */
 }
 </style>

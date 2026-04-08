@@ -56,9 +56,6 @@
                         label
                         @click="scrollToDetail(element.id)"
                       >
-                        <v-icon v-if="isOwner(element)" size="10" class="me-1"
-                          >mdi-crown</v-icon
-                        >
                         <v-icon size="15" class="me-1">
                           {{
                             element.isHomework === false
@@ -66,6 +63,19 @@
                               : "mdi-clipboard-check"
                           }}
                         </v-icon>
+
+                        <span
+                          v-if="
+                            element.departureTime &&
+                            element.departureTime.includes('T')
+                          "
+                          class="time-text font-weight-black me-1"
+                        >
+                          {{
+                            element.departureTime.split("T")[1].substring(0, 5)
+                          }}
+                        </span>
+
                         <span class="text-truncate font-weight-black">
                           [{{ element.difficulty[0] }}] {{ element.raid }} |
                           {{ element.title }}
@@ -97,9 +107,6 @@
                         label
                         @click="scrollToDetail(element.id)"
                       >
-                        <v-icon v-if="isOwner(element)" size="10" class="me-1"
-                          >mdi-crown</v-icon
-                        >
                         <v-icon size="15" class="me-1">
                           {{
                             element.isHomework === false

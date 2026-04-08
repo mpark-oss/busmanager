@@ -18,7 +18,9 @@
 
           <v-text-field
             v-model="searchName"
-            :label="isExistingChar ? '검색 OR 추가' : '신규 캐릭터 이름 입력'"
+            :label="
+              isExistingChar ? '캐릭터 추가 / 검색' : '캐릭터 추가 / 검색'
+            "
             :prepend-inner-icon="
               isExistingChar ? 'mdi-magnify' : 'mdi-account-plus'
             "
@@ -33,14 +35,17 @@
             <template v-slot:append-inner>
               <v-fade-transition>
                 <v-btn
-                  v-if="searchName && !isExistingChar"
-                  color="primary"
+                  v-if="searchName"
+                  :color="isExistingChar ? 'success' : 'primary'"
                   variant="flat"
                   size="small"
                   class="font-weight-black rounded-lg"
                   @click="fetchCharacter"
                 >
-                  추가
+                  <v-icon start size="16">
+                    {{ isExistingChar ? "mdi-refresh" : "mdi-plus" }}
+                  </v-icon>
+                  {{ isExistingChar ? "갱신" : "추가" }}
                 </v-btn>
               </v-fade-transition>
             </template>
@@ -1255,6 +1260,7 @@ const confirmAndUpload = async (bus, index) => {
 const fetchCharacter = async () => {
   if (!searchName.value) return;
   isLoading.value = true;
+
   try {
     const url = `https://developer-lostark.game.onstove.com/armories/characters/${encodeURIComponent(searchName.value)}/profiles`;
     const response = await axios.get(url, {
@@ -1263,24 +1269,45 @@ const fetchCharacter = async () => {
         authorization: `bearer ${API_KEY.trim()}`,
       },
     });
+
     const data = response.data;
     if (data && data.CharacterName) {
+      // 1. 이미 리스트에 있는지 확인
       const existingChar = charList.value.find(
         (c) => c.name === data.CharacterName,
       );
-      if (existingChar) await deleteDoc(doc(db, "characters", existingChar.id));
-      await addDoc(collection(db, "characters"), {
+
+      const charData = {
         name: data.CharacterName,
         level: data.ItemAvgLevel,
         job: data.CharacterClassName,
         img: data.CharacterImage,
         combatPower: data.CombatPower,
-        createdAt: new Date(),
-      });
-      searchName.value = "";
+        // 신규 추가일 때만 생성일 저장, 갱신일 때는 업데이트 시간만 기록
+        updatedAt: serverTimestamp(),
+      };
+
+      if (existingChar) {
+        // 🔥 [갱신 로직] 기존 문서 ID를 유지한 채 데이터만 업데이트
+        await setDoc(doc(db, "characters", existingChar.id), charData, {
+          merge: true,
+        });
+        console.log("캐릭터 정보가 최신화되었습니다.");
+      } else {
+        // 🔥 [신규 추가 로직]
+        await addDoc(collection(db, "characters"), {
+          ...charData,
+          createdAt: serverTimestamp(),
+        });
+        console.log("새로운 캐릭터가 명단에 추가되었습니다.");
+      }
+
+      searchName.value = ""; // 입력창 초기화
+    } else {
+      alert("캐릭터 정보를 찾을 수 없습니다. 이름을 확인해주세요.");
     }
   } catch (e) {
-    console.error(e);
+    console.error("API 호출 또는 DB 저장 오류:", e);
   } finally {
     isLoading.value = false;
   }
@@ -1305,43 +1332,49 @@ const addBusSlot = () => {
 };
 
 const isExistingChar = computed(() => {
-  if (!searchName.value) return true;
-  const q = searchName.value.toLowerCase().trim();
-  // 명단 전체(TOP 5 포함)에 이름이 있는지 확인
-  return charList.value.some(
-    (char) => char.name.toLowerCase() === q, // 정확히 일치하는 이름이 있는지 체크 (추가 방지용)
-  );
+  if (!searchName.value) return false;
+  const q = searchName.value.trim();
+  // 정확히 이름이 일치하는 캐릭터가 있는지 확인
+  return charList.value.some((char) => char.name === q);
 });
 
 const rankedCharList = computed(() => {
-  // 1. 전체 명단에서 전투력순으로 정렬
-  const allSorted = [...charList.value].sort((a, b) => {
+  // 1. 전체 명단을 전투력순으로 정렬하여 부동의 TOP 5 추출
+  const powerSorted = [...charList.value].sort((a, b) => {
     const powerA = parseInt(a.combatPower?.replace(/,/g, "") || 0);
     const powerB = parseInt(b.combatPower?.replace(/,/g, "") || 0);
     return powerB - powerA;
   });
 
-  // 2. 부동의 TOP 5 추출 (검색어와 상관없이 항상 노출)
-  const top5 = allSorted.slice(0, 5).map((char, index) => ({
+  const top5 = powerSorted.slice(0, 5).map((char, index) => ({
     ...char,
     rank: index + 1,
   }));
   const top5Names = top5.map((c) => c.name);
 
-  // 3. TOP 5를 제외한 나머지 캐릭터들 중 검색어에 맞는 캐릭터만 필터링
-  const others = allSorted.filter((c) => !top5Names.includes(c.name));
+  // 2. TOP 5를 제외한 나머지 캐릭터들 추출
+  const others = powerSorted.filter((c) => !top5Names.includes(c.name));
 
-  let filteredOthers = others;
+  // 🔥 [핵심] 나머지 캐릭터들을 '최신 수정/추가순'으로 재정렬
+  // Firestore의 serverTimestamp를 사용하므로 updatedAt이 있는 경우 이를 비교합니다.
+  const timeSortedOthers = others.sort((a, b) => {
+    const timeA = a.updatedAt?.seconds || 0;
+    const timeB = b.updatedAt?.seconds || 0;
+    return timeB - timeA; // 내림차순 (최신이 위로)
+  });
+
+  // 3. 검색어가 있을 경우 필터링 적용
+  let filteredOthers = timeSortedOthers;
   if (searchName.value) {
     const q = searchName.value.toLowerCase().trim();
-    filteredOthers = others.filter(
+    filteredOthers = timeSortedOthers.filter(
       (c) =>
         c.name.toLowerCase().includes(q) || c.job.toLowerCase().includes(q),
     );
   }
 
-  // 4. TOP 5 + 필터링된 나머지를 합쳐서 반환
-  // 검색 결과가 있든 없든 상위 5개는 항상 최상단에 유지됩니다.
+  // 4. TOP 5 + 최신순 정렬된 나머지를 합쳐서 반환
+  // 이렇게 하면 6번째 칸(others의 첫 번째)에 방금 추가/갱신한 캐릭이 위치합니다.
   return [...top5, ...filteredOthers.map((c) => ({ ...c, rank: 999 }))];
 });
 

@@ -33,7 +33,9 @@
                     class="day-header pa-2 text-center font-weight-bold"
                     :class="{ 'today-header': isToday(day.fullDate) }"
                   >
-                    {{ day.display }}
+                    <span :class="{ 'today-circle': isToday(day.fullDate) }">
+                      {{ day.display }}
+                    </span>
                   </div>
                   <draggable
                     :list="calendarSchedules[day.fullDate]"
@@ -740,8 +742,15 @@ const formatDateTime = (val) => {
   });
 };
 
-const isToday = (val) =>
-  val?.split("T")[0] === new Date().toISOString().split("T")[0];
+const isToday = (dateStr) => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+
+  // YYYY-MM-DD 형식으로 비교
+  return dateStr === `${year}-${month}-${day}`;
+};
 
 const activePartyId = ref(null);
 
@@ -840,16 +849,14 @@ const syncFixedToLocal = (party) => {
   min-height: 200px;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 .day-header {
   font-size: 0.75rem;
   background: rgba(var(--v-theme-surface-variant), 0.05);
   border-bottom: 1px solid rgba(var(--v-border-color), 0.08);
 }
-.today-header {
-  background: rgba(124, 77, 255, 0.1) !important;
-  color: #7c4dff !important;
-}
+
 .day-dropzone {
   flex-grow: 1;
   min-height: 150px;
@@ -1004,5 +1011,75 @@ const syncFixedToLocal = (party) => {
 [data-theme="dark"] .my-char-orange-highlight .text-caption,
 .v-theme--dark .my-char-orange-highlight .text-caption {
   color: #ffab40 !important; /* 다크모드 가독성을 위한 밝은 오렌지 이름 */
+}
+
+/* 오늘 날짜 컬럼 전체 하이라이트 */
+.today-column {
+  position: relative;
+  /* 라이트 모드에서는 아주 연한 파란색/노란색 배경 */
+  background-color: rgba(var(--v-theme-primary), 0.05) !important;
+  border-left: 1px solid rgba(var(--v-theme-primary), 0.2) !important;
+  border-right: 1px solid rgba(var(--v-theme-primary), 0.2) !important;
+  z-index: 1;
+}
+
+/* 다크모드일 때 오늘 날짜 배경 조금 더 강조 */
+:deep(.v-theme--dark) .today-column {
+  background-color: rgba(0, 229, 255, 0.03) !important;
+}
+
+/* [수정] 부모 헤더가 Flex이므로 absolute는 제거합니다 */
+.today-badge {
+  background: #e65100; /* 진한 오렌지 */
+  color: white;
+  font-size: 0.55rem;
+  font-weight: 900;
+  padding: 1px 6px;
+  border-radius: 4px;
+  line-height: 1.2;
+  /* 위치 관련 absolute/transform 속성은 모두 삭제하세요 */
+}
+
+/* 오늘 날짜 텍스트 강조 */
+.today-header .date-text {
+  color: #e65100;
+  font-size: 1rem; /* 오늘 날짜만 살짝 크게 */
+}
+
+/* 오늘 컬럼 전체 배경 (선택 사항: 더 눈에 띄게 함) */
+.today-column {
+  background-color: rgba(var(--v-theme-primary), 0.03) !important;
+}
+
+/* 다크모드 대응 */
+:deep(.v-theme--dark) .today-badge {
+  background: #ff6d00;
+}
+/* 오늘 날짜 헤더 스타일 */
+.today-header {
+  background-color: #e65100 !important; /* 진한 오렌지 배경 */
+  color: white !important; /* 글자색은 화이트로 대비 */
+  border-radius: 4px 4px 0 0; /* 윗부분만 살짝 라운드 */
+  position: relative;
+}
+
+/* 다크모드일 때 오늘 헤더 */
+:deep(.v-theme--dark) .today-header {
+  background-color: #ff6d00 !important;
+  box-shadow: 0 4px 10px rgba(255, 109, 0, 0.3); /* 은은한 네온 광채 */
+}
+
+.today-circle {
+  background-color: #e65100;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 20px; /* 알약 모양 하이라이트 */
+  display: inline-block;
+  line-height: 1;
+}
+
+:deep(.v-theme--dark) .today-circle {
+  background-color: #ff6d00;
+  box-shadow: 0 0 8px rgba(255, 109, 0, 0.5);
 }
 </style>

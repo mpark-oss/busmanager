@@ -269,7 +269,9 @@
                         variant="tonal"
                         color="primary"
                         @click="openTimePicker(party)"
-                        :disabled="party.isCleared"
+                        :disabled="
+                          party.isCleared || party.departureTime === '일정미정'
+                        "
                       >
                         시간수정
                       </v-btn>

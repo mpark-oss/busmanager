@@ -289,12 +289,10 @@
                         v-for="(member, idx) in party.members"
                         :key="idx"
                         variant="outlined"
-                        class="pa-2 rounded-lg d-flex align-center"
-                        :style="
-                          isMyChar(member.name)
-                            ? 'border: 2px solid #FFB300; background: rgba(255,179,0,0.05)'
-                            : 'border: 1px solid rgba(128,128,128,0.2)'
-                        "
+                        class="pa-2 rounded-lg d-flex align-center member-card"
+                        :class="{
+                          'my-char-orange-highlight': isMyChar(member.name),
+                        }"
                         style="width: calc(50% - 4px); height: 52px"
                       >
                         <v-avatar size="30" class="me-2">
@@ -976,5 +974,35 @@ const syncFixedToLocal = (party) => {
 }
 .past-day .day-header {
   opacity: 0.5; /* 헤더 글자를 흐리게 */
+}
+
+/* 기본 카드 보더 투명도 조절 */
+.member-card {
+  border: 1px solid rgba(128, 128, 128, 0.2) !important;
+  transition: all 0.3s ease-in-out;
+}
+
+/* 🔥 내 캐릭터 강조 (라이트 모드: 진한 오렌지) */
+.my-char-orange-highlight {
+  border: 2px solid #e65100 !important; /* 진한 오렌지 보더 */
+  background-color: rgba(230, 81, 0, 0.08) !important; /* 연한 오렌지 배경 */
+}
+
+.my-char-orange-highlight .text-caption {
+  color: #bf360c !important; /* 이름 텍스트 색상 강조 */
+}
+
+/* 🔥 내 캐릭터 강조 (다크 모드: 네온 오렌지 글로우) */
+/* 현재 사용하시는 theme 변수가 'dark'일 때 적용되도록 설정 */
+[data-theme="dark"] .my-char-orange-highlight,
+.v-theme--dark .my-char-orange-highlight {
+  border: 2px solid #ff6d00 !important; /* 더 밝은 네온 오렌지 */
+  background-color: rgba(255, 109, 0, 0.15) !important;
+  box-shadow: 0 0 12px rgba(255, 109, 0, 0.5) !important; /* 오렌지색 광채 */
+}
+
+[data-theme="dark"] .my-char-orange-highlight .text-caption,
+.v-theme--dark .my-char-orange-highlight .text-caption {
+  color: #ffab40 !important; /* 다크모드 가독성을 위한 밝은 오렌지 이름 */
 }
 </style>

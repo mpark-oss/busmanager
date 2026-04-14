@@ -459,22 +459,40 @@ const checkWeeklyReset = async (parties) => {
       : new Date(party.lastUpdated || 0);
 
     // 🔥 [방어막 2] 방금 막 업데이트된 데이터(예: 1분 이내)는 초기화 대상에서 제외
-    const isJustUpdated = now.getTime() - lastUpdate.getTime() < 60000; // 60초 이내
+    const isJustUpdated = now.getTime() - lastUpdate.getTime() < 60000;
     if (isJustUpdated) continue;
 
-    // 마지막 업데이트가 지난 수요일 06시 이전일 때만 초기화 실행
+    // 마지막 업데이트가 지난 수요일 06시 이전일 때만 초기화/갱신 실행
     if (
       lastUpdate < lastWed &&
       (party.isCleared || party.departureTime !== "일정미정")
     ) {
       try {
+        let nextDepartureTime = "일정미정";
+
+        // ✨ [핵심 수정] 기존 일정이 있다면 7일을 더함
+        if (party.departureTime && party.departureTime.includes("T")) {
+          const prevDate = new Date(party.departureTime);
+          if (!isNaN(prevDate)) {
+            prevDate.setDate(prevDate.getDate() + 7); // 7일 더하기
+
+            // 포맷팅 (YYYY-MM-DDTHH:mm) - 초 단위 제외를 위해 slice(0, 16)
+            nextDepartureTime = prevDate
+              .toISOString()
+              .split(".")[0]
+              .slice(0, 16);
+          }
+        }
+
         await updateDoc(doc(db, "fixed_parties", party.id), {
           isCleared: false,
-          departureTime: "일정미정",
+          departureTime: nextDepartureTime, // "일정미정" 또는 "7일 뒤 시간"
           lastUpdated: serverTimestamp(),
         });
+
+        console.log(`${party.raid} 파티 일정 갱신 완료: ${nextDepartureTime}`);
       } catch (e) {
-        console.error("초기화 오류:", e);
+        console.error("초기화/갱신 오류:", e);
       }
     }
   }

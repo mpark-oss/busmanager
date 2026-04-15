@@ -444,25 +444,25 @@ const checkWeeklyReset = async (parties) => {
   const day = now.getDay();
   const hours = now.getHours();
 
-  // 이번 주 수요일 06시 계산
+  // 1. 이번 주 수요일 06시(초기화 시점) 계산
   const lastWed = new Date(now);
   const diff = day < 3 || (day === 3 && hours < 6) ? day + 4 : day - 3;
   lastWed.setDate(now.getDate() - diff);
   lastWed.setHours(6, 0, 0, 0);
 
   for (const party of parties) {
-    // 🔥 [방어막 1] lastUpdated가 null이면 서버에서 시간을 찍는 중이므로 초기화 패스
+    // 🔥 [방어막 1] DB 업데이트 중인 데이터는 건너뜀
     if (!party.lastUpdated) continue;
 
     const lastUpdate = party.lastUpdated?.toDate
       ? party.lastUpdated.toDate()
       : new Date(party.lastUpdated || 0);
 
-    // 🔥 [방어막 2] 방금 막 업데이트된 데이터(예: 1분 이내)는 초기화 대상에서 제외
+    // 🔥 [방어막 2] 방금 막 수정한 데이터(60초 이내)는 초기화 방지
     const isJustUpdated = now.getTime() - lastUpdate.getTime() < 60000;
     if (isJustUpdated) continue;
 
-    // 마지막 업데이트가 지난 수요일 06시 이전일 때만 초기화/갱신 실행
+    // 2. 마지막 업데이트가 지난 수요일 06시 이전이라면 (즉, 지난주 데이터라면)
     if (
       lastUpdate < lastWed &&
       (party.isCleared || party.departureTime !== "일정미정")
@@ -470,29 +470,39 @@ const checkWeeklyReset = async (parties) => {
       try {
         let nextDepartureTime = "일정미정";
 
-        // ✨ [핵심 수정] 기존 일정이 있다면 7일을 더함
+        // 3. 기존 일정이 있을 경우 7일 더하기 로직
         if (party.departureTime && party.departureTime.includes("T")) {
           const prevDate = new Date(party.departureTime);
-          if (!isNaN(prevDate)) {
-            prevDate.setDate(prevDate.getDate() + 7); // 7일 더하기
 
-            // 포맷팅 (YYYY-MM-DDTHH:mm) - 초 단위 제외를 위해 slice(0, 16)
-            nextDepartureTime = prevDate
-              .toISOString()
-              .split(".")[0]
-              .slice(0, 16);
+          if (!isNaN(prevDate)) {
+            // [핵심] 로컬 시간 기준으로 7일 더하기
+            prevDate.setDate(prevDate.getDate() + 7);
+
+            // [toISOString 버그 해결]
+            // 한국 시간대(+9시간)만큼 오프셋을 강제로 더해준 뒤
+            // ISO 변환을 해야 T 앞뒤 날짜/시간이 한국 기준 그대로 유지됩니다.
+            const offset = prevDate.getTimezoneOffset() * 60000; // 분 단위를 밀리초로
+            const localISOTime = new Date(
+              prevDate.getTime() - offset,
+            ).toISOString();
+
+            // "YYYY-MM-DDTHH:mm" 형식 추출
+            nextDepartureTime = localISOTime.slice(0, 16);
           }
         }
 
+        // 4. Firestore 업데이트 실행
         await updateDoc(doc(db, "fixed_parties", party.id), {
           isCleared: false,
-          departureTime: nextDepartureTime, // "일정미정" 또는 "7일 뒤 시간"
+          departureTime: nextDepartureTime, // 7일 연장된 시간 또는 일정미정
           lastUpdated: serverTimestamp(),
         });
 
-        console.log(`${party.raid} 파티 일정 갱신 완료: ${nextDepartureTime}`);
+        console.log(
+          `[초기화 완료] ${party.raid} (${party.title}): 차주 일치 ${nextDepartureTime}로 갱신`,
+        );
       } catch (e) {
-        console.error("초기화/갱신 오류:", e);
+        console.error("고정 스케줄 주간 초기화 처리 중 오류:", e);
       }
     }
   }

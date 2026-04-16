@@ -1228,7 +1228,6 @@ const confirmAndUpload = async (bus, index) => {
       await setDoc(doc(db, "fixed_parties", fixedPartyId), fixedPartyData, {
         merge: true,
       });
-      alert("📅 고정 공격대 스케줄 저장 완료");
     } else {
       // --- [일반 일회성 스케줄 로직] ---
       const scheduleData = {
@@ -1245,7 +1244,6 @@ const confirmAndUpload = async (bus, index) => {
 
       const targetCol = bus.isHomework ? "homeworks" : "schedules";
       await addDoc(collection(db, targetCol), scheduleData);
-      alert("🚀 일반 레이드 스케줄 저장 완료.");
     }
 
     localBuses.value.splice(index, 1);

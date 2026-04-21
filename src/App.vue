@@ -275,7 +275,7 @@
             <div class="mb-6">
               <div class="d-flex align-center mb-3">
                 <v-icon color="orange-darken-2" size="small" class="me-2"
-                  >mdi-portal</v-icon
+                  >mdi-door</v-icon
                 >
                 <span class="text-subtitle-2 font-weight-black"
                   >오늘의 카오스 게이트</span

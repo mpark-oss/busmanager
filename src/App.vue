@@ -244,6 +244,275 @@
           </v-btn>
         </v-bottom-navigation>
 
+        <v-navigation-drawer
+          v-if="isLoggedIn && !isMobileMode"
+          v-model="eventDrawer"
+          location="right"
+          :rail="eventRail"
+          permanent
+          @click="eventRail = false"
+          width="280"
+          elevation="5"
+          border
+          class="event-toolbar"
+        >
+          <v-list-item nav class="px-2 py-3">
+            <template v-slot:prepend>
+              <v-btn
+                variant="text"
+                :icon="eventRail ? 'mdi-chevron-left' : 'mdi-chevron-right'"
+                @click.stop="eventRail = !eventRail"
+              ></v-btn>
+            </template>
+            <v-list-item-title class="font-weight-black"
+              >일일 콘텐츠</v-list-item-title
+            >
+          </v-list-item>
+
+          <v-divider></v-divider>
+
+          <div v-if="!eventRail" class="pa-4">
+            <div class="mb-6">
+              <div class="d-flex align-center mb-3">
+                <v-icon color="orange-darken-2" size="small" class="me-2"
+                  >mdi-portal</v-icon
+                >
+                <span class="text-subtitle-2 font-weight-black"
+                  >오늘의 카오스 게이트</span
+                >
+              </div>
+
+              <div v-if="todayEvents.chaosGate.length > 0">
+                <v-card
+                  v-for="cg in todayEvents.chaosGate"
+                  :key="cg.name"
+                  variant="tonal"
+                  class="pa-2 rounded-lg border-0 position-relative"
+                  :color="
+                    clearedEvents.chaosGate
+                      ? 'grey-darken-3'
+                      : 'orange-darken-4'
+                  "
+                  :style="{ opacity: clearedEvents.chaosGate ? 0.6 : 1 }"
+                >
+                  <div v-if="clearedEvents.chaosGate" class="success-stamp">
+                    SUCCESS
+                  </div>
+
+                  <div class="d-flex align-center">
+                    <v-avatar
+                      size="32"
+                      class="me-2 border"
+                      :style="{
+                        filter: clearedEvents.chaosGate
+                          ? 'grayscale(1)'
+                          : 'none',
+                      }"
+                    >
+                      <v-img :src="cg.icon"></v-img>
+                    </v-avatar>
+                    <div class="overflow-hidden flex-grow-1">
+                      <div class="text-caption font-weight-bold text-truncate">
+                        {{ cg.name }}
+                      </div>
+                      <div
+                        class="text-caption text-orange-darken-2 font-weight-black"
+                      >
+                        ⏰ {{ cg.time }}
+                      </div>
+                    </div>
+                    <v-btn
+                      size="x-small"
+                      variant="flat"
+                      class="ms-2"
+                      :color="
+                        clearedEvents.chaosGate ? 'grey' : 'orange-darken-2'
+                      "
+                      @click.stop="toggleEventClear('chaosGate')"
+                    >
+                      {{ clearedEvents.chaosGate ? "UNDO" : "DONE" }}
+                    </v-btn>
+                  </div>
+                </v-card>
+              </div>
+              <div v-else class="text-caption text-disabled ps-7">
+                오늘은 열리지 않습니다.
+              </div>
+            </div>
+
+            <div class="mb-6">
+              <div class="d-flex align-center mb-3">
+                <v-icon color="red-darken-2" size="small" class="me-2"
+                  >mdi-skull</v-icon
+                >
+                <span class="text-subtitle-2 font-weight-black"
+                  >오늘의 필드 보스</span
+                >
+              </div>
+
+              <div v-if="todayEvents.fieldBoss.length > 0">
+                <v-card
+                  v-for="fb in todayEvents.fieldBoss"
+                  :key="fb.name"
+                  variant="tonal"
+                  class="pa-2 rounded-lg border-0 position-relative"
+                  :color="
+                    clearedEvents.fieldBoss ? 'grey-darken-3' : 'red-darken-4'
+                  "
+                  :style="{ opacity: clearedEvents.fieldBoss ? 0.6 : 1 }"
+                >
+                  <div v-if="clearedEvents.fieldBoss" class="success-stamp red">
+                    SUCCESS
+                  </div>
+
+                  <div class="d-flex align-center">
+                    <v-avatar
+                      size="32"
+                      class="me-2 border"
+                      :style="{
+                        filter: clearedEvents.fieldBoss
+                          ? 'grayscale(1)'
+                          : 'none',
+                      }"
+                    >
+                      <v-img :src="fb.icon"></v-img>
+                    </v-avatar>
+                    <div class="overflow-hidden flex-grow-1">
+                      <div class="text-caption font-weight-bold text-truncate">
+                        {{ fb.name }}
+                      </div>
+                      <div
+                        class="text-caption text-red-darken-2 font-weight-black"
+                      >
+                        ⏰ {{ fb.time }}
+                      </div>
+                    </div>
+                    <v-btn
+                      size="x-small"
+                      variant="flat"
+                      class="ms-2"
+                      :color="clearedEvents.fieldBoss ? 'grey' : 'red-darken-2'"
+                      @click.stop="toggleEventClear('fieldBoss')"
+                    >
+                      {{ clearedEvents.fieldBoss ? "UNDO" : "DONE" }}
+                    </v-btn>
+                  </div>
+                </v-card>
+              </div>
+              <div v-else class="text-caption text-disabled ps-7">
+                오늘은 등장하지 않습니다.
+              </div>
+            </div>
+
+            <div class="mt-4">
+              <div class="d-flex align-center mb-3">
+                <v-icon color="blue-darken-2" size="small" class="me-2"
+                  >mdi-island</v-icon
+                >
+                <span class="text-subtitle-2 font-weight-black"
+                  >오늘의 모험 섬</span
+                >
+              </div>
+
+              <div v-if="todayEvents.islands.length > 0">
+                <v-card
+                  v-for="island in todayEvents.islands"
+                  :key="island.name"
+                  variant="tonal"
+                  class="mb-3 pa-2 rounded-lg border-0 position-relative"
+                  :color="
+                    clearedEvents.islands[island.name]
+                      ? 'grey-darken-3'
+                      : 'blue-darken-4'
+                  "
+                  :style="{
+                    opacity: clearedEvents.islands[island.name] ? 0.6 : 1,
+                  }"
+                >
+                  <div
+                    v-if="clearedEvents.islands[island.name]"
+                    class="success-stamp blue"
+                  >
+                    SUCCESS
+                  </div>
+
+                  <div class="d-flex align-center">
+                    <div
+                      class="position-relative me-2"
+                      :style="{
+                        filter: clearedEvents.islands[island.name]
+                          ? 'grayscale(1)'
+                          : 'none',
+                      }"
+                    >
+                      <v-avatar size="32" class="border">
+                        <v-img :src="island.icon"></v-img>
+                      </v-avatar>
+                      <v-avatar
+                        v-if="island.hasGold"
+                        size="16"
+                        class="position-absolute"
+                        style="
+                          bottom: -2px;
+                          right: -2px;
+                          background: rgba(0, 0, 0, 0.6);
+                          border: 1px solid #ffd700;
+                        "
+                      >
+                        <v-img :src="island.goldIcon"></v-img>
+                      </v-avatar>
+                    </div>
+                    <div class="overflow-hidden flex-grow-1">
+                      <div class="d-flex align-center">
+                        <span
+                          class="text-caption font-weight-bold text-truncate"
+                          >{{ island.name }}</span
+                        >
+                        <v-chip
+                          v-if="island.hasGold"
+                          size="x-small"
+                          color="warning"
+                          variant="flat"
+                          class="ms-1"
+                          style="height: 14px; font-size: 8px"
+                          >GOLD</v-chip
+                        >
+                      </div>
+                      <div
+                        class="text-caption text-blue-darken-2 font-weight-black"
+                      >
+                        ⏰ {{ island.time }}
+                      </div>
+                    </div>
+                    <v-btn
+                      size="x-small"
+                      variant="flat"
+                      class="ms-2"
+                      :color="
+                        clearedEvents.islands[island.name]
+                          ? 'grey'
+                          : 'blue-darken-2'
+                      "
+                      @click.stop="toggleEventClear('island', island.name)"
+                    >
+                      {{ clearedEvents.islands[island.name] ? "UNDO" : "DONE" }}
+                    </v-btn>
+                  </div>
+                </v-card>
+              </div>
+              <div v-else class="text-caption text-disabled ps-7">
+                오늘 남은 일정이 없습니다.
+              </div>
+            </div>
+          </div>
+
+          <v-list v-else nav class="d-flex flex-column align-center pt-4">
+            <v-icon color="orange-darken-2" class="mb-6">mdi-portal</v-icon>
+            <v-icon color="red-darken-2" class="mb-6">mdi-skull</v-icon>
+            <v-icon color="blue-darken-2">mdi-island</v-icon>
+          </v-list>
+        </v-navigation-drawer>
+
         <v-main>
           <router-view></router-view>
 
@@ -381,6 +650,101 @@ const topRosterMembers = ref([]);
 const topRosterCount = ref(0);
 const showFab = ref(false);
 
+// [추가] <script setup> 내부에 삽입
+const eventDrawer = ref(true);
+const eventRail = ref(true);
+const todayEvents = ref({ chaosGate: [], fieldBoss: [], islands: [] });
+// 완료 상태 관리 (로컬 스토리지와 동기화됨)
+const clearedEvents = ref({
+  chaosGate: false,
+  fieldBoss: false,
+  islands: {}, // { "포르페": true, "무릉도원": false } 식으로 저장
+});
+
+const fetchLostArkCalendar = async () => {
+  if (!API_KEY) return;
+  try {
+    const res = await axios.get(
+      "https://developer-lostark.game.onstove.com/gamecontents/calendar",
+      {
+        headers: { Authorization: `bearer ${API_KEY.trim()}` },
+      },
+    );
+
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const date = String(now.getDate()).padStart(2, "0");
+    const todayStr = `${year}-${month}-${date}`;
+
+    console.log("todayStr ::: ", todayStr);
+    console.log("res.data", res.data);
+
+    // 1. 카오스 게이트
+    const chaosGateData = res.data.find(
+      (i) =>
+        i.CategoryName === "카오스게이트" || i.CategoryName === "카오스 게이트",
+    );
+    if (chaosGateData) {
+      const futureTimes = chaosGateData.StartTimes.filter(
+        (t) => t.startsWith(todayStr) && new Date(t) > now,
+      );
+      todayEvents.value.chaosGate =
+        futureTimes.length > 0
+          ? [
+              {
+                name: chaosGateData.ContentsName,
+                icon: chaosGateData.ContentsIcon,
+                time: futureTimes[0].split("T")[1].substring(0, 5),
+              },
+            ]
+          : [];
+    }
+
+    // 2. 필드 보스 (아이콘 추가)
+    const fieldBossData = res.data.find((i) => i.CategoryName === "필드보스");
+    if (fieldBossData) {
+      const futureTimes = fieldBossData.StartTimes.filter(
+        (t) => t.startsWith(todayStr) && new Date(t) > now,
+      );
+      todayEvents.value.fieldBoss =
+        futureTimes.length > 0
+          ? [
+              {
+                name: fieldBossData.ContentsName,
+                icon: fieldBossData.ContentsIcon,
+                time: futureTimes[0].split("T")[1].substring(0, 5),
+              },
+            ]
+          : [];
+    }
+
+    const islandsData = res.data.filter((i) => i.CategoryName === "모험 섬");
+    todayEvents.value.islands = islandsData
+      .map((i) => {
+        const futureTimes = i.StartTimes.filter(
+          (t) => t.startsWith(todayStr) && new Date(t) > now,
+        ).map((t) => t.split("T")[1].substring(0, 5));
+
+        // 보상 목록에서 "골드" 아이템 찾기
+        const goldReward = i.RewardItems[0]?.Items.find(
+          (item) => item.Name === "골드",
+        );
+
+        return {
+          name: i.ContentsName,
+          icon: i.ContentsIcon,
+          time: futureTimes.length > 0 ? futureTimes[0] : null,
+          hasGold: !!goldReward, // 골드 보상 존재 여부 (boolean)
+          goldIcon: goldReward ? goldReward.Icon : null, // 골드 아이콘 URL
+        };
+      })
+      .filter((island) => island.time !== null);
+  } catch (error) {
+    console.error("캘린더 데이터 호출 실패:", error);
+  }
+};
+
 // App.vue 스크립트 부분
 //const MY_GUILD_ID = "1376571141556277380"; // "1295559813001908301"
 
@@ -502,7 +866,54 @@ onMounted(async () => {
 
   checkWeeklyReset();
   window.addEventListener("scroll", handleScroll);
+
+  loadDailyStatus();
+
+  if (isLoggedIn.value) {
+    fetchLostArkCalendar();
+  }
 });
+
+const loadDailyStatus = () => {
+  const saved = localStorage.getItem("lostark_daily_clears");
+  const lastUpdate = localStorage.getItem("lostark_daily_last_date");
+
+  if (saved && lastUpdate) {
+    const now = new Date();
+
+    // 로아 기준 '오늘'의 시작 시간(오전 6시)을 구하는 로직
+    const getStandardTime = (date) => {
+      const d = new Date(date);
+      if (d.getHours() < 6) d.setDate(d.getDate() - 1); // 6시 전이면 어제로 취급
+      d.setHours(6, 0, 0, 0);
+      return d.getTime();
+    };
+
+    // 저장된 날짜와 현재 날짜의 '6시 기준 시점'이 다르면 초기화
+    if (getStandardTime(now) !== getStandardTime(new Date(lastUpdate))) {
+      clearedEvents.value = { chaosGate: false, fieldBoss: false, islands: {} };
+      localStorage.removeItem("lostark_daily_clears");
+    } else {
+      clearedEvents.value = JSON.parse(saved);
+    }
+  }
+};
+
+// 상태 변경 시 저장하는 함수
+const toggleEventClear = (type, islandName = null) => {
+  if (type === "island") {
+    clearedEvents.value.islands[islandName] =
+      !clearedEvents.value.islands[islandName];
+  } else {
+    clearedEvents.value[type] = !clearedEvents.value[type];
+  }
+
+  localStorage.setItem(
+    "lostark_daily_clears",
+    JSON.stringify(clearedEvents.value),
+  );
+  localStorage.setItem("lostark_daily_last_date", new Date().toISOString());
+};
 
 const setupFirestoreSnapshots = () => {
   // 빌런 추적
@@ -544,6 +955,7 @@ const setupFirestoreSnapshots = () => {
       });
     }
   });
+  fetchLostArkCalendar();
 };
 
 // --- 나머지 기존 함수들 (변경 없음) ---
@@ -725,5 +1137,46 @@ body {
   align-items: center;
   justify-content: center;
   background-color: #121212; /* 배경을 다크하게 잡아주면 더 자연스럽습니다 */
+}
+
+/* [추가] <style> 태그 하단 */
+.event-toolbar {
+  z-index: 1000 !important; /* AppBar보다 아래, Content보다 위 */
+}
+
+.v-theme--dark .event-toolbar {
+  background-color: #111111 !important;
+}
+
+.event-toolbar :deep(.v-navigation-drawer__content) {
+  overflow-x: hidden;
+}
+
+/* 접혔을 때 아이콘 정렬 간격 */
+.v-navigation-drawer--rail .v-list-item {
+  justify-content: center !important;
+}
+
+/* 도장 스타일 */
+.success-stamp {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-15deg);
+  border: 2px solid #ff5252;
+  color: #ff5252;
+  font-size: 1.2rem;
+  font-weight: 900;
+  padding: 0px 6px;
+  border-radius: 4px;
+  z-index: 10;
+  pointer-events: none; /* 버튼 클릭 방해 금지 */
+  letter-spacing: 1px;
+  opacity: 0.9;
+}
+
+/* 흑백 처리 로직 */
+.v-card[color="grey-darken-3"] {
+  filter: grayscale(0.8);
 }
 </style>

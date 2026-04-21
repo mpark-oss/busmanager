@@ -677,9 +677,6 @@ const fetchLostArkCalendar = async () => {
     const date = String(now.getDate()).padStart(2, "0");
     const todayStr = `${year}-${month}-${date}`;
 
-    console.log("todayStr ::: ", todayStr);
-    console.log("res.data", res.data);
-
     // 1. 카오스 게이트
     const chaosGateData = res.data.find(
       (i) =>

@@ -1309,6 +1309,86 @@
         </v-card-text>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="extremeModal" max-width="450" persistent>
+      <v-card class="rounded-xl overflow-hidden shadow-24" border="sm">
+        <v-img
+          height="220"
+          src="/extreme_img.png"
+          cover
+          class="align-end text-white"
+        >
+          <v-card-title
+            class="font-weight-black pb-4"
+            style="text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8)"
+          >
+          </v-card-title>
+        </v-img>
+
+        <v-card-text class="pa-6">
+          <div class="d-flex align-center mb-4">
+            <v-avatar size="48" color="orange-darken-4" class="me-3 shadow-lg">
+              <v-icon color="white">mdi-sword-cross</v-icon>
+            </v-avatar>
+            <div>
+              <div class="text-h6 font-weight-black">
+                {{ currentExtremeEvent?.name }}
+              </div>
+              <div class="text-caption text-orange-darken-2 font-weight-bold">
+                원정대 통합 주간 1회 보상
+              </div>
+            </div>
+          </div>
+
+          <v-sheet color="grey-lighten-4" class="pa-4 rounded-lg border mb-4">
+            <div class="d-flex justify-space-between align-center mb-1">
+              <span class="text-body-2">입장 가능 난이도</span>
+              <v-chip
+                color="orange-darken-4"
+                size="small"
+                variant="flat"
+                class="font-weight-black"
+              >
+                {{ recommendedDifficulty?.name }}
+              </v-chip>
+            </div>
+            <div class="d-flex justify-space-between align-center">
+              <span class="text-body-2">클리어 골드 보상</span>
+              <span class="text-h6 font-weight-black text-orange-darken-3">
+                {{ recommendedDifficulty?.gold.toLocaleString() }} G
+              </span>
+            </div>
+          </v-sheet>
+        </v-card-text>
+
+        <v-divider></v-divider>
+
+        <v-card-actions class="pa-4 bg-grey-lighten-5">
+          <v-btn
+            variant="text"
+            color="grey-darken-1"
+            size="small"
+            @click="hideExtremeModalForWeek"
+          >
+            이번 주 안 보기
+          </v-btn>
+
+          <v-spacer></v-spacer>
+
+          <v-btn variant="text" color="grey" @click="extremeModal = false"
+            >닫기</v-btn
+          >
+
+          <v-btn
+            color="orange-darken-4"
+            variant="elevated"
+            class="px-6 font-weight-black"
+            @click="handleExtremeClear"
+          >
+            클리어 완료
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -1364,6 +1444,137 @@ const allSchedules = ref([]);
 const scheduleDialog = ref(false);
 const activeCharName = ref("");
 const activeSchedules = ref([]);
+
+// 1. 상세 난이도 및 보상 정보 정의
+const EXTREME_DIFFICULTIES = [
+  { id: "nightmare", name: "나이트메어", level: 1770, gold: 45000 },
+  { id: "hard", name: "하드", level: 1750, gold: 45000 },
+  { id: "normal", name: "노멀", level: 1720, gold: 20000 },
+];
+
+const EXTREME_EVENTS = [
+  {
+    id: "extreme_aegir",
+    name: "1막: 에기르 [Extreme]",
+    startDate: "2026-04-22T10:00:00",
+    endDate: "2026-05-20T06:00:00",
+    color: "#FFD700",
+  },
+  {
+    id: "extreme_brel",
+    name: "2막: 아브렐슈드 [Extreme]",
+    startDate: "2026-05-20T06:00:00",
+    endDate: "2026-06-17T06:00:00",
+    color: "#7B1FA2",
+  },
+];
+
+// [수정] 1. 테스트 날짜를 상수로 고정하여 리렌더링 시 오차 방지
+const TEST_NOW = new Date();
+
+const currentExtremeEvent = computed(() => {
+  return EXTREME_EVENTS.find((event) => {
+    const start = new Date(event.startDate);
+    const end = new Date(event.endDate);
+    return TEST_NOW >= start && TEST_NOW < end;
+  });
+});
+
+// [수정] 데이터가 출렁여도 마지막 값을 꽉 잡고 있는 변수
+const stableMaxLevel = ref(0);
+
+const recommendedDifficulty = computed(() => {
+  const mainName = localStorage.getItem("current_main_name");
+  if (!mainName) return null;
+
+  // 1. 우선순위: 로컬 스토리지를 "기준점"으로 삼습니다. (메모리는 계속 변하기 때문)
+  const storageKey = `hw_chars_${mainName}`;
+  const saved = JSON.parse(localStorage.getItem(storageKey) || "[]");
+
+  // 2. 로컬 데이터가 있다면 거기서 먼저 레벨을 뽑습니다.
+  if (saved.length > 0) {
+    const levels = saved.map(
+      (c) => parseFloat(String(c.level || "0").replace(/,/g, "")) || 0,
+    );
+    const maxL = Math.max(...levels);
+    if (maxL >= 1720) stableMaxLevel.value = maxL;
+  }
+
+  // 3. 만약 메모리(characters.value)에 데이터가 "완성"된 상태라면 그것으로 업데이트합니다.
+  if (characters.value && characters.value.length > 0 && !isFetching.value) {
+    const memLevels = characters.value.map(
+      (c) => parseFloat(String(c.level || "0").replace(/,/g, "")) || 0,
+    );
+    const memMax = Math.max(...memLevels);
+    if (memMax >= 1720) stableMaxLevel.value = memMax;
+  }
+
+  // 4. 최종 결정
+  if (stableMaxLevel.value < 1720) return null;
+  return (
+    EXTREME_DIFFICULTIES.find((diff) => stableMaxLevel.value >= diff.level) ||
+    null
+  );
+});
+
+console.log("currentExtremeEvent", currentExtremeEvent);
+console.log("recommendedDifficulty", recommendedDifficulty);
+
+// 1. 팝업 노출 여부 제어 변수
+const extremeModal = ref(false);
+
+// 2. '이번 주 안 보기' 키 생성
+const getExtremeHideKey = () => {
+  const weekId = getExtremeClearKey().replace("extreme_clear_", "");
+  return `extreme_hide_${weekId}`;
+};
+
+// 3. 팝업을 띄울지 말지 결정하는 로직
+const checkExtremeModal = () => {
+  // 이미 클리어했거나, '이번 주 안 보기'를 눌렀다면 띄우지 않음
+  const isHide = localStorage.getItem(getExtremeHideKey()) === "true";
+
+  if (currentExtremeEvent.value && recommendedDifficulty.value) {
+    if (!isExtremeCleared.value && !isHide) {
+      extremeModal.value = true;
+    }
+  }
+};
+
+// 4. '이번 주 안 보기' 처리
+const hideExtremeModalForWeek = () => {
+  localStorage.setItem(getExtremeHideKey(), "true");
+  extremeModal.value = false;
+};
+
+const handleExtremeClear = () => {
+  // 클리어 상태를 true로 변경하고 로컬 스토리지에 저장
+  isExtremeCleared.value = true;
+  localStorage.setItem(getExtremeClearKey(), "true");
+
+  // 팝업 닫기
+  extremeModal.value = false;
+};
+
+// 4. 클리어 키 생성 (기존과 동일)
+const getExtremeClearKey = () => {
+  const now = new Date();
+  const day = now.getDay();
+  const diff = day >= 3 && now.getHours() >= 6 ? day - 3 : day + 4;
+  const lastWed = new Date(now);
+  lastWed.setDate(now.getDate() - diff);
+  return `extreme_clear_${lastWed.toISOString().split("T")[0]}`;
+};
+
+// 클리어 여부 관리
+const isExtremeCleared = ref(
+  localStorage.getItem(getExtremeClearKey()) === "true",
+);
+
+const toggleExtremeClear = () => {
+  isExtremeCleared.value = !isExtremeCleared.value;
+  localStorage.setItem(getExtremeClearKey(), isExtremeCleared.value);
+};
 
 const checkAndResetWeekly = async (parties) => {
   const now = new Date();
@@ -1723,6 +1934,16 @@ const raidList = [
     gates: [
       { g: 1, gold: 1900, moreGold: 310 },
       { g: 2, gold: 4200, moreGold: 700 },
+    ],
+  },
+  {
+    group: "에픽",
+    name: "에픽: 베히모스(노말)",
+    level: 1640,
+    gold: 3600,
+    gates: [
+      { g: 1, gold: 1100, moreGold: 720 },
+      { g: 2, gold: 2500, moreGold: 1630 },
     ],
   },
 ];
@@ -2139,10 +2360,24 @@ const handleDailyCheck = (char, taskId) => {
   saveToLocal(); // 변경사항 저장
 };
 
-const getTotalGold = () =>
-  characters.value
+const getTotalGold = () => {
+  // 기존 6캐릭 골드 계산 [cite: 147]
+  let baseGold = characters.value
     .filter((c) => c.isGoldCharacter)
     .reduce((sum, char) => sum + getCharGold(char), 0);
+
+  // 이벤트 골드 합산 [cite: 148, 149]
+  let eventGold = 0;
+  if (
+    currentExtremeEvent.value &&
+    recommendedDifficulty.value &&
+    isExtremeCleared.value // 이 값이 true일 때만 합산됨
+  ) {
+    eventGold = recommendedDifficulty.value.gold;
+  }
+
+  return baseGold + eventGold;
+};
 
 const deleteCharacter = (name) => {
   if (confirm(`${name} 삭제?`)) {
@@ -2474,6 +2709,10 @@ onMounted(async () => {
   fetchFixedParties();
 
   await syncHomeworkWithFixedParties();
+
+  setTimeout(() => {
+    checkExtremeModal();
+  }, 2500); // API 로딩 시간을 고려한 여유 시간
 });
 
 // [추가] 캐릭터별 더보기 차감 전 '순수 획득 골드' 계산 (상단 대시보드용)
@@ -2505,7 +2744,20 @@ const getCharGrossGold = (char) => {
 
 const getTotalGrossGold = () => {
   if (!characters.value.length) return 0;
-  return characters.value.reduce((sum, c) => sum + getCharGold(c), 0);
+
+  // 1. 기존 캐릭터별 골드 수익 합산
+  let total = characters.value.reduce((sum, c) => sum + getCharGold(c), 0);
+
+  // 2. 익스트림 이벤트 골드 조건부 합산
+  if (
+    currentExtremeEvent.value &&
+    recommendedDifficulty.value &&
+    isExtremeCleared.value
+  ) {
+    total += recommendedDifficulty.value.gold;
+  }
+
+  return total;
 };
 
 // [신규] 특정 관문이 골드 보상 대상으로 선택되었는지 확인 (UI 아이콘 색상 결정)
@@ -3348,5 +3600,72 @@ const syncHomeworkWithFixedParties = async () => {
   opacity: 0.6;
   letter-spacing: 3px;
   white-space: nowrap;
+}
+
+/* 배너 배경 그라데이션 애니메이션 */
+.extreme-banner {
+  background: linear-gradient(-45deg, #1a237e, #4a148c, #880e4f, #01579b);
+  background-size: 400% 400%;
+  animation: gradientBG 15s ease infinite;
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+@keyframes gradientBG {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.banner-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url("https://www.transparenttextures.com/patterns/carbon-fibre.png");
+  opacity: 0.1;
+  pointer-events: none;
+}
+
+/* 클리어 도장 스타일 */
+.extreme-success-stamp {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-10deg);
+  border: 8px solid rgba(255, 215, 0, 0.7);
+  color: rgba(255, 215, 0, 0.7);
+  font-size: 4rem;
+  font-weight: 900;
+  padding: 10px 40px;
+  border-radius: 20px;
+  z-index: 10;
+  pointer-events: none;
+  text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5);
+  letter-spacing: 5px;
+}
+
+.cleared-btn-text {
+  color: #4a148c !important;
+}
+
+.event-avatar {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(5px);
+}
+
+.clear-btn {
+  transition: all 0.3s ease;
+}
+
+.clear-btn:hover {
+  transform: scale(1.05);
 }
 </style>

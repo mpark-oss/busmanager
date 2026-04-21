@@ -698,22 +698,30 @@ const fetchLostArkCalendar = async () => {
           : [];
     }
 
-    // 2. 필드 보스 (아이콘 추가)
     const fieldBossData = res.data.find((i) => i.CategoryName === "필드보스");
     if (fieldBossData) {
-      const futureTimes = fieldBossData.StartTimes.filter(
-        (t) => t.startsWith(todayStr) && new Date(t) > now,
-      );
-      todayEvents.value.fieldBoss =
-        futureTimes.length > 0
-          ? [
-              {
-                name: fieldBossData.ContentsName,
-                icon: fieldBossData.ContentsIcon,
-                time: futureTimes[0].split("T")[1].substring(0, 5),
-              },
-            ]
-          : [];
+      // 보정된 시간을 기준으로 필터링하기 위해 filter 로직 수정
+      const futureTimes = fieldBossData.StartTimes.filter((t) => {
+        const startTime = new Date(t);
+        startTime.setMinutes(startTime.getMinutes() + 3); // 3분 더함
+        return t.startsWith(todayStr) && startTime > now;
+      });
+
+      if (futureTimes.length > 0) {
+        const correctedTime = new Date(futureTimes[0]);
+        correctedTime.setMinutes(correctedTime.getMinutes() + 3);
+
+        todayEvents.value.fieldBoss = [
+          {
+            name: fieldBossData.ContentsName,
+            icon: fieldBossData.ContentsIcon,
+            // 3분이 더해진 시간으로 표시 (예: 21:00 -> 21:03)
+            time: correctedTime.toTimeString().substring(0, 5),
+          },
+        ];
+      } else {
+        todayEvents.value.fieldBoss = [];
+      }
     }
 
     const islandsData = res.data.filter((i) => i.CategoryName === "모험 섬");
@@ -813,22 +821,27 @@ onMounted(async () => {
   const urlParams = new URLSearchParams(window.location.search);
   const skipKey = urlParams.get(SKIP_AUTH_KEY);
 
+  // 1. 초기 캘린더 로드
+  fetchLostArkCalendar();
+
+  // 2. 1분마다 갱신 타이머 설정 (Refresh)
+  const calendarTimer = setInterval(() => {
+    fetchLostArkCalendar();
+  }, 60000); // 60초
+
+  onUnmounted(() => {
+    clearInterval(calendarTimer);
+  });
+
   if (skipKey === SKIP_AUTH_VALUE) {
     console.log("⚠️ 파라미터에 의해 인증이 우회되었습니다.");
     isLoggedIn.value = true;
     isAuthLoading.value = false;
 
-    // 파라미터 로그인의 경우 Firestore 스냅샷 등을 바로 실행해줘야 합니다.
     setupFirestoreSnapshots();
-
-    // URL에서 파라미터를 깔끔하게 제거하고 싶다면 아래 주석 해제 (새로고침 시 로그인 풀림 방지 필요시 주의)
-    //window.history.replaceState({}, document.title, window.location.pathname);
   }
 
-  // 1. 리다이렉트 로그인 결과 확인 (signInWithRedirect 사용 시 필수)
-  // 라우터 가드 이후, 돌아온 페이지에서 토큰을 처리하기 위해 가장 먼저 실행합니다.
   try {
-    // [수정] getRedirectResult() 안에 'auth'를 반드시 넣어줘야 합니다.
     const loginResult = await getRedirectResult(auth);
 
     if (loginResult) {
@@ -865,10 +878,6 @@ onMounted(async () => {
   window.addEventListener("scroll", handleScroll);
 
   loadDailyStatus();
-
-  if (isLoggedIn.value) {
-    fetchLostArkCalendar();
-  }
 });
 
 const loadDailyStatus = () => {

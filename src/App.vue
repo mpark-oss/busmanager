@@ -296,7 +296,7 @@
                   :style="{ opacity: clearedEvents.chaosGate ? 0.6 : 1 }"
                 >
                   <div v-if="clearedEvents.chaosGate" class="success-stamp">
-                    SUCCESS
+                    DONE
                   </div>
 
                   <div class="d-flex align-center">
@@ -362,7 +362,7 @@
                   :style="{ opacity: clearedEvents.fieldBoss ? 0.6 : 1 }"
                 >
                   <div v-if="clearedEvents.fieldBoss" class="success-stamp red">
-                    SUCCESS
+                    DONE
                   </div>
 
                   <div class="d-flex align-center">
@@ -433,7 +433,7 @@
                     v-if="clearedEvents.islands[island.name]"
                     class="success-stamp blue"
                   >
-                    SUCCESS
+                    DONE
                   </div>
 
                   <div class="d-flex align-center">

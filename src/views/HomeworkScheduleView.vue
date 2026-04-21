@@ -1456,7 +1456,7 @@ const EXTREME_EVENTS = [
   {
     id: "extreme_aegir",
     name: "1막: 에기르 [Extreme]",
-    startDate: "2026-04-22T10:00:00",
+    startDate: "2026-04-22T06:00:00",
     endDate: "2026-05-20T06:00:00",
     color: "#FFD700",
   },

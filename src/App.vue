@@ -507,7 +507,7 @@
           </div>
 
           <v-list v-else nav class="d-flex flex-column align-center pt-4">
-            <v-icon color="orange-darken-2" class="mb-6">mdi-portal</v-icon>
+            <v-icon color="orange-darken-2" class="mb-6">mdi-door</v-icon>
             <v-icon color="red-darken-2" class="mb-6">mdi-skull</v-icon>
             <v-icon color="blue-darken-2">mdi-island</v-icon>
           </v-list>

@@ -683,9 +683,12 @@ const fetchLostArkCalendar = async () => {
         i.CategoryName === "카오스게이트" || i.CategoryName === "카오스 게이트",
     );
     if (chaosGateData) {
-      const futureTimes = chaosGateData.StartTimes.filter(
-        (t) => t.startsWith(todayStr) && new Date(t) > now,
-      );
+      const futureTimes = chaosGateData.StartTimes.filter((t) => {
+        const startTime = new Date(t);
+        startTime.setMinutes(startTime.getMinutes() + 10); // 3분 더함
+        return t.startsWith(todayStr) && startTime > now;
+      });
+
       const correctedCgTime = new Date(futureTimes[0]);
       correctedCgTime.setMinutes(correctedCgTime.getMinutes() + 10);
 

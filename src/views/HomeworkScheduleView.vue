@@ -163,7 +163,18 @@
             </div>
           </div>
           <v-spacer></v-spacer>
+
           <div class="d-flex align-center mb-6">
+            <v-btn
+              prepend-icon="mdi-sword"
+              color="purple-darken-3"
+              variant="flat"
+              rounded="lg"
+              class="me-2"
+              @click="openExtremeModalManually"
+            >
+              Extreme 레이드
+            </v-btn>
             <v-btn
               prepend-icon="mdi-account-group"
               color="amber-darken-3"
@@ -1444,6 +1455,11 @@ const allSchedules = ref([]);
 const scheduleDialog = ref(false);
 const activeCharName = ref("");
 const activeSchedules = ref([]);
+
+// [추가] 조건 없이 익스트림 팝업을 강제로 여는 함수
+const openExtremeModalManually = () => {
+  extremeModal.value = true;
+};
 
 // 1. 상세 난이도 및 보상 정보 정의
 const EXTREME_DIFFICULTIES = [

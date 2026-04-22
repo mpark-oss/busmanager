@@ -686,13 +686,16 @@ const fetchLostArkCalendar = async () => {
       const futureTimes = chaosGateData.StartTimes.filter(
         (t) => t.startsWith(todayStr) && new Date(t) > now,
       );
+      const correctedCgTime = new Date(futureTimes[0]);
+      correctedCgTime.setMinutes(correctedCgTime.getMinutes() + 10);
+
       todayEvents.value.chaosGate =
         futureTimes.length > 0
           ? [
               {
-                name: chaosGateData.ContentsName,
+                name: chaosGateData.ContentsName.split("(")[0],
                 icon: chaosGateData.ContentsIcon,
-                time: futureTimes[0].split("T")[1].substring(0, 5),
+                time: correctedCgTime.toTimeString().substring(0, 5),
               },
             ]
           : [];

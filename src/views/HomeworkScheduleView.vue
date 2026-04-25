@@ -8,103 +8,61 @@
               개인 숙제 관리
             </h2>
 
-            <div
-              class="text-caption text-medium-emphasis font-weight-bold d-flex align-center flex-wrap gap-2"
-            >
+            <div class="text-caption text-medium-emphasis font-weight-bold d-flex align-center flex-wrap gap-2">
               <span>주간 수익 현황:</span>
-              <v-tooltip
-                location="bottom"
-                offset="10"
-                transition="fade-transition"
-                theme="dark"
-                content-class="custom-tooltip-bg"
-              >
+              <v-tooltip location="bottom" offset="10" transition="fade-transition" theme="dark"
+                content-class="custom-tooltip-bg">
                 <template v-slot:activator="{ props }">
-                  <span
-                    v-bind="props"
-                    class="text-primary cursor-help font-weight-black num-style"
-                    style="
+                  <span v-bind="props" class="text-primary cursor-help font-weight-black num-style" style="
                       border-bottom: 2px dotted currentColor;
                       font-size: 1.1rem;
-                    "
-                  >
+                    ">
                     {{ getTotalGrossGold().toLocaleString() }}G
                   </span>
                 </template>
 
                 <div class="pa-1">
-                  <div
-                    class="text-subtitle-2 font-weight-black mb-2 white-text"
-                  >
+                  <div class="text-subtitle-2 font-weight-black mb-2 white-text">
                     주간 수익 상세 내역
                   </div>
 
-                  <div
-                    class="d-flex flex-column gap-1"
-                    style="min-width: 200px"
-                  >
+                  <div class="d-flex flex-column gap-1" style="min-width: 200px">
                     <div class="d-flex justify-space-between align-center">
                       <div class="d-flex align-center white-text">
-                        <v-icon size="16" color="amber" class="me-2"
-                          >mdi-sword-cross</v-icon
-                        >
+                        <v-icon size="16" color="amber" class="me-2">mdi-sword-cross</v-icon>
                         <span class="font-weight-bold">레이드</span>
                       </div>
-                      <span
-                        class="text-amber-accent-2 font-weight-bold num-style"
-                      >
+                      <span class="text-amber-accent-2 font-weight-bold num-style">
                         +{{ getPureRaidGold().toLocaleString() }}G
                       </span>
                     </div>
 
-                    <div
-                      class="d-flex justify-space-between align-center ps-6 pe-1 text-caption"
-                      style="opacity: 0.8"
-                    >
+                    <div class="d-flex justify-space-between align-center ps-6 pe-1 text-caption" style="opacity: 0.8">
                       <span class="white-text">ㄴ 일반 골드</span>
-                      <span class="white-text num-style"
-                        >{{
-                          getTotalGoldBreakdown().tradeable.toLocaleString()
-                        }}G</span
-                      >
+                      <span class="white-text num-style">{{
+                        getTotalGoldBreakdown().tradeable.toLocaleString()
+                      }}G</span>
                     </div>
-                    <div
-                      class="d-flex justify-space-between align-center ps-6 pe-1 text-caption"
-                      style="opacity: 0.8"
-                    >
-                      <span class="text-light-green-accent-1"
-                        >ㄴ 귀속 골드</span
-                      >
-                      <span class="text-light-green-accent-1 num-style"
-                        >{{
-                          getTotalGoldBreakdown().bound.toLocaleString()
-                        }}G</span
-                      >
+                    <div class="d-flex justify-space-between align-center ps-6 pe-1 text-caption" style="opacity: 0.8">
+                      <span class="text-light-green-accent-1">ㄴ 귀속 골드</span>
+                      <span class="text-light-green-accent-1 num-style">{{
+                        getTotalGoldBreakdown().bound.toLocaleString()
+                      }}G</span>
                     </div>
 
-                    <v-divider
-                      class="my-1 border-opacity-25"
-                      color="white"
-                    ></v-divider>
+                    <v-divider class="my-1 border-opacity-25" color="white"></v-divider>
 
                     <div class="d-flex justify-space-between align-center">
                       <div class="d-flex align-center white-text">
-                        <v-icon
-                          size="16"
-                          color="light-blue-accent-2"
-                          class="me-2"
-                          >mdi-bus-side</v-icon
-                        >
+                        <v-icon size="16" color="light-blue-accent-2" class="me-2">mdi-bus-side</v-icon>
                         <span>버스</span>
                       </div>
-                      <span
-                        :class="[
-                          'font-weight-bold num-style',
-                          getTotalBusGold() >= 0
-                            ? 'text-light-blue-accent-2'
-                            : 'text-red-accent-2',
-                        ]"
-                      >
+                      <span :class="[
+                        'font-weight-bold num-style',
+                        getTotalBusGold() >= 0
+                          ? 'text-light-blue-accent-2'
+                          : 'text-red-accent-2',
+                      ]">
                         {{ getTotalBusGold() >= 0 ? "+" : ""
                         }}{{ getTotalBusGold().toLocaleString() }}G
                       </span>
@@ -112,14 +70,10 @@
 
                     <div class="d-flex justify-space-between align-center">
                       <div class="d-flex align-center white-text">
-                        <v-icon size="16" color="red-accent-2" class="me-2"
-                          >mdi-minus-box</v-icon
-                        >
+                        <v-icon size="16" color="red-accent-2" class="me-2">mdi-minus-box</v-icon>
                         <span>더보기</span>
                       </div>
-                      <span
-                        class="text-red-accent-2 font-weight-bold num-style"
-                      >
+                      <span class="text-red-accent-2 font-weight-bold num-style">
                         -{{ getTotalMoreCost().toLocaleString() }}G
                       </span>
                     </div>
@@ -130,31 +84,23 @@
               <span class="text-grey">/</span>
               <span class="">{{ getMaxPossibleGold().toLocaleString() }}G</span>
 
-              <v-chip
-                size="x-small"
-                :color="
-                  getMaxPossibleGold() -
-                    (getPureRaidGold() - getTotalMoreCost()) >
+              <v-chip size="x-small" :color="getMaxPossibleGold() -
+                  (getPureRaidGold() - getTotalMoreCost()) >
                   0
-                    ? 'error'
-                    : 'success'
-                "
-                variant="flat"
-                class="font-weight-black num-style"
-              >
-                <template
-                  v-if="
-                    getMaxPossibleGold() -
-                      (getPureRaidGold() - getTotalMoreCost()) >
-                    0
-                  "
-                >
+                  ? 'error'
+                  : 'success'
+                " variant="flat" class="font-weight-black num-style">
+                <template v-if="
+                  getMaxPossibleGold() -
+                  (getPureRaidGold() - getTotalMoreCost()) >
+                  0
+                ">
                   레이드 남은 수익:
                   {{
                     Math.max(
                       0,
                       getMaxPossibleGold() -
-                        (getPureRaidGold() - getTotalMoreCost()),
+                      (getPureRaidGold() - getTotalMoreCost()),
                     ).toLocaleString()
                   }}G
                 </template>
@@ -165,34 +111,17 @@
           <v-spacer></v-spacer>
 
           <div class="d-flex align-center mb-6">
-            <v-btn
-              prepend-icon="mdi-sword"
-              color="purple-darken-3"
-              variant="flat"
-              rounded="lg"
-              class="me-2"
-              @click="openExtremeModalManually"
-            >
+            <v-btn prepend-icon="mdi-sword" color="purple-darken-3" variant="flat" rounded="lg" class="me-2"
+              @click="openExtremeModalManually">
               Extreme 레이드
             </v-btn>
-            <v-btn
-              prepend-icon="mdi-account-group"
-              color="amber-darken-3"
-              variant="flat"
-              rounded="lg"
-              class="me-2"
-              @click="fixedPartyModal = true"
-            >
+            <v-btn prepend-icon="mdi-account-group" color="amber-darken-3" variant="flat" rounded="lg" class="me-2"
+              @click="fixedPartyModal = true">
               내 고정 팟 보기
             </v-btn>
 
-            <v-btn
-              prepend-icon="mdi-account-edit-outline"
-              color="primary"
-              variant="flat"
-              rounded="lg"
-              @click="openRosterManager"
-            >
+            <v-btn prepend-icon="mdi-account-edit-outline" color="primary" variant="flat" rounded="lg"
+              @click="openRosterManager">
               화면 설정
             </v-btn>
           </div>
@@ -206,9 +135,7 @@
 
               <div class="pa-4 bg-grey-lighten-4 rounded-lg mb-4">
                 <div class="text-subtitle-2 font-weight-bold mb-2">
-                  <v-icon size="small" color="primary" class="me-1"
-                    >mdi-cloud-sync</v-icon
-                  >
+                  <v-icon size="small" color="primary" class="me-1">mdi-cloud-sync</v-icon>
                   클라우드 동기화 (기기 간 공유)
                 </div>
                 <div class="text-caption text-grey-darken-1 mb-3">
@@ -217,26 +144,14 @@
 
                 <v-row dense>
                   <v-col cols="6">
-                    <v-btn
-                      block
-                      color="primary"
-                      variant="elevated"
-                      prepend-icon="mdi-cloud-upload"
-                      :loading="isSyncing"
-                      @click="saveToCloud"
-                    >
+                    <v-btn block color="primary" variant="elevated" prepend-icon="mdi-cloud-upload" :loading="isSyncing"
+                      @click="saveToCloud">
                       현재 상태 저장
                     </v-btn>
                   </v-col>
                   <v-col cols="6">
-                    <v-btn
-                      block
-                      color="secondary"
-                      variant="outlined"
-                      prepend-icon="mdi-cloud-download"
-                      :loading="isSyncing"
-                      @click="loadFromCloud"
-                    >
+                    <v-btn block color="secondary" variant="outlined" prepend-icon="mdi-cloud-download"
+                      :loading="isSyncing" @click="loadFromCloud">
                       데이터 불러오기
                     </v-btn>
                   </v-col>
@@ -247,17 +162,11 @@
                   카드 순서 변경 (드래그)
                 </div>
                 <v-list class="pa-0 border rounded-lg mb-6">
-                  <draggable
-                    v-model="tempRosterOrder"
-                    handle=".drag-handle"
-                    item-key="name"
-                  >
+                  <draggable v-model="tempRosterOrder" handle=".drag-handle" item-key="name">
                     <template #item="{ element }">
                       <v-list-item class="border-b last-mb-0">
                         <template v-slot:prepend>
-                          <v-icon class="drag-handle cursor-move me-2"
-                            >mdi-drag-vertical</v-icon
-                          >
+                          <v-icon class="drag-handle cursor-move me-2">mdi-drag-vertical</v-icon>
                           <v-avatar size="32" border class="me-2">
                             <v-img :src="element.img"></v-img>
                           </v-avatar>
@@ -265,8 +174,7 @@
                         <v-list-item-title class="font-weight-bold">{{
                           element.name
                         }}</v-list-item-title>
-                        <v-list-item-subtitle
-                          >Lv.{{ element.level }}
+                        <v-list-item-subtitle>Lv.{{ element.level }}
                           {{ element.className }}
                         </v-list-item-subtitle>
                       </v-list-item>
@@ -284,13 +192,8 @@
                         name
                       }}</v-list-item-title>
                       <template v-slot:append>
-                        <v-btn
-                          size="small"
-                          variant="text"
-                          color="success"
-                          prepend-icon="mdi-refresh"
-                          @click="restoreCharacter(name)"
-                        >
+                        <v-btn size="small" variant="text" color="success" prepend-icon="mdi-refresh"
+                          @click="restoreCharacter(name)">
                           복구
                         </v-btn>
                       </template>
@@ -302,28 +205,16 @@
               <v-card-actions class="pa-4">
                 <v-spacer></v-spacer>
                 <v-btn variant="text" @click="rosterDialog = false">닫기</v-btn>
-                <v-btn
-                  color="primary"
-                  variant="flat"
-                  rounded="lg"
-                  @click="saveRosterOrder"
-                >
-                  저장</v-btn
-                >
+                <v-btn color="primary" variant="flat" rounded="lg" @click="saveRosterOrder">
+                  저장</v-btn>
               </v-card-actions>
             </v-card>
           </v-dialog>
         </div>
 
-        <v-row
-          v-if="characters.length === 0 && !isFetching"
-          justify="center"
-          class="py-12"
-        >
+        <v-row v-if="characters.length === 0 && !isFetching" justify="center" class="py-12">
           <v-col cols="12" sm="8" md="6" class="text-center">
-            <v-icon size="64" color="grey-lighten-1" class="mb-4"
-              >mdi-account-search-outline</v-icon
-            >
+            <v-icon size="64" color="grey-lighten-1" class="mb-4">mdi-account-search-outline</v-icon>
             <h3 class="text-h5 font-weight-bold mb-2">
               설정된 대표 캐릭터가 없습니다.
             </h3>
@@ -331,76 +222,36 @@
         </v-row>
 
         <v-row v-else>
-          <v-col
-            v-for="char in characters"
-            :key="char.name"
-            cols="12"
-            sm="6"
-            md="4"
-            lg="4"
-            xl="3"
-          >
+          <v-col v-for="char in characters" :key="char.name" cols="12" sm="6" md="4" lg="4" xl="3">
             <v-hover v-slot="{ isHovering, props }">
-              <v-card
-                v-bind="props"
-                border
-                variant="flat"
-                class="character-card rounded-xl overflow-hidden shadow-sm bg-card position-relative"
-                :style="
-                  char.isGoldCharacter
+              <v-card v-bind="props" border variant="flat"
+                class="character-card rounded-xl overflow-hidden shadow-sm bg-card position-relative" :style="char.isGoldCharacter
                     ? 'border: 2px solid #FFB300 !important'
                     : ''
-                "
-              >
-                <v-list-item
-                  class="pa-3 bg-profile-header"
-                  :subtitle="`Lv. ${char.level} ${char.className}`"
-                >
+                  ">
+                <v-list-item class="pa-3 bg-profile-header" :subtitle="`Lv. ${char.level} ${char.className}`">
                   <template v-slot:prepend>
-                    <v-avatar
-                      size="60"
-                      border
-                      class="elevation-3 bg-grey-lighten-4"
-                    >
-                      <v-img
-                        :src="char.img"
-                        cover
-                        position="top center"
-                      ></v-img>
+                    <v-avatar size="60" border class="elevation-3 bg-grey-lighten-4">
+                      <v-img :src="char.img" cover position="top center"></v-img>
                     </v-avatar>
                   </template>
                   <template v-slot:title>
                     <div class="d-flex align-center">
-                      <v-btn
-                        icon
-                        variant="text"
-                        size="x-small"
-                        :color="
-                          char.isGoldCharacter
-                            ? 'amber-darken-3'
-                            : 'grey-lighten-1'
-                        "
-                        @click.stop="toggleGoldCharacter(char)"
-                        class="me-1"
-                      >
+                      <v-btn icon variant="text" size="x-small" :color="char.isGoldCharacter
+                          ? 'amber-darken-3'
+                          : 'grey-lighten-1'
+                        " @click.stop="toggleGoldCharacter(char)" class="me-1">
                         <v-icon size="18">{{
                           char.isGoldCharacter
                             ? "mdi-gold"
                             : "mdi-treasure-chest"
                         }}</v-icon>
                       </v-btn>
-                      <span
-                        class="text-subtitle-1 font-weight-black text-truncate"
-                        style="max-width: 130px"
-                        >{{ char.name }}</span
-                      >
-                      <div
-                        class="d-flex align-center text-caption font-weight-bold text-medium-emphasis"
-                        style="margin: 0.5rem"
-                      >
-                        <v-icon size="14" class="me-1" color="grey-darken-1"
-                          >mdi-sword-cross</v-icon
-                        >
+                      <span class="text-subtitle-1 font-weight-black text-truncate" style="max-width: 130px">{{
+                        char.name }}</span>
+                      <div class="d-flex align-center text-caption font-weight-bold text-medium-emphasis"
+                        style="margin: 0.5rem">
+                        <v-icon size="14" class="me-1" color="grey-darken-1">mdi-sword-cross</v-icon>
                         <span class="num-style">
                           {{
                             typeof char.cbPower === "number"
@@ -409,18 +260,10 @@
                           }}
                         </span>
                       </div>
-                      <v-tooltip
-                        v-if="topRosterMembers.includes(char.name)"
-                        location="top"
-                      >
+                      <v-tooltip v-if="topRosterMembers.includes(char.name)" location="top">
                         <template v-slot:activator="{ props }">
-                          <v-chip
-                            v-bind="props"
-                            size="x-small"
-                            color="red"
-                            variant="flat"
-                            class="ms-2 px-1 pulse-badge"
-                          >
+                          <v-chip v-bind="props" size="x-small" color="red" variant="flat"
+                            class="ms-2 px-1 pulse-badge">
                             <v-icon size="14" color="white">mdi-skull</v-icon>
                           </v-chip>
                         </template>
@@ -431,51 +274,29 @@
                   <template v-slot:append>
                     <div class="d-flex align-center">
                       <div class="text-right mr-1">
-                        <div
-                          class="text-caption font-weight-bold num-style"
-                          :class="
-                            char.isGoldCharacter
-                              ? 'text-amber-darken-4'
-                              : 'text-light-blue-darken-2'
-                          "
-                        >
+                        <div class="text-caption font-weight-bold num-style" :class="char.isGoldCharacter
+                            ? 'text-amber-darken-4'
+                            : 'text-light-blue-darken-2'
+                          ">
                           {{ getCharGold(char).toLocaleString() }} G
                         </div>
                       </div>
 
-                      <v-btn
-                        v-if="getCharSchedules(char.name).length > 0"
-                        icon
-                        variant="text"
-                        size="small"
-                        color="error"
-                        class="position-relative pulse-badge"
-                        @click.stop="openScheduleModal(char.name)"
-                      >
+                      <v-btn v-if="getCharSchedules(char.name).length > 0" icon variant="text" size="small"
+                        color="error" class="position-relative pulse-badge" @click.stop="openScheduleModal(char.name)">
                         <v-icon>mdi-bell-outline</v-icon>
                         <span class="bell-badge-count">{{
                           getCharSchedules(char.name).length
                         }}</span>
                       </v-btn>
 
-                      <v-btn
-                        icon="mdi-cog-outline"
-                        variant="text"
-                        color="grey-darken-1"
-                        size="small"
-                        @click="openCharSettings(char)"
-                      ></v-btn>
+                      <v-btn icon="mdi-cog-outline" variant="text" color="grey-darken-1" size="small"
+                        @click="openCharSettings(char)"></v-btn>
 
                       <div style="width: 40px" class="d-flex justify-center">
                         <v-fade-transition>
-                          <v-btn
-                            v-if="isHovering || isMobileMode"
-                            icon="mdi-delete-outline"
-                            variant="text"
-                            color="error"
-                            size="small"
-                            @click.stop="deleteCharacter(char.name)"
-                          ></v-btn>
+                          <v-btn v-if="isHovering || isMobileMode" icon="mdi-delete-outline" variant="text"
+                            color="error" size="small" @click.stop="deleteCharacter(char.name)"></v-btn>
                         </v-fade-transition>
                       </div>
                     </div>
@@ -487,64 +308,27 @@
                 <v-card-text class="pa-3">
                   <div v-if="hasVisibleDaily(char)">
                     <div class="d-flex align-center mb-2">
-                      <v-chip
-                        size="x-small"
-                        color="orange"
-                        variant="flat"
-                        class="me-2 font-weight-bold"
-                        >DAILY</v-chip
-                      >
-                      <span
-                        class="text-caption font-weight-black text-medium-emphasis"
-                        >일일 숙제</span
-                      >
+                      <v-chip size="x-small" color="orange" variant="flat" class="me-2 font-weight-bold">DAILY</v-chip>
+                      <span class="text-caption font-weight-black text-medium-emphasis">일일 숙제</span>
                     </div>
                     <div class="d-flex flex-column gap-3 mb-3">
                       <template v-for="task in dailyTasks" :key="task.id">
-                        <div
-                          v-if="isTaskVisible(char, task.id)"
-                          class="task-container"
-                        >
-                          <div
-                            class="d-flex align-center justify-space-between mb-1"
-                          >
-                            <v-checkbox
-                              v-model="char.completedTasks"
-                              :value="task.id"
-                              :label="task.name"
-                              hide-details
-                              density="compact"
-                              color="orange"
-                              @change="handleDailyCheck(char, task.id)"
-                              class="custom-chk flex-grow-1"
-                            ></v-checkbox>
+                        <div v-if="isTaskVisible(char, task.id)" class="task-container">
+                          <div class="d-flex align-center justify-space-between mb-1">
+                            <v-checkbox v-model="char.completedTasks" :value="task.id" :label="task.name" hide-details
+                              density="compact" color="orange" @change="handleDailyCheck(char, task.id)"
+                              class="custom-chk flex-grow-1"></v-checkbox>
                             <div class="rest-input-wrapper">
-                              <span
-                                class="text-caption font-weight-bold grey--text mr-1"
-                                >휴게</span
-                              >
-                              <input
-                                type="number"
-                                v-model.number="char.restGauges[task.id]"
-                                class="rest-input text-caption font-weight-black"
-                                @change="validateAndSaveRest(char)"
-                                min="0"
-                                max="200"
-                                step="20"
-                              />
+                              <span class="text-caption font-weight-bold grey--text mr-1">휴게</span>
+                              <input type="number" v-model.number="char.restGauges[task.id]"
+                                class="rest-input text-caption font-weight-black" @change="validateAndSaveRest(char)"
+                                min="0" max="200" step="20" />
                             </div>
                           </div>
                           <div class="rest-gauge-bar">
-                            <div
-                              v-for="n in 10"
-                              :key="n"
-                              class="gauge-segment"
-                              :class="getSegmentClass(char, task.id, n)"
-                            >
-                              <div
-                                class="gauge-fill"
-                                :style="getFillStyle(char, task.id, n)"
-                              ></div>
+                            <div v-for="n in 10" :key="n" class="gauge-segment"
+                              :class="getSegmentClass(char, task.id, n)">
+                              <div class="gauge-fill" :style="getFillStyle(char, task.id, n)"></div>
                             </div>
                           </div>
                         </div>
@@ -555,34 +339,15 @@
 
                   <div v-if="hasVisibleSpecial(char)">
                     <div class="d-flex align-center mb-2">
-                      <v-chip
-                        size="x-small"
-                        color="cyan-darken-1"
-                        variant="flat"
-                        class="me-2 font-weight-bold text-white"
-                        >SPECIAL</v-chip
-                      >
-                      <span
-                        class="text-caption font-weight-black text-medium-emphasis"
-                        >주간 숙제</span
-                      >
+                      <v-chip size="x-small" color="cyan-darken-1" variant="flat"
+                        class="me-2 font-weight-bold text-white">SPECIAL</v-chip>
+                      <span class="text-caption font-weight-black text-medium-emphasis">주간 숙제</span>
                     </div>
-                    <div
-                      class="d-flex flex-row flex-wrap mb-3"
-                      style="gap: 4px"
-                    >
+                    <div class="d-flex flex-row flex-wrap mb-3" style="gap: 4px">
                       <template v-for="task in specialTasks" :key="task.id">
-                        <v-checkbox
-                          v-if="isTaskVisible(char, task.id)"
-                          v-model="char.completedTasks"
-                          :value="task.id"
-                          :label="task.label"
-                          hide-details
-                          density="compact"
-                          color="cyan-darken-2"
-                          @change="saveToLocal"
-                          class="custom-chk-horizontal"
-                        ></v-checkbox>
+                        <v-checkbox v-if="isTaskVisible(char, task.id)" v-model="char.completedTasks" :value="task.id"
+                          :label="task.label" hide-details density="compact" color="cyan-darken-2" @change="saveToLocal"
+                          class="custom-chk-horizontal"></v-checkbox>
                       </template>
                     </div>
                     <v-divider class="my-3 border-opacity-25"></v-divider>
@@ -590,115 +355,63 @@
 
                   <template v-if="char.settings?.showWeekly">
                     <div class="d-flex align-center mb-2">
-                      <v-chip
-                        size="x-small"
-                        color="primary"
-                        variant="flat"
-                        class="me-2 font-weight-bold"
-                        >WEEKLY</v-chip
-                      >
-                      <span
-                        class="text-caption font-weight-black text-medium-emphasis"
-                        >주간 레이드</span
-                      >
-                      <v-chip
-                        size="x-small"
-                        :color="
-                          getGoldRaidCount(char) >= 3
-                            ? 'success'
-                            : 'grey-darken-1'
-                        "
-                        variant="tonal"
-                        class="ms-2 font-weight-black"
-                      >
+                      <v-chip size="x-small" color="primary" variant="flat"
+                        class="me-2 font-weight-bold">WEEKLY</v-chip>
+                      <span class="text-caption font-weight-black text-medium-emphasis">주간 레이드</span>
+                      <v-chip size="x-small" :color="getGoldRaidCount(char) >= 3
+                          ? 'success'
+                          : 'grey-darken-1'
+                        " variant="tonal" class="ms-2 font-weight-black">
                         {{ getGoldRaidCount(char) }} / 3
                       </v-chip>
                     </div>
 
                     <div class="d-flex flex-column gap-2">
-                      <div
-                        v-for="groupName in char.settings?.visibleGroups || []"
-                        :key="groupName"
-                        class="raid-group-container border rounded-lg pa-1"
-                      >
+                      <div v-for="groupName in char.settings?.visibleGroups || []" :key="groupName"
+                        class="raid-group-container border rounded-lg pa-1">
                         <div class="d-flex align-center px-2 mb-1">
-                          <span
-                            class="text-caption font-weight-black text-primary flex-grow-1"
-                            :style="
-                              isGoldExcluded(char, groupName)
-                                ? 'text-decoration: line-through; opacity: 0.5'
-                                : ''
-                            "
-                          >
+                          <span class="text-caption font-weight-black text-primary flex-grow-1" :style="isGoldExcluded(char, groupName)
+                              ? 'text-decoration: line-through; opacity: 0.5'
+                              : ''
+                            ">
                             {{ groupName }}
-                            <v-btn
-                              icon
-                              variant="text"
-                              size="x-small"
-                              :class="[
-                                'ms-1',
-                                {
-                                  'bus-active-glow': hasBusSetting(
-                                    char,
-                                    groupName,
-                                  ),
-                                },
-                              ]"
-                              :color="
-                                hasBusSetting(char, groupName)
+                            <v-btn icon variant="text" size="x-small" :class="[
+                              'ms-1',
+                              {
+                                'bus-active-glow': hasBusSetting(
+                                  char,
+                                  groupName,
+                                ),
+                              },
+                            ]" :color="hasBusSetting(char, groupName)
                                   ? 'light-blue-accent-2'
                                   : 'grey-lighten-1'
-                              "
-                              @click.stop="openBusDialog(char, groupName)"
-                            >
+                                " @click.stop="openBusDialog(char, groupName)">
                               <v-icon size="18">mdi-bus-side</v-icon>
-                              <v-tooltip activator="parent" location="top"
-                                >{{ groupName }} 버스 설정</v-tooltip
-                              >
+                              <v-tooltip activator="parent" location="top">{{ groupName }} 버스 설정</v-tooltip>
                             </v-btn>
                           </span>
                         </div>
                         <div class="d-flex flex-column px-1">
-                          <template
-                            v-for="raid in getRaidsByGroup(groupName)"
-                            :key="raid.name"
-                          >
-                            <template
-                              v-for="gate in raid.gates || []"
-                              :key="gate.g"
-                            >
-                              <div
-                                v-if="
-                                  gate &&
-                                  (
-                                    char.settings?.selectedGateIds || []
-                                  ).includes(raid.name + '_G' + gate.g)
-                                "
-                                class="d-flex align-center mb-n1"
-                              >
-                                <v-checkbox
-                                  v-model="char.completedTasks"
-                                  :value="raid.name + '_G' + gate.g"
-                                  :disabled="isGateDisabled(char, raid, gate)"
-                                  @change="toggleGate(char, raid, gate)"
-                                  hide-details
-                                  density="compact"
-                                  color="primary"
-                                  class="gate-chk flex-grow-1"
-                                >
+                          <template v-for="raid in getRaidsByGroup(groupName)" :key="raid.name">
+                            <template v-for="gate in raid.gates || []" :key="gate.g">
+                              <div v-if="
+                                gate &&
+                                (
+                                  char.settings?.selectedGateIds || []
+                                ).includes(raid.name + '_G' + gate.g)
+                              " class="d-flex align-center mb-n1">
+                                <v-checkbox v-model="char.completedTasks" :value="raid.name + '_G' + gate.g"
+                                  :disabled="isGateDisabled(char, raid, gate)" @change="toggleGate(char, raid, gate)"
+                                  hide-details density="compact" color="primary" class="gate-chk flex-grow-1">
                                   <template v-slot:label>
                                     <div class="d-flex align-center">
-                                      <v-chip
-                                        size="x-small"
-                                        :color="getDifficulty(raid.name).color"
-                                        label
-                                        class="me-1 text-white font-weight-black px-1"
-                                        style="
+                                      <v-chip size="x-small" :color="getDifficulty(raid.name).color" label
+                                        class="me-1 text-white font-weight-black px-1" style="
                                           min-width: 40px;
                                           justify-content: center;
                                           height: 16px;
-                                        "
-                                      >
+                                        ">
                                         {{
                                           getDifficulty(
                                             raid.name,
@@ -707,54 +420,38 @@
                                             : getDifficulty(raid.name).text[0]
                                         }}
                                       </v-chip>
-                                      <span
-                                        class="text-overline font-weight-black"
-                                      >
+                                      <span class="text-overline font-weight-black">
                                         {{ gate.g }} 관문
-                                        <span
-                                          class="ms-1 num-style"
-                                          style="
-                                            font-size: 0.6rem;
-                                            opacity: 0.7;
-                                          "
-                                          >({{
-                                            (gate.gold / 1000).toFixed(1)
-                                          }}k{{
-                                            /싱글|1단계|2단계|3단계/.test(
-                                              raid.name,
-                                            )
-                                              ? "귀속"
-                                              : ""
-                                          }})</span
-                                        >
+                                        <span class="ms-1 num-style" style="font-size: 0.6rem; opacity: 0.7;">
+                                          ({{ (gate.gold / 1000).toFixed(1) }}k
+                                          {{
+                                            /4막: 아르모체\(노말\)|종막: 카제로스\(노말\)|그림자: 세르카\(노말\)/.test(raid.name)
+                                              ? "반귀속"
+                                          : /싱글|1단계|2단계|3단계/.test(raid.name)
+                                          ? "귀속"
+                                          : ""
+                                          }})
+                                        </span>
                                       </span>
-                                      <v-btn
-                                        icon
-                                        variant="text"
-                                        size="x-small"
-                                        :class="[
-                                          'me-1 gold-toggle-btn',
-                                          {
-                                            'is-active': isGoldGateSelected(
-                                              char,
-                                              raid.name,
-                                              gate.g,
-                                            ),
-                                          },
-                                        ]"
-                                        :color="
-                                          isGoldGateSelected(
+                                      <v-btn icon variant="text" size="x-small" :class="[
+                                        'me-1 gold-toggle-btn',
+                                        {
+                                          'is-active': isGoldGateSelected(
                                             char,
                                             raid.name,
                                             gate.g,
-                                          )
+                                          ),
+                                        },
+                                      ]" :color="isGoldGateSelected(
+                                          char,
+                                          raid.name,
+                                          gate.g,
+                                        )
                                             ? 'amber-accent-3'
                                             : 'grey-lighten-1'
-                                        "
-                                        @click.stop="
+                                          " @click.stop="
                                           toggleGoldGate(char, raid, gate.g)
-                                        "
-                                      >
+                                          ">
                                         <v-icon size="18">
                                           {{
                                             isGoldGateSelected(
@@ -766,32 +463,20 @@
                                               : "mdi-currency-usd-off"
                                           }}
                                         </v-icon>
-                                        <v-tooltip
-                                          activator="parent"
-                                          location="top"
-                                          >골드 보상 지정</v-tooltip
-                                        >
+                                        <v-tooltip activator="parent" location="top">골드 보상 지정</v-tooltip>
                                       </v-btn>
                                     </div>
                                   </template>
                                 </v-checkbox>
 
-                                <v-btn
-                                  icon
-                                  variant="text"
-                                  size="x-small"
-                                  :color="
-                                    (char.moreTasks || []).includes(
-                                      raid.name + '_G' + gate.g + '_More',
-                                    )
-                                      ? 'indigo-accent-2'
-                                      : 'grey-lighten-1'
-                                  "
-                                  @click.stop="
+                                <v-btn icon variant="text" size="x-small" :color="(char.moreTasks || []).includes(
+                                  raid.name + '_G' + gate.g + '_More',
+                                )
+                                    ? 'indigo-accent-2'
+                                    : 'grey-lighten-1'
+                                  " @click.stop="
                                     toggleMoreReward(char, raid.name, gate.g)
-                                  "
-                                  class="ms-1"
-                                >
+                                    " class="ms-1">
                                   <v-icon size="18">{{
                                     (char.moreTasks || []).includes(
                                       raid.name + "_G" + gate.g + "_More",
@@ -799,11 +484,7 @@
                                       ? "mdi-plus-box"
                                       : "mdi-plus-box-outline"
                                   }}</v-icon>
-                                  <v-tooltip
-                                    activator="parent"
-                                    location="top"
-                                    open-delay="300"
-                                  >
+                                  <v-tooltip activator="parent" location="top" open-delay="300">
                                     더보기 비용:
                                     {{ gate.moreGold?.toLocaleString() }}G
                                   </v-tooltip>
@@ -823,12 +504,7 @@
       </v-col>
     </v-row>
 
-    <v-dialog
-      v-model="charSettingsDialog"
-      max-width="500"
-      scrollable
-      persistent
-    >
+    <v-dialog v-model="charSettingsDialog" max-width="500" scrollable persistent>
       <v-card class="rounded-xl" v-if="targetChar">
         <v-card-title class="pa-4 font-weight-black d-flex align-center">
           <v-icon class="me-2">mdi-cog</v-icon> {{ targetChar.name }} 카드 설정
@@ -841,17 +517,8 @@
           <div class="bg-grey-lighten-4 rounded-lg pa-3 mb-4">
             <div class="text-caption font-weight-bold mb-2">일일 숙제</div>
             <div class="d-flex flex-wrap gap-2 mb-3">
-              <v-btn
-                v-for="task in dailyTasks"
-                :key="task.id"
-                variant="flat"
-                size="x-small"
-                :color="
-                  isTaskVisibleInSettings(task.id) ? 'orange' : 'grey-darken-2'
-                "
-                class="text-white px-3"
-                @click="toggleTaskVisibility(task.id)"
-              >
+              <v-btn v-for="task in dailyTasks" :key="task.id" variant="flat" size="x-small" :color="isTaskVisibleInSettings(task.id) ? 'orange' : 'grey-darken-2'
+                " class="text-white px-3" @click="toggleTaskVisibility(task.id)">
                 <v-icon start size="14">{{
                   isTaskVisibleInSettings(task.id) ? "mdi-eye" : "mdi-eye-off"
                 }}</v-icon>
@@ -861,19 +528,10 @@
             <v-divider class="mb-3"></v-divider>
             <div class="text-caption font-weight-bold mb-2">주간 숙제</div>
             <div class="d-flex flex-wrap gap-2">
-              <v-btn
-                v-for="task in specialTasks"
-                :key="task.id"
-                variant="flat"
-                size="x-small"
-                :color="
-                  isTaskVisibleInSettings(task.id)
-                    ? 'cyan-darken-2'
-                    : 'grey-darken-2'
-                "
-                class="text-white px-3"
-                @click="toggleTaskVisibility(task.id)"
-              >
+              <v-btn v-for="task in specialTasks" :key="task.id" variant="flat" size="x-small" :color="isTaskVisibleInSettings(task.id)
+                  ? 'cyan-darken-2'
+                  : 'grey-darken-2'
+                " class="text-white px-3" @click="toggleTaskVisibility(task.id)">
                 <v-icon start size="14">{{
                   isTaskVisibleInSettings(task.id) ? "mdi-eye" : "mdi-eye-off"
                 }}</v-icon>
@@ -887,35 +545,17 @@
             레이드 설정 (드래그 순서 변경)
           </div>
           <v-list density="compact" class="pa-0 shadow-none bg-transparent">
-            <draggable
-              v-model="tempSettings.allGroups"
-              handle=".drag-handle"
-              item-key="toString"
-            >
+            <draggable v-model="tempSettings.allGroups" handle=".drag-handle" item-key="toString">
               <template #item="{ element: group }">
-                <div
-                  class="border rounded-lg mb-2 overflow-hidden shadow-sm"
-                  :class="theme === 'dark' ? 'bg-grey-darken-4' : 'bg-white'"
-                >
+                <div class="border rounded-lg mb-2 overflow-hidden shadow-sm"
+                  :class="theme === 'dark' ? 'bg-grey-darken-4' : 'bg-white'">
                   <v-list-item class="bg-grey-lighten-4 py-1">
                     <template v-slot:prepend>
-                      <v-icon
-                        class="drag-handle me-2 cursor-move"
-                        color="grey-darken-2"
-                        >mdi-drag-vertical</v-icon
-                      >
-                      <v-btn
-                        icon
-                        size="small"
-                        variant="flat"
-                        class="eye-btn shadow-sm"
-                        :color="
-                          tempSettings.visibleGroups.includes(group)
-                            ? 'primary'
-                            : 'grey-darken-3'
-                        "
-                        @click.stop="toggleGroupSelection(group)"
-                      >
+                      <v-icon class="drag-handle me-2 cursor-move" color="grey-darken-2">mdi-drag-vertical</v-icon>
+                      <v-btn icon size="small" variant="flat" class="eye-btn shadow-sm" :color="tempSettings.visibleGroups.includes(group)
+                          ? 'primary'
+                          : 'grey-darken-3'
+                        " @click.stop="toggleGroupSelection(group)">
                         <v-icon size="18">{{
                           tempSettings.visibleGroups.includes(group)
                             ? "mdi-eye"
@@ -923,11 +563,9 @@
                         }}</v-icon>
                       </v-btn>
                     </template>
-                    <v-list-item-title
-                      class="font-weight-black ms-2 cursor-pointer"
-                      @click="toggleExpand(group)"
-                      >{{ group }}</v-list-item-title
-                    >
+                    <v-list-item-title class="font-weight-black ms-2 cursor-pointer" @click="toggleExpand(group)">{{
+                      group
+                      }}</v-list-item-title>
                     <template v-slot:append>
                       <v-icon @click="toggleExpand(group)">{{
                         expandedGroup === group
@@ -937,40 +575,20 @@
                     </template>
                   </v-list-item>
                   <v-expand-transition>
-                    <div
-                      v-show="expandedGroup === group"
-                      class="pa-3 bg-white border-t"
-                    >
-                      <div
-                        v-for="raid in getRaidsByGroup(group)"
-                        :key="raid.name"
-                        class="mb-4 last-mb-0"
-                      >
+                    <div v-show="expandedGroup === group" class="pa-3 bg-white border-t">
+                      <div v-for="raid in getRaidsByGroup(group)" :key="raid.name" class="mb-4 last-mb-0">
                         <div class="d-flex align-center mb-2">
-                          <v-chip
-                            size="x-small"
-                            :color="getDifficulty(raid.name).color"
-                            label
-                            class="me-2 text-white font-weight-black"
-                            >{{ getDifficulty(raid.name).text }}</v-chip
-                          >
+                          <v-chip size="x-small" :color="getDifficulty(raid.name).color" label
+                            class="me-2 text-white font-weight-black">{{ getDifficulty(raid.name).text }}</v-chip>
                         </div>
                         <div class="d-flex flex-wrap gap-2">
-                          <v-btn
-                            v-for="gate in raid.gates"
-                            :key="gate.g"
-                            variant="flat"
-                            size="x-small"
-                            class="font-weight-black px-3 eye-gate-btn"
-                            :color="
-                              (tempSettings.selectedGateIds || []).includes(
-                                raid.name + '_G' + gate.g,
-                              )
+                          <v-btn v-for="gate in raid.gates" :key="gate.g" variant="flat" size="x-small"
+                            class="font-weight-black px-3 eye-gate-btn" :color="(tempSettings.selectedGateIds || []).includes(
+                              raid.name + '_G' + gate.g,
+                            )
                                 ? 'primary'
                                 : 'grey-darken-2'
-                            "
-                            @click="toggleGateVisibility(raid.name, gate.g)"
-                          >
+                              " @click="toggleGateVisibility(raid.name, gate.g)">
                             <v-icon start size="14">{{
                               (tempSettings.selectedGateIds || []).includes(
                                 raid.name + "_G" + gate.g,
@@ -998,14 +616,7 @@
         <v-card-actions class="pa-4">
           <v-spacer></v-spacer>
           <v-btn variant="text" @click="charSettingsDialog = false">취소</v-btn>
-          <v-btn
-            color="primary"
-            variant="flat"
-            rounded="lg"
-            class="px-6"
-            @click="saveCharSettings"
-            >저장하기</v-btn
-          >
+          <v-btn color="primary" variant="flat" rounded="lg" class="px-6" @click="saveCharSettings">저장하기</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -1013,37 +624,20 @@
     <v-dialog v-model="scheduleDialog" max-width="450">
       <v-card class="rounded-xl pa-2">
         <v-card-title class="font-weight-black d-flex align-center">
-          <v-icon color="primary" class="me-2">mdi-calendar-multiselect</v-icon
-          >{{ activeCharName }}의 참여 일정
+          <v-icon color="primary" class="me-2">mdi-calendar-multiselect</v-icon>{{ activeCharName }}의 참여 일정
         </v-card-title>
         <v-card-text class="pa-4">
           <v-list v-if="activeSchedules.length > 0">
-            <v-list-item
-              v-for="item in activeSchedules"
-              :key="item.id"
-              border
-              class="rounded-lg mb-3 pa-3"
-            >
-              <div
-                class="d-flex align-center justify-space-between mb-2 flex-wrap"
-                style="gap: 8px"
-              >
+            <v-list-item v-for="item in activeSchedules" :key="item.id" border class="rounded-lg mb-3 pa-3">
+              <div class="d-flex align-center justify-space-between mb-2 flex-wrap" style="gap: 8px">
                 <div class="d-flex align-center" style="gap: 6px">
-                  <v-chip
-                    :color="item.isHomework ? 'success' : 'error'"
-                    size="x-small"
-                    label
-                    class="font-weight-black text-white px-2"
-                  >
+                  <v-chip :color="item.isHomework ? 'success' : 'error'" size="x-small" label
+                    class="font-weight-black text-white px-2">
                     {{ item.isHomework ? "숙제" : "버스" }}
                   </v-chip>
 
-                  <v-chip
-                    size="x-small"
-                    :color="getDifficulty(item.difficulty).color"
-                    label
-                    class="text-white font-weight-black px-2"
-                  >
+                  <v-chip size="x-small" :color="getDifficulty(item.difficulty).color" label
+                    class="text-white font-weight-black px-2">
                     {{ getDifficulty(item.difficulty).text }}
                   </v-chip>
 
@@ -1053,35 +647,22 @@
                 </div>
 
                 <div class="d-flex align-center">
-                  <v-chip
-                    v-if="isToday(item.dateTime)"
-                    color="error"
-                    size="x-small"
-                    variant="flat"
-                    class="font-weight-black text-white me-2 px-2"
-                  >
+                  <v-chip v-if="isToday(item.dateTime)" color="error" size="x-small" variant="flat"
+                    class="font-weight-black text-white me-2 px-2">
                     오늘
                   </v-chip>
 
-                  <span
-                    class="text-caption font-weight-bold"
-                    :class="
-                      isToday(item.dateTime) ? 'text-error' : 'text-primary'
-                    "
-                  >
+                  <span class="text-caption font-weight-bold" :class="isToday(item.dateTime) ? 'text-error' : 'text-primary'
+                    ">
                     {{ formatScheduleTime(item.dateTime) }}
                   </span>
                 </div>
               </div>
 
-              <div
-                class="text-caption text-medium-emphasis d-flex align-center mt-1"
-              >
-                <v-icon size="16" class="me-1"
-                  >mdi-account-group-outline</v-icon
-                >
+              <div class="text-caption text-medium-emphasis d-flex align-center mt-1">
+                <v-icon size="16" class="me-1">mdi-account-group-outline</v-icon>
                 <span class="font-weight-bold">
-                  멤버: {{ (item.members || []).map((p) => p.name).join(", ") }}
+                  멤버: {{(item.members || []).map((p) => p.name).join(", ")}}
                 </span>
               </div>
             </v-list-item>
@@ -1090,155 +671,84 @@
             참여 중인 일정이 없습니다.
           </div>
         </v-card-text>
-        <v-card-actions
-          ><v-spacer></v-spacer
-          ><v-btn
-            variant="text"
-            @click="scheduleDialog = false"
-            class="font-weight-bold"
-            >닫기</v-btn
-          ></v-card-actions
-        >
+        <v-card-actions><v-spacer></v-spacer><v-btn variant="text" @click="scheduleDialog = false"
+            class="font-weight-bold">닫기</v-btn></v-card-actions>
       </v-card>
     </v-dialog>
     <v-dialog v-model="busDialog" max-width="350">
       <v-card class="rounded-xl pa-4">
         <v-card-title class="font-weight-black d-flex align-center px-0">
-          <v-icon color="light-blue-accent-3" class="me-2"
-            >mdi-bus-clock</v-icon
-          >
+          <v-icon color="light-blue-accent-3" class="me-2">mdi-bus-clock</v-icon>
           버스 수입/지출 설정
         </v-card-title>
 
         <v-card-text class="pa-0 mt-4">
           <div class="d-flex justify-center mb-6">
-            <v-btn-toggle
-              v-model="busForm.isDriver"
-              mandatory
-              color="light-blue-accent-4"
-              variant="flat"
-              rounded="lg"
-            >
+            <v-btn-toggle v-model="busForm.isDriver" mandatory color="light-blue-accent-4" variant="flat" rounded="lg">
               <v-btn :value="true" class="px-6">기사 (수입)</v-btn>
               <v-btn :value="false" class="px-6">승객 (지출)</v-btn>
             </v-btn-toggle>
           </div>
 
-          <v-text-field
-            v-model.number="busForm.gold"
-            :label="busForm.isDriver ? '수입 골드' : '지출 골드'"
-            suffix="G"
-            variant="outlined"
-            type="number"
-            hide-details
-            class="font-weight-bold"
-          ></v-text-field>
+          <v-text-field v-model.number="busForm.gold" :label="busForm.isDriver ? '수입 골드' : '지출 골드'" suffix="G"
+            variant="outlined" type="number" hide-details class="font-weight-bold"></v-text-field>
         </v-card-text>
 
         <v-card-actions class="px-0 mt-6">
           <v-spacer></v-spacer>
           <v-btn variant="text" @click="busDialog = false">취소</v-btn>
-          <v-btn
-            color="light-blue-accent-4"
-            variant="flat"
-            rounded="lg"
-            @click="saveBusSetting"
-            >설정 완료</v-btn
-          >
+          <v-btn color="light-blue-accent-4" variant="flat" rounded="lg" @click="saveBusSetting">설정 완료</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
     <v-dialog v-model="fixedPartyModal" max-width="900" scrollable>
       <v-card class="rounded-xl pa-4">
-        <v-card-title
-          class="text-h5 font-weight-black d-flex align-center pb-4"
-        >
+        <v-card-title class="text-h5 font-weight-black d-flex align-center pb-4">
           <v-icon color="amber-darken-3" class="me-2">mdi-shield-check</v-icon>
           내 원정대 고정 공격대
           <v-spacer></v-spacer>
-          <v-btn
-            icon="mdi-close"
-            variant="text"
-            @click="fixedPartyModal = false"
-          ></v-btn>
+          <v-btn icon="mdi-close" variant="text" @click="fixedPartyModal = false"></v-btn>
         </v-card-title>
 
         <v-card-text class="pa-2">
           <v-row v-if="myFixedParties.length > 0">
             <v-col v-for="party in myFixedParties" :key="party.id" cols="12">
-              <v-card
-                border
-                variant="flat"
-                class="rounded-xl pa-5 mb-4 bg-grey-lighten-5 position-relative bus-card"
-                :class="{ 'cleared-card': party.isCleared }"
-                style="transition: none !important"
-              >
+              <v-card border variant="flat" class="rounded-xl pa-5 mb-4 bg-grey-lighten-5 position-relative bus-card"
+                :class="{ 'cleared-card': party.isCleared }" style="transition: none !important">
                 <div v-if="party.isCleared" class="cleared-overlay">
                   <div class="cleared-text">CLEAR</div>
                 </div>
 
-                <div
-                  class="d-flex justify-space-between align-start mb-6"
-                  style="position: relative; z-index: 2"
-                >
+                <div class="d-flex justify-space-between align-start mb-6" style="position: relative; z-index: 2">
                   <div>
                     <div class="d-flex align-center flex-wrap gap-2 mb-2">
-                      <v-chip
-                        size="small"
-                        :color="party.isHomework ? 'success' : 'error'"
-                        variant="flat"
-                        label
-                        class="font-weight-black"
-                      >
+                      <v-chip size="small" :color="party.isHomework ? 'success' : 'error'" variant="flat" label
+                        class="font-weight-black">
                         {{ party.isHomework ? "숙제" : "버스" }}
                       </v-chip>
-                      <v-chip
-                        size="small"
-                        color="orange-darken-1"
-                        label
-                        class="font-weight-black text-white"
-                      >
+                      <v-chip size="small" color="orange-darken-1" label class="font-weight-black text-white">
                         {{ party.difficulty }}
                       </v-chip>
-                      <v-chip
-                        size="small"
-                        color="primary"
-                        label
-                        class="font-weight-black"
-                      >
+                      <v-chip size="small" color="primary" label class="font-weight-black">
                         {{ party.raid }} | {{ party.title }}
                       </v-chip>
                     </div>
 
-                    <div
-                      class="text-h6 font-weight-black d-flex align-center pb-4"
-                      :class="
-                        party.isCleared
-                          ? 'text-grey opacity-60'
-                          : 'text-high-emphasis'
-                      "
-                    >
-                      <v-icon
-                        class="me-2"
-                        size="small"
-                        :color="party.isCleared ? 'grey' : 'primary'"
-                      >
+                    <div class="text-h6 font-weight-black d-flex align-center pb-4" :class="party.isCleared
+                        ? 'text-grey opacity-60'
+                        : 'text-high-emphasis'
+                      ">
+                      <v-icon class="me-2" size="small" :color="party.isCleared ? 'grey' : 'primary'">
                         mdi-clock-outline
                       </v-icon>
                       {{ formatDateTime(party.departureTime) }}
                     </div>
                   </div>
 
-                  <v-btn
-                    :color="party.isCleared ? 'success' : 'primary'"
-                    :variant="party.isCleared ? 'flat' : 'tonal'"
-                    size="large"
-                    rounded="lg"
-                    class="font-weight-black px-6"
-                    style="z-index: 10"
-                    @click.stop="togglePartyClear(party)"
-                  >
+                  <v-btn :color="party.isCleared ? 'success' : 'primary'" :variant="party.isCleared ? 'flat' : 'tonal'"
+                    size="large" rounded="lg" class="font-weight-black px-6" style="z-index: 10"
+                    @click.stop="togglePartyClear(party)">
                     <v-icon start>
                       {{ party.isCleared ? "mdi-refresh" : "mdi-check-bold" }}
                     </v-icon>
@@ -1246,61 +756,38 @@
                   </v-btn>
                 </div>
 
-                <div
-                  class="d-flex flex-wrap gap-3 mt-2"
-                  style="overflow: hidden; position: relative; z-index: 2"
-                >
-                  <v-card
-                    v-for="(member, idx) in party.members"
-                    :key="idx"
-                    variant="flat"
-                    border
-                    class="d-flex align-center pa-2 rounded-lg"
-                    style="
+                <div class="d-flex flex-wrap gap-3 mt-2" style="overflow: hidden; position: relative; z-index: 2">
+                  <v-card v-for="(member, idx) in party.members" :key="idx" variant="flat" border
+                    class="d-flex align-center pa-2 rounded-lg" style="
                       width: 220px;
                       height: 60px;
                       flex: 0 0 220px;
                       overflow: hidden;
                       transition: none !important;
-                    "
-                  >
+                    ">
                     <v-avatar size="36" class="me-2 border-sm flex-shrink-0">
                       <v-img :src="member.img" cover></v-img>
                     </v-avatar>
 
-                    <div
-                      class="flex-grow-1 d-flex flex-column justify-center overflow-hidden"
-                      style="height: 40px"
-                    >
-                      <div
-                        class="text-caption font-weight-black fixed-card-text"
-                      >
+                    <div class="flex-grow-1 d-flex flex-column justify-center overflow-hidden" style="height: 40px">
+                      <div class="text-caption font-weight-black fixed-card-text">
                         {{ member.name }}
                       </div>
 
-                      <div
-                        class="text-overline opacity-60 text-truncate"
-                        :class="
-                          theme === 'dark'
-                            ? 'text-grey-lighten-1'
-                            : 'text-grey-darken-1'
-                        "
-                        style="
+                      <div class="text-overline opacity-60 text-truncate" :class="theme === 'dark'
+                          ? 'text-grey-lighten-1'
+                          : 'text-grey-darken-1'
+                        " style="
                           font-size: 0.6rem !important;
                           line-height: 1;
                           height: 0.8rem;
-                        "
-                      >
+                        ">
                         {{ member.job }}
                       </div>
                     </div>
 
-                    <v-icon
-                      v-if="myCharNames.includes(member.name)"
-                      color="amber-darken-3"
-                      size="small"
-                      class="ms-1 flex-shrink-0"
-                    >
+                    <v-icon v-if="myCharNames.includes(member.name)" color="amber-darken-3" size="small"
+                      class="ms-1 flex-shrink-0">
                       mdi-star
                     </v-icon>
                   </v-card>
@@ -1310,9 +797,7 @@
           </v-row>
 
           <div v-else class="text-center py-12">
-            <v-icon size="80" color="grey-lighten-2"
-              >mdi-shield-off-outline</v-icon
-            >
+            <v-icon size="80" color="grey-lighten-2">mdi-shield-off-outline</v-icon>
             <div class="text-h6 mt-4 text-grey-lighten-1 font-weight-bold">
               참여 중인 고정 공격대가 없습니다.
             </div>
@@ -1322,16 +807,8 @@
     </v-dialog>
     <v-dialog v-model="extremeModal" max-width="450" persistent>
       <v-card class="rounded-xl overflow-hidden shadow-24" border="sm">
-        <v-img
-          height="220"
-          src="/extreme_img.png"
-          cover
-          class="align-end text-white"
-        >
-          <v-card-title
-            class="font-weight-black pb-4"
-            style="text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8)"
-          >
+        <v-img height="220" src="/extreme_img.png" cover class="align-end text-white">
+          <v-card-title class="font-weight-black pb-4" style="text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8)">
           </v-card-title>
         </v-img>
 
@@ -1353,12 +830,7 @@
           <v-sheet color="grey-lighten-4" class="pa-4 rounded-lg border mb-4">
             <div class="d-flex justify-space-between align-center mb-1">
               <span class="text-body-2">입장 가능 난이도</span>
-              <v-chip
-                color="orange-darken-4"
-                size="small"
-                variant="flat"
-                class="font-weight-black"
-              >
+              <v-chip color="orange-darken-4" size="small" variant="flat" class="font-weight-black">
                 {{ recommendedDifficulty?.name }}
               </v-chip>
             </div>
@@ -1374,27 +846,15 @@
         <v-divider></v-divider>
 
         <v-card-actions class="pa-4 bg-grey-lighten-5">
-          <v-btn
-            variant="text"
-            color="grey-darken-1"
-            size="small"
-            @click="hideExtremeModalForWeek"
-          >
+          <v-btn variant="text" color="grey-darken-1" size="small" @click="hideExtremeModalForWeek">
             이번 주 안 보기
           </v-btn>
 
           <v-spacer></v-spacer>
 
-          <v-btn variant="text" color="grey" @click="extremeModal = false"
-            >닫기</v-btn
-          >
+          <v-btn variant="text" color="grey" @click="extremeModal = false">닫기</v-btn>
 
-          <v-btn
-            color="orange-darken-4"
-            variant="elevated"
-            class="px-6 font-weight-black"
-            @click="handleExtremeClear"
-          >
+          <v-btn color="orange-darken-4" variant="elevated" class="px-6 font-weight-black" @click="handleExtremeClear">
             클리어 완료
           </v-btn>
         </v-card-actions>
@@ -2419,7 +1879,7 @@ const updateDailyRestGauges = () => {
 
     const daysDiff = Math.floor(
       (today6AM.getTime() - new Date(char.lastDailyUpdate).getTime()) /
-        (1000 * 60 * 60 * 24),
+      (1000 * 60 * 60 * 24),
     );
 
     if (daysDiff > 0) {
@@ -2662,11 +2122,11 @@ const openScheduleModal = (name) => {
 const formatScheduleTime = (t) =>
   t
     ? new Date(t).toLocaleString("ko-KR", {
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
     : "시간 미정";
 
 // [수정] 골드 보상으로 지정된 레이드 중 완료된 레이드 개수만 카운트
@@ -2999,7 +2459,7 @@ const formatDateTime = (val) => {
   });
 };
 
-// [추가] 상단 툴팁 상세용: 전체 레이드 수익을 일반/귀속으로 분류
+// [수정] 상단 툴팁 상세용: 전체 레이드 수익을 일반/귀속으로 분류
 const getTotalGoldBreakdown = () => {
   let tradeable = 0;
   let bound = 0;
@@ -3017,11 +2477,22 @@ const getTotalGoldBreakdown = () => {
         const gate = raid?.gates.find((g) => g.g === parseInt(gNum));
 
         if (gate) {
-          // 이름에 싱글, 1단계, 2단계, 3단계가 포함되면 귀속골드로 분류
-          if (/싱글|1단계|2단계|3단계/.test(raid.name)) {
-            bound += Number(gate.gold);
-          } else {
-            tradeable += Number(gate.gold);
+          const goldValue = Number(gate.gold);
+
+          // 1. 50% 귀속 정책 적용 대상 (4막 노말, 종막 노말, 세르카 노말)
+          const isHalfBoundRaid = /4막: 아르모체\(노말\)|종막: 카제로스\(노말\)|그림자: 세르카\(노말\)/.test(raid.name);
+
+          if (isHalfBoundRaid) {
+            tradeable += goldValue * 0.5;
+            bound += goldValue * 0.5;
+          }
+          // 2. 100% 귀속 대상 (기존 싱글, 1~3단계 등)
+          else if (/싱글|1단계|2단계|3단계/.test(raid.name)) {
+            bound += goldValue;
+          }
+          // 3. 그 외 일반 레이드 (100% 거래 가능)
+          else {
+            tradeable += goldValue;
           }
         }
       }
@@ -3567,7 +3038,8 @@ const syncHomeworkWithFixedParties = async () => {
   position: relative;
   display: inline-block;
   line-height: 1.2;
-  height: 1.2rem; /* 높이 강제 고정 */
+  height: 1.2rem;
+  /* 높이 강제 고정 */
   transition: opacity 0.2s ease;
 }
 
@@ -3607,7 +3079,8 @@ const syncHomeworkWithFixedParties = async () => {
 
 /* 'CLEAR' 도장 디자인 (약간 작게 조정) */
 .cleared-text {
-  font-size: 2.5rem; /* 크기 조정 */
+  font-size: 2.5rem;
+  /* 크기 조정 */
   font-weight: 900;
   color: #4caf50;
   border: 4px solid #4caf50;
@@ -3631,9 +3104,11 @@ const syncHomeworkWithFixedParties = async () => {
   0% {
     background-position: 0% 50%;
   }
+
   50% {
     background-position: 100% 50%;
   }
+
   100% {
     background-position: 0% 50%;
   }

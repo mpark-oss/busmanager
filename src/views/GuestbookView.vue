@@ -6,9 +6,21 @@
         <span class="text-h6 font-weight-black">바로가기 링크</span>
       </div>
       <v-row dense>
-        <v-col v-for="link in quickLinks" :key="link.title" cols="6" sm="4" md="2.4">
-          <v-btn block variant="tonal" :color="link.color" class="rounded-lg font-weight-bold" height="48"
-            @click="openLink(link.url)">
+        <v-col
+          v-for="link in quickLinks"
+          :key="link.title"
+          cols="6"
+          sm="4"
+          md="2.4"
+        >
+          <v-btn
+            block
+            variant="tonal"
+            :color="link.color"
+            class="rounded-lg font-weight-bold"
+            height="48"
+            @click="openLink(link.url)"
+          >
             <v-icon start size="small">{{ link.icon }}</v-icon>
             {{ link.title }}
           </v-btn>
@@ -26,6 +38,15 @@
       <v-tab value="guide" class="font-weight-black text-amber-darken-3">
         <v-icon start>mdi-map-marker-path</v-icon>지옥/나락 길잡이
       </v-tab>
+      <v-tab
+        value="frequency"
+        class="font-weight-black text-deep-purple-accent-3"
+      >
+        <v-icon start>mdi-waveform</v-icon>운명의 주파수
+      </v-tab>
+      <v-tab value="ladder" class="font-weight-black text-green-darken-2">
+        <v-icon start>mdi-ladder</v-icon>운명의 사다리
+      </v-tab>
     </v-tabs>
 
     <v-window v-model="activeTab">
@@ -39,15 +60,32 @@
           <v-form @submit.prevent="addMessage" class="mb-8">
             <v-row dense>
               <v-col cols="12" sm="3">
-                <v-text-field v-model="newName" label="닉네임" variant="outlined" density="compact" hide-details readonly
-                  :placeholder="!newName ? '캐릭터 미설정' : ''" class="mb-2 font-weight-bold"></v-text-field>
+                <v-text-field
+                  v-model="newName"
+                  label="닉네임"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  readonly
+                  :placeholder="!newName ? '캐릭터 미설정' : ''"
+                  class="mb-2 font-weight-bold"
+                ></v-text-field>
               </v-col>
               <v-col cols="12" sm="9">
-                <v-text-field v-model="newMessage" :label="!newName
-                  ? '상단 메뉴에서 대표 캐릭터를 먼저 설정해주세요!'
-                  : '자유롭게 한마디 남겨주세요!'
-                  " variant="outlined" density="compact" :disabled="!newName" append-inner-icon="mdi-send"
-                  @click:append-inner="addMessage" hide-details></v-text-field>
+                <v-text-field
+                  v-model="newMessage"
+                  :label="
+                    !newName
+                      ? '상단 메뉴에서 대표 캐릭터를 먼저 설정해주세요!'
+                      : '자유롭게 한마디 남겨주세요!'
+                  "
+                  variant="outlined"
+                  density="compact"
+                  :disabled="!newName"
+                  append-inner-icon="mdi-send"
+                  @click:append-inner="addMessage"
+                  hide-details
+                ></v-text-field>
               </v-col>
             </v-row>
           </v-form>
@@ -56,56 +94,92 @@
 
           <v-list lines="two" class="bg-transparent">
             <v-fade-transition group>
-              <v-list-item v-for="msg in messages" :key="msg.id" class="mb-4 pa-4 rounded-lg border transition-swing"
-                :class="theme.global.current.value.dark
-                  ? 'bg-grey-darken-3'
-                  : 'bg-grey-lighten-5'
-                  ">
+              <v-list-item
+                v-for="msg in messages"
+                :key="msg.id"
+                class="mb-4 pa-4 rounded-lg border transition-swing"
+                :class="
+                  theme.global.current.value.dark
+                    ? 'bg-grey-darken-3'
+                    : 'bg-grey-lighten-5'
+                "
+              >
                 <template v-slot:prepend>
                   <v-avatar color="primary" variant="tonal">
                     <v-icon>mdi-account</v-icon>
                   </v-avatar>
                 </template>
 
-                <v-list-item-title class="font-weight-bold d-flex align-center"
-                  :class="{ 'text-white': theme.global.current.value.dark }">
+                <v-list-item-title
+                  class="font-weight-bold d-flex align-center"
+                  :class="{ 'text-white': theme.global.current.value.dark }"
+                >
                   {{ msg.nickname }}
                   <span class="text-caption text-medium-emphasis ms-3">{{
                     formatDate(msg.createdAt)
                   }}</span>
                 </v-list-item-title>
 
-                <v-list-item-subtitle class="text-body-1 mt-1" :class="theme.global.current.value.dark
-                  ? 'text-white'
-                  : 'text-black'
-                  " style="opacity: 1">
+                <v-list-item-subtitle
+                  class="text-body-1 mt-1"
+                  :class="
+                    theme.global.current.value.dark
+                      ? 'text-white'
+                      : 'text-black'
+                  "
+                  style="opacity: 1"
+                >
                   {{ msg.content }}
                 </v-list-item-subtitle>
 
                 <template v-slot:append>
-                  <v-btn icon="mdi-delete-outline" size="small" variant="text" color="medium-emphasis"
-                    @click="deleteMessage(msg.id)"></v-btn>
+                  <v-btn
+                    icon="mdi-delete-outline"
+                    size="small"
+                    variant="text"
+                    color="medium-emphasis"
+                    @click="deleteMessage(msg.id)"
+                  ></v-btn>
                 </template>
                 <v-divider class="my-3"></v-divider>
                 <div class="px-2 pb-2">
-                  <div v-for="reply in msg.replies || []" :key="reply.id" class="text-caption mb-1">
+                  <div
+                    v-for="reply in msg.replies || []"
+                    :key="reply.id"
+                    class="text-caption mb-1"
+                  >
                     <b class="text-error">{{ reply.nickname }}:</b>
                     {{ reply.content }}
                   </div>
-                  <v-text-field v-model="msg.newReply" placeholder="댓글 작성..." variant="underlined" density="compact"
-                    hide-details append-inner-icon="mdi-chat-plus-outline"
+                  <v-text-field
+                    v-model="msg.newReply"
+                    placeholder="댓글 작성..."
+                    variant="underlined"
+                    density="compact"
+                    hide-details
+                    append-inner-icon="mdi-chat-plus-outline"
                     @click:append-inner="addComment('guestbook', msg)"
-                    @keyup.enter="addComment('guestbook', msg)"></v-text-field>
+                    @keyup.enter="addComment('guestbook', msg)"
+                  ></v-text-field>
                 </div>
               </v-list-item>
             </v-fade-transition>
           </v-list>
           <div v-if="hasMoreMessages" class="text-center mt-6">
-            <v-btn variant="tonal" color="primary" rounded="lg" :loading="isMoreMsgLoading" @click="fetchMoreMessages">
+            <v-btn
+              variant="tonal"
+              color="primary"
+              rounded="lg"
+              :loading="isMoreMsgLoading"
+              @click="fetchMoreMessages"
+            >
               <v-icon start>mdi-history</v-icon> 이전 낙서 더보기
             </v-btn>
           </div>
-          <div v-else-if="messages.length > 0" class="text-center mt-6 text-grey text-caption">
+          <div
+            v-else-if="messages.length > 0"
+            class="text-center mt-6 text-grey text-caption"
+          >
             마지막 낙서입니다.
           </div>
 
@@ -116,21 +190,35 @@
       </v-window-item>
 
       <v-window-item value="incident">
-        <v-card variant="flat" class="rounded-xl pa-4 mb-6 border-dashed ranking-board-container">
+        <v-card
+          variant="flat"
+          class="rounded-xl pa-4 mb-6 border-dashed ranking-board-container"
+        >
           <div class="d-flex align-center mb-4">
             <v-icon color="error" class="me-2">mdi-trophy-variant</v-icon>
-            <span class="text-subtitle-1 font-weight-black text-error">원정대 누적 신고 랭킹 (Top 3)</span>
+            <span class="text-subtitle-1 font-weight-black text-error"
+              >원정대 누적 신고 랭킹 (Top 3)</span
+            >
           </div>
 
           <v-row dense justify="center">
-            <v-col v-for="(rank, index) in rosterRankings" :key="index" cols="12" sm="4">
-              <v-card variant="flat"
-                class="pa-4 rounded-xl border-lg position-relative overflow-hidden ranking-medal-card" :class="[
+            <v-col
+              v-for="(rank, index) in rosterRankings"
+              :key="index"
+              cols="12"
+              sm="4"
+            >
+              <v-card
+                variant="flat"
+                class="pa-4 rounded-xl border-lg position-relative overflow-hidden ranking-medal-card"
+                :class="[
                   `medal-rank-${index + 1}`,
                   theme.global.current.value.dark
                     ? 'theme--dark'
                     : 'theme--light',
-                ]" height="100%">
+                ]"
+                height="100%"
+              >
                 <v-icon class="rank-bg-icon">{{
                   index === 0
                     ? "mdi-trophy"
@@ -139,13 +227,25 @@
                       : "mdi-medal-outline"
                 }}</v-icon>
 
-                <div class="d-flex justify-space-between align-start position-relative" style="z-index: 2">
+                <div
+                  class="d-flex justify-space-between align-start position-relative"
+                  style="z-index: 2"
+                >
                   <div class="d-flex flex-column">
                     <div class="d-flex align-center mb-1">
-                      <v-avatar size="24" :color="getMedalColor(index)" class="me-2 elevation-2">
-                        <span class="text-white font-weight-black text-caption">{{ index + 1 }}</span>
+                      <v-avatar
+                        size="24"
+                        :color="getMedalColor(index)"
+                        class="me-2 elevation-2"
+                      >
+                        <span
+                          class="text-white font-weight-black text-caption"
+                          >{{ index + 1 }}</span
+                        >
                       </v-avatar>
-                      <span class="text-subtitle-2 font-weight-black medal-label">
+                      <span
+                        class="text-subtitle-2 font-weight-black medal-label"
+                      >
                         {{
                           index === 0
                             ? "GOLD"
@@ -156,7 +256,10 @@
                       </span>
                     </div>
 
-                    <div class="text-h6 font-weight-black text-truncate ranking-name" style="max-width: 140px">
+                    <div
+                      class="text-h6 font-weight-black text-truncate ranking-name"
+                      style="max-width: 140px"
+                    >
                       {{ rank.lastTargetName || "정보 없음" }}
                     </div>
                   </div>
@@ -165,14 +268,23 @@
                     <div class="text-h4 font-weight-black ranking-count">
                       {{ rank.totalCount }}
                     </div>
-                    <div class="text-caption font-weight-bold total-label mt-n1">
+                    <div
+                      class="text-caption font-weight-bold total-label mt-n1"
+                    >
                       TOTAL
                     </div>
                   </div>
                 </div>
 
-                <div class="mt-3 d-flex align-center position-relative" style="z-index: 2">
-                  <v-chip size="x-small" class="font-weight-bold px-2 roster-chip" variant="flat">
+                <div
+                  class="mt-3 d-flex align-center position-relative"
+                  style="z-index: 2"
+                >
+                  <v-chip
+                    size="x-small"
+                    class="font-weight-bold px-2 roster-chip"
+                    variant="flat"
+                  >
                     외 {{ rank.members?.length - 1 || 0 }} 캐릭터
                   </v-chip>
                 </div>
@@ -190,72 +302,144 @@
           <v-form @submit.prevent="submitReport" class="mb-8">
             <v-row dense>
               <v-col cols="12" sm="5">
-                <v-text-field v-model="reportForm.targetName" label="신고 대상 캐릭터명" variant="outlined" density="compact"
-                  append-inner-icon="mdi-magnify" placeholder="정확한 캐릭터명" hide-details
-                  @update:model-value="isSearched = false" @keyup.enter="searchTarget"></v-text-field>
+                <v-text-field
+                  v-model="reportForm.targetName"
+                  label="신고 대상 캐릭터명"
+                  variant="outlined"
+                  density="compact"
+                  append-inner-icon="mdi-magnify"
+                  placeholder="정확한 캐릭터명"
+                  hide-details
+                  @update:model-value="isSearched = false"
+                  @keyup.enter="searchTarget"
+                ></v-text-field>
               </v-col>
 
               <v-col cols="12" sm="4">
-                <v-text-field v-model="reportForm.incidentTime" label="사건 발생 시간" type="datetime-local"
-                  variant="outlined" density="compact" hide-details></v-text-field>
+                <v-text-field
+                  v-model="reportForm.incidentTime"
+                  label="사건 발생 시간"
+                  type="datetime-local"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                ></v-text-field>
               </v-col>
 
               <v-col cols="12" sm="3">
-                <v-text-field v-model="reportForm.password" label="삭제 비번(4자리)" type="password" variant="outlined"
-                  density="compact" maxlength="4" placeholder="숫자 4자리" hide-details></v-text-field>
+                <v-text-field
+                  v-model="reportForm.password"
+                  label="삭제 비번(4자리)"
+                  type="password"
+                  variant="outlined"
+                  density="compact"
+                  maxlength="4"
+                  placeholder="숫자 4자리"
+                  hide-details
+                ></v-text-field>
               </v-col>
 
               <v-col cols="12" class="text-right mt-2">
-                <v-btn color="primary" variant="tonal" rounded="lg" class="me-2" prepend-icon="mdi-magnify"
-                  @click="searchTarget">
+                <v-btn
+                  color="primary"
+                  variant="tonal"
+                  rounded="lg"
+                  class="me-2"
+                  prepend-icon="mdi-magnify"
+                  @click="searchTarget"
+                >
                   캐릭터 검색/확인
                 </v-btn>
 
-                <v-btn :color="isSearched ? 'error' : 'grey'" variant="flat" rounded="lg"
-                  :prepend-icon="isSearched ? 'mdi-bullhorn' : 'mdi-lock'" @click="submitReport" :loading="isReporting"
-                  :disabled="!isSearched">
+                <v-btn
+                  :color="isSearched ? 'error' : 'grey'"
+                  variant="flat"
+                  rounded="lg"
+                  :prepend-icon="isSearched ? 'mdi-bullhorn' : 'mdi-lock'"
+                  @click="submitReport"
+                  :loading="isReporting"
+                  :disabled="!isSearched"
+                >
                   {{ isSearched ? "신고 등록" : "캐릭터 검색 필요" }}
                 </v-btn>
               </v-col>
 
               <v-col cols="12" class="mt-2">
-                <v-textarea v-model="reportForm.reason" label="신고 사유" variant="outlined" rows="3"
-                  placeholder="신고 사유를 상세히 적어주세요" hide-details></v-textarea>
+                <v-textarea
+                  v-model="reportForm.reason"
+                  label="신고 사유"
+                  variant="outlined"
+                  rows="3"
+                  placeholder="신고 사유를 상세히 적어주세요"
+                  hide-details
+                ></v-textarea>
               </v-col>
 
               <v-col cols="12" class="mt-2">
-                <v-file-input v-model="reportForm.imageFile" label="증거 스크린샷" variant="outlined" density="compact"
-                  prepend-icon="mdi-camera" accept="image/*" hide-details></v-file-input>
+                <v-file-input
+                  v-model="reportForm.imageFile"
+                  label="증거 스크린샷"
+                  variant="outlined"
+                  density="compact"
+                  prepend-icon="mdi-camera"
+                  accept="image/*"
+                  hide-details
+                ></v-file-input>
               </v-col>
             </v-row>
           </v-form>
 
           <v-divider class="mb-6"></v-divider>
 
-          <v-text-field v-model="searchKeyword" label="신고 내역 통합 검색 (캐릭터명 입력)" placeholder="캐릭터명 입력 후 Enter"
-            prepend-inner-icon="mdi-account-search" variant="solo-filled" flat hide-details rounded="lg" clearable
-            class="mb-6" @keyup.enter="handleSearch" @click:append-inner="handleSearch" @click:clear="resetSearch"
-            @update:model-value="(val) => !val && resetSearch()"></v-text-field>
+          <v-text-field
+            v-model="searchKeyword"
+            label="신고 내역 통합 검색 (캐릭터명 입력)"
+            placeholder="캐릭터명 입력 후 Enter"
+            prepend-inner-icon="mdi-account-search"
+            variant="solo-filled"
+            flat
+            hide-details
+            rounded="lg"
+            clearable
+            class="mb-6"
+            @keyup.enter="handleSearch"
+            @click:append-inner="handleSearch"
+            @click:clear="resetSearch"
+            @update:model-value="(val) => !val && resetSearch()"
+          ></v-text-field>
 
           <v-fade-transition>
-            <div v-if="searchedKeyword && !isSearching" class="px-1 mb-4 d-flex align-center">
-              <v-icon size="small" color="error" class="me-2">mdi-database-search</v-icon>
+            <div
+              v-if="searchedKeyword && !isSearching"
+              class="px-1 mb-4 d-flex align-center"
+            >
+              <v-icon size="small" color="error" class="me-2"
+                >mdi-database-search</v-icon
+              >
               <span class="text-subtitle-2 font-weight-bold">
                 '{{ searchedKeyword }}' 관련 원정대 통합 검색 결과:
-                <span class="text-error">{{ searchTotalCount }}</span>건
+                <span class="text-error">{{ searchTotalCount }}</span
+                >건
               </span>
             </div>
           </v-fade-transition>
 
           <v-list class="bg-transparent">
             <v-fade-transition group>
-              <v-list-item v-for="report in searchedKeyword ? searchResults : reports" :key="report.id"
-                class="mb-4 pa-4 rounded-lg border incident-item" :class="theme.global.current.value.dark
-                  ? 'bg-red-darken-4'
-                  : 'bg-red-lighten-5'
-                  ">
+              <v-list-item
+                v-for="report in searchedKeyword ? searchResults : reports"
+                :key="report.id"
+                class="mb-4 pa-4 rounded-lg border incident-item"
+                :class="
+                  theme.global.current.value.dark
+                    ? 'bg-red-darken-4'
+                    : 'bg-red-lighten-5'
+                "
+              >
                 <div class="d-flex justify-space-between align-center mb-2">
-                  <span class="text-h6 font-weight-black text-error">🚨 대상: {{ report.targetName }}</span>
+                  <span class="text-h6 font-weight-black text-error"
+                    >🚨 대상: {{ report.targetName }}</span
+                  >
                   <span class="text-caption font-weight-bold">{{
                     formatDate(report.createdAt)
                   }}</span>
@@ -269,55 +453,104 @@
                   }}
                 </div>
                 <div class="text-body-1 mb-2">{{ report.reason }}</div>
-                <v-img v-if="report.imageUrl" :src="report.imageUrl" aspect-ratio="16/9" cover max-width="200"
-                  height="120" class="rounded-lg mb-3 cursor-pointer thumbnail-hover border"
-                  @click="openImage(report.imageUrl)">
+                <v-img
+                  v-if="report.imageUrl"
+                  :src="report.imageUrl"
+                  aspect-ratio="16/9"
+                  cover
+                  max-width="200"
+                  height="120"
+                  class="rounded-lg mb-3 cursor-pointer thumbnail-hover border"
+                  @click="openImage(report.imageUrl)"
+                >
                   <template v-slot:placeholder>
-                    <v-row class="fill-height ma-0" align="center" justify="center">
-                      <v-progress-circular indeterminate color="grey-lighten-5"></v-progress-circular>
+                    <v-row
+                      class="fill-height ma-0"
+                      align="center"
+                      justify="center"
+                    >
+                      <v-progress-circular
+                        indeterminate
+                        color="grey-lighten-5"
+                      ></v-progress-circular>
                     </v-row>
                   </template>
                 </v-img>
-                <div class="text-caption font-weight-bold" :class="theme.global.current.value.dark
-                  ? 'text-red-lighten-3'
-                  : 'text-red-darken-2'
-                  ">
+                <div
+                  class="text-caption font-weight-bold"
+                  :class="
+                    theme.global.current.value.dark
+                      ? 'text-red-lighten-3'
+                      : 'text-red-darken-2'
+                  "
+                >
                   올바른 길드 생활을 위해 반성하세요.
                 </div>
 
                 <template v-slot:append>
-                  <v-btn icon="mdi-delete-outline" size="small" variant="elevated" color="bg-red-darken-4"
-                    style="opacity: 1 !important" @click="deleteReport(report)"></v-btn>
+                  <v-btn
+                    icon="mdi-delete-outline"
+                    size="small"
+                    variant="elevated"
+                    color="bg-red-darken-4"
+                    style="opacity: 1 !important"
+                    @click="deleteReport(report)"
+                  ></v-btn>
                 </template>
 
                 <v-divider class="my-3"></v-divider>
                 <div class="px-2 pb-2">
-                  <div v-for="reply in report.replies || []" :key="reply.id" class="text-caption mb-1">
+                  <div
+                    v-for="reply in report.replies || []"
+                    :key="reply.id"
+                    class="text-caption mb-1"
+                  >
                     <b class="text-error">{{ reply.nickname }}:</b>
                     {{ reply.content }}
                   </div>
 
-                  <v-text-field v-model="report.newReply" placeholder="댓글 작성..." variant="underlined" density="compact"
-                    hide-details append-inner-icon="mdi-chat-plus-outline"
+                  <v-text-field
+                    v-model="report.newReply"
+                    placeholder="댓글 작성..."
+                    variant="underlined"
+                    density="compact"
+                    hide-details
+                    append-inner-icon="mdi-chat-plus-outline"
                     @click:append-inner="addComment('reports', report)"
-                    @keyup.enter="addComment('reports', report)"></v-text-field>
+                    @keyup.enter="addComment('reports', report)"
+                  ></v-text-field>
                 </div>
               </v-list-item>
             </v-fade-transition>
           </v-list>
-          <div v-if="searchedKeyword && searchResults.length === 0" class="text-center py-10 text-grey">
+          <div
+            v-if="searchedKeyword && searchResults.length === 0"
+            class="text-center py-10 text-grey"
+          >
             '{{ searchedKeyword }}'와 관련된 신고 내역이 없습니다.
           </div>
           <div v-if="hasMoreReports" class="text-center mt-6">
-            <v-btn variant="flat" color="error" rounded="lg" :loading="isMoreLoading" @click="fetchMoreReports">
+            <v-btn
+              variant="flat"
+              color="error"
+              rounded="lg"
+              :loading="isMoreLoading"
+              @click="fetchMoreReports"
+            >
               <v-icon start>mdi-history</v-icon> 이전 신고 더보기
             </v-btn>
           </div>
-          <div v-else-if="reports.length > 0" class="text-center mt-6 text-grey text-caption">
+          <div
+            v-else-if="reports.length > 0"
+            class="text-center mt-6 text-grey text-caption"
+          >
             모든 신고 내역을 불러왔습니다.
           </div>
 
-          <div v-if="filteredReports.length === 0 && searchKeyword" class="text-center py-10 text-grey">
+          <div
+            v-if="filteredReports.length === 0 && searchKeyword"
+            class="text-center py-10 text-grey"
+          >
             '{{ searchKeyword }}'와 관련된 신고 내역이 없습니다.
           </div>
         </v-card>
@@ -330,26 +563,50 @@
             길잡이
           </h2>
 
-          <v-alert border="start" color="amber-darken-3" variant="tonal" class="mb-6 rounded-lg">
+          <v-alert
+            border="start"
+            color="amber-darken-3"
+            variant="tonal"
+            class="mb-6 rounded-lg"
+          >
             <div class="text-body-2">
               등급별 열쇠를 선택하여 길잡이 정보를 확인하세요.
             </div>
           </v-alert>
 
           <v-row dense>
-            <v-col v-for="key in keyGrades" :key="key.label" cols="12" sm="4" md="3">
-              <v-btn block variant="elevated" height="60" class="rounded-lg font-weight-black text-h6" :style="{
-                backgroundColor: key.color,
-                color: '#333 !important' /* 모든 모드에서 검은색 글씨 강제 */,
-              }" @click="generateGuide(key.label)">
+            <v-col
+              v-for="key in keyGrades"
+              :key="key.label"
+              cols="12"
+              sm="4"
+              md="3"
+            >
+              <v-btn
+                block
+                variant="elevated"
+                height="60"
+                class="rounded-lg font-weight-black text-h6"
+                :style="{
+                  backgroundColor: key.color,
+                  color: '#333 !important' /* 모든 모드에서 검은색 글씨 강제 */,
+                }"
+                @click="generateGuide(key.label)"
+              >
                 <v-icon start size="large" color="#333">mdi-key-chain</v-icon>
                 {{ key.label }} 열쇠
               </v-btn>
             </v-col>
             <v-col cols="12" sm="4" md="3">
-              <v-btn block variant="flat" height="60" color="cyan"
-                class="rounded-lg font-weight-black text-h6 text-white" @click="addExtraChance"
-                :disabled="!selectedKey">
+              <v-btn
+                block
+                variant="flat"
+                height="60"
+                color="cyan"
+                class="rounded-lg font-weight-black text-h6 text-white"
+                @click="addExtraChance"
+                :disabled="!selectedKey"
+              >
                 <v-icon start size="large">mdi-plus-circle-outline</v-icon>
                 강하 +1
               </v-btn>
@@ -357,21 +614,38 @@
           </v-row>
 
           <v-expand-transition>
-            <div v-if="selectedKey" class="mt-10 pa-8 rounded-xl bg-grey-darken-4 text-center border-double"
-              style="border: 4px double rgba(255, 255, 255, 0.2)">
-              <div class="text-h5 font-weight-black mb-4" :style="{
-                color: keyGrades.find((k) => k.label === selectedKey)?.color,
-              }">
+            <div
+              v-if="selectedKey"
+              class="mt-10 pa-8 rounded-xl bg-grey-darken-4 text-center border-double"
+              style="border: 4px double rgba(255, 255, 255, 0.2)"
+            >
+              <div
+                class="text-h5 font-weight-black mb-4"
+                :style="{
+                  color: keyGrades.find((k) => k.label === selectedKey)?.color,
+                }"
+              >
                 <v-icon class="me-2">mdi-auto-fix</v-icon>
                 {{ selectedKey }} 열쇠 길잡이 결과
               </div>
 
-              <div class="d-flex flex-wrap justify-center mb-8" style="gap: 16px; row-gap: 32px">
-                <div v-for="(res, index) in guideResults" :key="index" class="d-flex align-center">
-                  <v-card width="100" height="120" variant="flat"
+              <div
+                class="d-flex flex-wrap justify-center mb-8"
+                style="gap: 16px; row-gap: 32px"
+              >
+                <div
+                  v-for="(res, index) in guideResults"
+                  :key="index"
+                  class="d-flex align-center"
+                >
+                  <v-card
+                    width="100"
+                    height="120"
+                    variant="flat"
                     :color="res === '왼쪽' ? 'blue-darken-4' : 'red-darken-4'"
                     class="d-flex flex-column align-center justify-center rounded-lg border-sm elevation-4"
-                    style="position: relative">
+                    style="position: relative"
+                  >
                     <div class="text-caption font-weight-bold mb-1 opacity-70">
                       {{ index + 1 }}회차
                     </div>
@@ -384,23 +658,36 @@
                     </v-icon>
                     <div class="text-h6 font-weight-black">{{ res }}</div>
 
-                    <div :class="res === '왼쪽' ? 'bg-blue' : 'bg-red'" style="
+                    <div
+                      :class="res === '왼쪽' ? 'bg-blue' : 'bg-red'"
+                      style="
                         position: absolute;
                         bottom: 0;
                         width: 100%;
                         height: 4px;
                         opacity: 0.6;
-                      "></div>
+                      "
+                    ></div>
                   </v-card>
 
-                  <v-icon v-if="index < guideResults.length - 1" color="grey-darken-2" class="mx-1">
+                  <v-icon
+                    v-if="index < guideResults.length - 1"
+                    color="grey-darken-2"
+                    class="mx-1"
+                  >
                     mdi-chevron-right
                   </v-icon>
                 </div>
               </div>
 
-              <v-btn size="large" variant="outlined" color="white" rounded="pill" class="px-8 font-weight-bold"
-                @click="generateGuide(selectedKey)">
+              <v-btn
+                size="large"
+                variant="outlined"
+                color="white"
+                rounded="pill"
+                class="px-8 font-weight-bold"
+                @click="generateGuide(selectedKey)"
+              >
                 <v-icon start>mdi-refresh</v-icon> 다시 뽑기
               </v-btn>
             </div>
@@ -411,12 +698,255 @@
           </div>
         </v-card>
       </v-window-item>
+
+      <v-window-item value="frequency">
+        <v-card
+          variant="flat"
+          border
+          class="rounded-xl pa-6 overflow-hidden position-relative"
+        >
+          <h2 class="text-h4 font-weight-black text-deep-purple-accent-3 mb-6">
+            <v-icon size="large" class="me-2">mdi-auto-fix</v-icon> 운명의
+            주파수
+          </h2>
+
+          <v-alert
+            border="start"
+            color="deep-purple-accent-3"
+            variant="tonal"
+            class="mb-8 rounded-lg"
+          >
+            <div class="text-body-2">
+              운이 지지리도 없는 개발자의 염원이 담긴 주파수입니다.
+            </div>
+          </v-alert>
+
+          <v-sheet
+            height="200"
+            class="rounded-xl mb-8 d-flex align-center justify-center bg-black position-relative overflow-hidden border-lg"
+            style="border: 2px solid #6200ee"
+          >
+            <div
+              v-if="isPlaying"
+              :class="['visualizer-glow', activeFreqType]"
+            ></div>
+
+            <div
+              class="d-flex align-end justify-center gap-2"
+              style="z-index: 2; height: 100px"
+            >
+              <div
+                v-for="n in 15"
+                :key="n"
+                :class="['freq-bar', { 'is-animating': isPlaying }]"
+                :style="{
+                  animationDelay: `${n * 0.07}s`,
+                  backgroundColor: currentFreqColor,
+                }"
+              ></div>
+            </div>
+
+            <div
+              class="position-absolute bottom-0 mb-4 text-overline font-weight-black text-white"
+              style="z-index: 2"
+            >
+              {{
+                isPlaying
+                  ? `${activeFreqName} 공명 중...`
+                  : "주파수를 선택하여 공명을 시작하세요"
+              }}
+            </div>
+          </v-sheet>
+
+          <v-row dense>
+            <v-col v-for="f in frequencyList" :key="f.id" cols="12" sm="6">
+              <v-btn
+                block
+                height="80"
+                variant="elevated"
+                :style="{ backgroundColor: f.color, color: f.textColor }"
+                class="rounded-xl font-weight-black text-h6"
+                :class="{
+                  'pulse-active': activeFreqType === f.id && isPlaying,
+                }"
+                @click="toggleFrequency(f)"
+              >
+                <v-icon start size="large">{{
+                  isPlaying && activeFreqType === f.id
+                    ? "mdi-stop-circle"
+                    : f.icon
+                }}</v-icon>
+                {{ f.title }}
+              </v-btn>
+            </v-col>
+          </v-row>
+        </v-card>
+      </v-window-item>
+      <v-window-item value="ladder">
+        <v-card variant="flat" border class="rounded-xl pa-6">
+          <h2 class="text-h4 font-weight-black text-green-darken-2 mb-6">
+            <v-icon size="large" class="me-2">mdi-ladder</v-icon> 운명의 사다리
+          </h2>
+
+          <v-row class="mb-4">
+            <v-col cols="12" sm="6">
+              <v-slider
+                v-model="ladderCount"
+                min="2"
+                max="8"
+                step="1"
+                label="참여 인원"
+                thumb-label
+                color="green-darken-2"
+                hide-details
+              ></v-slider>
+            </v-col>
+            <v-col cols="12" sm="6" class="d-flex gap-2">
+              <v-btn
+                block
+                color="green-darken-2"
+                height="44"
+                variant="elevated"
+                @click="initLadder"
+                class="rounded-lg font-weight-black"
+              >
+                사다리 생성
+              </v-btn>
+            </v-col>
+          </v-row>
+
+          <v-sheet
+            border
+            class="rounded-xl pa-4 bg-grey-lighten-4 overflow-hidden position-relative"
+            style="min-height: 400px"
+          >
+            <div id="ladder-container" class="ladder-wrap">
+              <div class="d-flex justify-space-between mb-4">
+                <div
+                  v-for="i in ladderCount"
+                  :key="'in-' + i"
+                  class="ladder-node-input"
+                >
+                  <input v-model="ladderInputs[i - 1]" placeholder="이름" />
+                </div>
+              </div>
+
+              <canvas
+                ref="ladderCanvas"
+                id="ladder-canvas"
+                width="600"
+                height="300"
+              ></canvas>
+
+              <div class="d-flex justify-space-between mt-4">
+                <div
+                  v-for="i in ladderCount"
+                  :key="'out-' + i"
+                  class="ladder-node-input"
+                >
+                  <input v-model="ladderResults[i - 1]" placeholder="결과" />
+                </div>
+              </div>
+            </div>
+          </v-sheet>
+
+          <div class="mt-6 text-center d-flex justify-center gap-4">
+            <v-btn
+              size="large"
+              color="grey-darken-1"
+              variant="outlined"
+              rounded="pill"
+              class="px-8 font-weight-bold"
+              @click="initLadder"
+              :disabled="isLadderRunning"
+            >
+              <v-icon start>mdi-refresh</v-icon> 새 사다리
+            </v-btn>
+
+            <v-btn
+              size="large"
+              color="primary"
+              rounded="pill"
+              class="px-10 font-weight-bold"
+              @click="startLadder"
+              :disabled="isLadderRunning"
+            >
+              <v-icon start>mdi-play</v-icon> 결과 확인하기
+            </v-btn>
+          </div>
+        </v-card>
+      </v-window-item>
     </v-window>
   </v-container>
+  <v-dialog v-model="ladderResultModal" max-width="400">
+    <v-card class="rounded-xl pa-4 text-center">
+      <v-card-title
+        class="text-h5 font-weight-black d-flex align-center justify-center"
+      >
+        <v-icon color="green-darken-2" class="me-2">mdi-trophy-variant</v-icon>
+        운명의 사다리 결과
+      </v-card-title>
+
+      <v-divider class="my-3"></v-divider>
+
+      <v-card-text class="pa-0">
+        <v-list class="bg-transparent">
+          <v-list-item
+            v-for="(res, idx) in finalMatchedResults"
+            :key="idx"
+            class="mb-2 border rounded-lg pa-3"
+          >
+            <div class="d-flex align-center justify-space-between w-100">
+              <div class="d-flex align-center">
+                <v-avatar
+                  size="12"
+                  :style="{ backgroundColor: res.color }"
+                  class="me-3"
+                ></v-avatar>
+                <span class="font-weight-black text-subtitle-1">{{
+                  res.name
+                }}</span>
+              </div>
+              <v-icon color="grey-lighten-1">mdi-arrow-right-bold</v-icon>
+              <div class="text-right">
+                <span class="font-weight-black text-h6 text-primary">{{
+                  res.result
+                }}</span>
+              </div>
+            </div>
+          </v-list-item>
+        </v-list>
+      </v-card-text>
+
+      <v-card-actions>
+        <v-btn
+          block
+          color="primary"
+          variant="flat"
+          size="large"
+          rounded="lg"
+          class="font-weight-black"
+          @click="ladderResultModal = false"
+        >
+          확인
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
   <v-dialog v-model="imageDialog" max-width="90vw">
     <v-card class="bg-transparent shadow-none text-right">
-      <v-btn icon="mdi-close" color="white" variant="text" @click="imageDialog = false"></v-btn>
-      <v-img :src="selectedImage" max-height="85vh" contain class="rounded-lg shadow-lg"></v-img>
+      <v-btn
+        icon="mdi-close"
+        color="white"
+        variant="text"
+        @click="imageDialog = false"
+      ></v-btn>
+      <v-img
+        :src="selectedImage"
+        max-height="85vh"
+        contain
+        class="rounded-lg shadow-lg"
+      ></v-img>
     </v-card>
   </v-dialog>
 </template>
@@ -592,6 +1122,159 @@ const chanceMap = {
 
 // GuestbookView.vue <script setup> 내부
 
+// [변수 추가] 기존 ref들이 모여있는 상단에 추가
+const isPlaying = ref(false);
+const activeFreqType = ref(null);
+const activeFreqName = ref("");
+const currentFreqColor = ref("#6200EE");
+let audioCtx = null;
+let oscillator = null;
+let gainNode = null;
+
+// [주파수 데이터 정의]
+const frequencyList = [
+  {
+    id: "ancient",
+    title: "고대코어 획득 주파수",
+    icon: "mdi-hexagram",
+    freq: 528,
+    color: "#F5F5DC",
+    textColor: "#333",
+  },
+  {
+    id: "upgrade",
+    title: "강화 성공 주파수",
+    icon: "mdi-sword-cross",
+    freq: 432,
+    color: "#FF5252",
+    textColor: "#FFF",
+  },
+  {
+    id: "gold",
+    title: "골드 편린 주파수",
+    icon: "mdi-gold",
+    freq: 880,
+    color: "#FFD700",
+    textColor: "#333",
+  },
+  {
+    id: "gem",
+    title: "젬 아저씨 주파수",
+    icon: "mdi-diamond-stone",
+    freq: 639,
+    color: "#2196F3",
+    textColor: "#FFF",
+  },
+];
+
+// [재생/정지 토글 함수]
+const toggleFrequency = (f) => {
+  if (isPlaying.value && activeFreqType.value === f.id) {
+    stopSound();
+  } else {
+    stopSound();
+    playSound(f);
+  }
+};
+
+const playSound = async (f) => {
+  if (!audioCtx)
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === "suspended") await audioCtx.resume();
+
+  oscillator = audioCtx.createOscillator();
+  gainNode = audioCtx.createGain();
+
+  // --- 주파수별 고유 성격 부여 ---
+  switch (f.id) {
+    case "ancient": // 1. 고대코어: 낮고 웅장한 진동 (Triangle 파형)
+      oscillator.type = "triangle";
+      const lowOsc = audioCtx.createOscillator();
+      const lowGain = audioCtx.createGain();
+      lowOsc.frequency.value = 5; // 아주 낮은 주파수로 맥동 유도
+      lowGain.gain.value = 10;
+      lowOsc.connect(lowGain);
+      lowGain.connect(oscillator.frequency);
+      lowOsc.start();
+      break;
+
+    case "upgrade": // 2. 강화: 긴장감 있는 날카로운 소리 (Sawtooth + 빠른 비브라토)
+      oscillator.type = "sawtooth";
+      const fastLfo = audioCtx.createOscillator();
+      const fastGain = audioCtx.createGain();
+      fastLfo.frequency.value = 15; // 빠르게 떨리는 소리
+      fastGain.gain.value = 20;
+      fastLfo.connect(fastGain);
+      fastGain.connect(oscillator.frequency);
+      fastLfo.start();
+      break;
+
+    case "gold": // 3. 골드 편린: 맑고 영롱한 종소리 (Sine + 감쇠하는 높은 음)
+      oscillator.type = "sine";
+      // 880Hz 고정음 대신 약간의 화음 효과
+      break;
+
+    case "gem": // 4. 젬: 디지털적이고 정교한 느낌 (Square 파형 + 필터)
+      oscillator.type = "square";
+      const biquadFilter = audioCtx.createBiquadFilter();
+      biquadFilter.type = "lowpass";
+      biquadFilter.frequency.value = 1000;
+      oscillator.connect(biquadFilter);
+      biquadFilter.connect(gainNode);
+      // 필터 사용 시 직접 연결 끊고 리턴 방지 위해 여기서 연결
+      break;
+  }
+
+  // 젬 주파수(필터 사용) 외에는 기본 연결
+  if (f.id !== "gem") oscillator.connect(gainNode);
+
+  gainNode.connect(audioCtx.destination);
+
+  // 볼륨 및 시작 설정
+  oscillator.frequency.setValueAtTime(f.freq, audioCtx.currentTime);
+  gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+  gainNode.gain.linearRampToValueAtTime(0.06, audioCtx.currentTime + 0.2);
+
+  oscillator.start();
+
+  isPlaying.value = true;
+  activeFreqType.value = f.id;
+  activeFreqName.value = f.title;
+  currentFreqColor.value = f.color;
+};
+
+const stopSound = () => {
+  if (oscillator) {
+    try {
+      const finishTime = audioCtx.currentTime + 0.1;
+      gainNode.gain.linearRampToValueAtTime(0, finishTime);
+
+      // 0.1초 뒤에 확실히 정지
+      const tempOsc = oscillator;
+      setTimeout(() => {
+        tempOsc.stop();
+        tempOsc.disconnect();
+      }, 150);
+    } catch (e) {
+      console.warn("소리 정지 중 오류 발생:", e);
+    }
+  }
+
+  isPlaying.value = false;
+  activeFreqType.value = null;
+  // 참조 변수 초기화 (다음 재생 시 새로 생성하기 위함)
+  oscillator = null;
+  gainNode = null;
+};
+
+// [라이프사이클 추가] 페이지 이탈 시 소리 자동 정지
+onUnmounted(() => {
+  stopSound();
+  // 기존 리스너 제거 로직 유지 [cite: 190]
+  window.removeEventListener("main-char-changed", handleMainCharChange);
+  window.removeEventListener("paste", handlePaste);
+});
+
 const fetchInitialReports = async () => {
   const q = query(
     collection(db, "reports"),
@@ -611,6 +1294,142 @@ const fetchInitialReports = async () => {
 
   if (documentSnapshots.docs.length < 10) hasMore.value = false;
 };
+
+// [변수 추가] 상단 선언부에 추가
+const ladderCount = ref(4);
+const ladderInputs = ref(Array(8).fill(""));
+const ladderResults = ref(Array(8).fill(""));
+const ladderCanvas = ref(null);
+const isLadderRunning = ref(false);
+let ladderLines = []; // 가로선 정보 저장
+
+let horizontalLines = [];
+const initLadder = () => {
+  const canvas = ladderCanvas.value;
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  const width = canvas.width;
+  const height = canvas.height;
+
+  // 초기화
+  ctx.clearRect(0, 0, width, height);
+  horizontalLines = [];
+
+  const colWidth = width / (ladderCount.value + 1);
+
+  // 1. 세로선 그리기
+  ctx.beginPath();
+  ctx.strokeStyle = theme.global.current.value.dark ? "#ffffff" : "#333";
+  ctx.lineWidth = 4;
+  for (let i = 1; i <= ladderCount.value; i++) {
+    const x = colWidth * i;
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, height);
+  }
+  ctx.stroke();
+
+  // 2. 가로선 생성 (안전한 for 루프 사용)
+  for (let i = 1; i < ladderCount.value; i++) {
+    const x = colWidth * i;
+    const nextX = colWidth * (i + 1);
+
+    // 각 칸 사이에 무조건 2~3개의 가로선을 만듭니다.
+    const lineCount = Math.floor(Math.random() * 2) + 2;
+
+    // Y축을 등분하여 선이 겹칠 확률을 원천 차단합니다.
+    for (let j = 0; j < lineCount; j++) {
+      // 구간을 나누어 랜덤하게 배치 (예: 전체 높이를 lineCount만큼 나눠서 그 안에서 랜덤)
+      const sectionHeight = (height - 60) / lineCount;
+      const y = 30 + sectionHeight * j + Math.random() * (sectionHeight - 20);
+
+      horizontalLines.push({ y, from: i, to: i + 1, x1: x, x2: nextX });
+
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(nextX, y);
+      ctx.lineWidth = 4;
+      ctx.stroke();
+    }
+  }
+
+  // Y축 기준 정렬 (결과 추적용)
+  horizontalLines.sort((a, b) => a.y - b.y);
+};
+
+// [변수 추가] 상단 선언부
+const ladderResultModal = ref(false);
+const finalMatchedResults = ref([]); // { name: '이름', result: '결과', color: '색상' } 저장
+
+const startLadder = async () => {
+  if (isLadderRunning.value) return;
+  isLadderRunning.value = true;
+  finalMatchedResults.value = []; // 결과 초기화
+
+  const ctx = ladderCanvas.value.getContext("2d");
+  const colWidth = ladderCanvas.value.width / (ladderCount.value + 1);
+  const height = ladderCanvas.value.height;
+
+  // 모든 참여자에 대해 순차적으로 애니메이션 실행
+  for (let startCol = 1; startCol <= ladderCount.value; startCol++) {
+    const playerColor = `hsl(${(startCol * 360) / ladderCount.value}, 70%, 50%)`;
+    ctx.beginPath();
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = playerColor;
+
+    let currentX = colWidth * startCol;
+    let currentY = 0;
+    let currentCol = startCol;
+    let visitedLines = new Set();
+
+    ctx.moveTo(currentX, currentY);
+
+    while (currentY < height) {
+      const nextLine = horizontalLines.find(
+        (l) =>
+          l.y > currentY &&
+          (l.from === currentCol || l.to === currentCol) &&
+          !visitedLines.has(l),
+      );
+
+      if (nextLine) {
+        ctx.lineTo(currentX, nextLine.y);
+        currentCol = nextLine.from === currentCol ? nextLine.to : nextLine.from;
+        currentX = colWidth * currentCol;
+        ctx.lineTo(currentX, nextLine.y);
+        currentY = nextLine.y;
+        visitedLines.add(nextLine);
+      } else {
+        ctx.lineTo(currentX, height);
+        currentY = height;
+      }
+      ctx.stroke();
+      await new Promise((resolve) => setTimeout(resolve, 30)); // 속도 살짝 상향
+    }
+
+    // 🎯 최종 결과 매칭 저장 (입력값이 없으면 '참여자/결과 N'으로 대체)
+    const playerName =
+      ladderInputs.value[startCol - 1] || `${startCol}번 참여자`;
+    const resultValue =
+      ladderResults.value[currentCol - 1] || `${currentCol}번 결과`;
+
+    finalMatchedResults.value.push({
+      name: playerName,
+      result: resultValue,
+      color: playerColor,
+    });
+  }
+
+  isLadderRunning.value = false;
+  // 🏁 모든 애니메이션 종료 후 팝업 오픈
+  setTimeout(() => {
+    ladderResultModal.value = true;
+  }, 500);
+};
+
+// 탭 전환 시 초기화 대응
+onMounted(() => {
+  setTimeout(() => initLadder(), 500);
+});
 
 const fetchMoreReports = async () => {
   if (!lastVisible.value || isMoreLoading.value) return;
@@ -843,7 +1662,10 @@ const submitReport = async () => {
         : reportForm.value.imageFile;
 
       if (file) {
-        const fileRef = storageRef(storage, `reports/${Date.now()}_${file.name}`);
+        const fileRef = storageRef(
+          storage,
+          `reports/${Date.now()}_${file.name}`,
+        );
         const snapshot = await uploadBytes(fileRef, file);
         imageUrl = await getDownloadURL(snapshot.ref);
       }
@@ -857,7 +1679,10 @@ const submitReport = async () => {
     // array-contains-any는 최대 10개까지 비교 가능하므로 상위 10개만 추출해서 비교
     const searchSample = currentRoster.slice(0, 10);
     const statsRef = collection(db, "roster_stats");
-    const q = query(statsRef, where("members", "array-contains-any", searchSample));
+    const q = query(
+      statsRef,
+      where("members", "array-contains-any", searchSample),
+    );
     const querySnapshot = await getDocs(q);
 
     if (!querySnapshot.empty) {
@@ -891,7 +1716,7 @@ const submitReport = async () => {
         lastUpdated: serverTimestamp(),
         lastTargetName: reportForm.value.targetName.trim(),
       },
-      { merge: true }
+      { merge: true },
     );
 
     // 6. 성공 알림 및 폼 초기화
@@ -966,7 +1791,6 @@ const migrateRosterStatsNames = async () => {
     }
 
     await Promise.all(batch);
-    alert(`총 ${batch.length}개의 원정대 통계가 최적화되었습니다!`);
   } catch (e) {
     console.error("마이그레이션 오류:", e);
     alert("데이터 분석 중 오류가 발생했습니다.");
@@ -1408,5 +2232,129 @@ const handlePaste = async (event) => {
 .ranking-medal-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* 이퀄라이저 막대 스타일 */
+.freq-bar {
+  width: 10px;
+  height: 8px;
+  border-radius: 4px;
+  transition: height 0.15s ease;
+}
+
+/* 재생 중일 때 막대 움직임 애니메이션 */
+.freq-bar.is-animating {
+  animation: barMove 0.8s infinite ease-in-out;
+}
+
+/* 1. 고대코어 (천천히 웅장하게) */
+.ancient .is-animating {
+  animation: barMove 2s infinite ease-in-out;
+}
+
+/* 2. 강화 (빠르고 긴박하게) */
+.upgrade .is-animating {
+  animation: barMove 0.3s infinite linear;
+}
+
+/* 3. 골드 (부드럽고 리듬감 있게) */
+.gold .is-animating {
+  animation: barMove 1.2s infinite ease-in-out;
+}
+
+/* 4. 젬 (규칙적이고 딱딱 끊기게) */
+.gem .is-animating {
+  animation: barMove 0.6s infinite steps(5);
+}
+
+@keyframes barMove {
+  0%,
+  100% {
+    height: 8px;
+    opacity: 0.5;
+  }
+  50% {
+    height: 90px;
+    opacity: 1;
+  }
+}
+
+/* 배경 신비로운 빛 효과 */
+.visualizer-glow {
+  position: absolute;
+  width: 120%;
+  height: 120%;
+  background: radial-gradient(
+    circle,
+    var(--v-primary-base) 0%,
+    transparent 60%
+  );
+  filter: blur(50px);
+  opacity: 0.2;
+  animation: bgRotate 8s linear infinite;
+}
+
+@keyframes bgRotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 버튼 활성화 시 맥동 효과 */
+.pulse-active {
+  animation: btnPulse 1.2s infinite;
+  border: 2px solid white !important;
+}
+
+@keyframes btnPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4);
+  }
+  70% {
+    transform: scale(1.02);
+    box-shadow: 0 0 0 15px rgba(255, 255, 255, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+  }
+}
+
+/* 사다리 게임 스타일 */
+.ladder-wrap {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.ladder-node-input {
+  width: 60px;
+}
+
+.ladder-node-input input {
+  width: 100%;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  padding: 4px;
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: bold;
+  background: white;
+  transition: border-color 0.2s;
+}
+
+.ladder-node-input input:focus {
+  border-color: #2e7d32;
+  outline: none;
+}
+
+#ladder-canvas {
+  width: 100%;
+  height: auto;
+  display: block;
 }
 </style>

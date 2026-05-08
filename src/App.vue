@@ -677,6 +677,7 @@ const fetchLostArkCalendar = async () => {
     const date = String(now.getDate()).padStart(2, "0");
     const todayStr = `${year}-${month}-${date}`;
 
+    console.log(res);
     // 1. 카오스 게이트
     const chaosGateData = res.data.find(
       (i) =>
@@ -730,26 +731,47 @@ const fetchLostArkCalendar = async () => {
       }
     }
 
+    // App.vue 내 fetchLostArkCalendar 함수의 모험 섬 부분 수정
+    // App.vue의 fetchLostArkCalendar 함수 내 islandsData 처리 부분
     const islandsData = res.data.filter((i) => i.CategoryName === "모험 섬");
+
     todayEvents.value.islands = islandsData
       .map((i) => {
-        const futureTimes = i.StartTimes.filter(
-          (t) => t.startsWith(todayStr) && new Date(t) > now,
-        ).map((t) => t.split("T")[1].substring(0, 5));
+        // [수정] StartTimes가 null인 경우를 대비해 빈 배열([])을 기본값으로 설정
+        const startTimes = i.StartTimes || [];
 
-        // 보상 목록에서 "골드" 아이템 찾기
-        const goldReward = i.RewardItems[0]?.Items.find(
+        // 1. 오늘 날짜에 해당하는 모든 시작 시간 추출
+        const todayAllTimes = startTimes
+          .filter((t) => t && t.startsWith(todayStr)) // t가 존재하는지도 확인
+          .map((t) => t.split("T")[1].substring(0, 5));
+
+        // 2. 그 중 현재 시간보다 미래인 시간만 따로 필터링
+        const futureTimes = startTimes
+          .filter((t) => t && t.startsWith(todayStr) && new Date(t) > now)
+          .map((t) => t.split("T")[1].substring(0, 5));
+
+        // 3. 보상 목록 안전하게 접근
+        const rewardGroups = i.RewardItems || [];
+        const goldReward = rewardGroups[0]?.Items?.find(
           (item) => item.Name === "골드",
         );
 
         return {
           name: i.ContentsName,
           icon: i.ContentsIcon,
-          time: futureTimes.length > 0 ? futureTimes[0] : null,
-          hasGold: !!goldReward, // 골드 보상 존재 여부 (boolean)
-          goldIcon: goldReward ? goldReward.Icon : null, // 골드 아이콘 URL
+          // 오늘 일정이 아예 없는 경우 null 반환하여 나중에 필터링되게 함
+          time:
+            futureTimes.length > 0
+              ? futureTimes[0]
+              : todayAllTimes.length > 0
+                ? todayAllTimes[todayAllTimes.length - 1]
+                : null,
+          hasGold: !!goldReward,
+          goldIcon: goldReward ? goldReward.Icon : null,
+          isExpired: futureTimes.length === 0,
         };
       })
+      // 시간이 null인 (오늘 열리지 않는) 섬은 제외
       .filter((island) => island.time !== null);
   } catch (error) {
     console.error("캘린더 데이터 호출 실패:", error);

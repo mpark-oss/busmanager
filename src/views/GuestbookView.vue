@@ -1151,7 +1151,7 @@ const frequencyList = [
   },
   {
     id: "gold",
-    title: "편린 획득 주파수",
+    title: "편린 주파수",
     icon: "mdi-gold",
     freq: 880,
     color: "#FFD700",
@@ -1306,19 +1306,21 @@ let ladderLines = []; // 가로선 정보 저장
 let horizontalLines = [];
 const initLadder = () => {
   const canvas = ladderCanvas.value;
-  if (!canvas) return; [cite: 125]
-  const ctx = canvas.getContext('2d');
+  if (!canvas) return;
+
+  const ctx = canvas.getContext("2d");
   const width = canvas.width;
   const height = canvas.height;
 
   ctx.clearRect(0, 0, width, height);
+  // horizontalLines가 상단에 let으로 선언되어 있어야 합니다.
   horizontalLines = [];
 
   const colWidth = width / (ladderCount.value + 1);
 
-  // 1. 세로선 그리기 (테마별 색상 적용) [cite: 8, 9]
+  // 1. 세로선 그리기
   ctx.beginPath();
-  ctx.strokeStyle = theme.global.current.value.dark ? '#ffffff' : '#333'; [cite: 8, 9]
+  ctx.strokeStyle = theme.global.current.value.dark ? "#ffffff" : "#333333";
   ctx.lineWidth = 4;
   for (let i = 1; i <= ladderCount.value; i++) {
     const x = colWidth * i;
@@ -1327,39 +1329,49 @@ const initLadder = () => {
   }
   ctx.stroke();
 
-  // 2. 가로선 생성 (중복 높이 방지 로직 강화)
+  // 2. 가로선 생성 로직 (인원수 맞춤형 간격 조절)
+  // 인원이 많아질수록 최소 간격을 줄여서 공간을 확보합니다.
+  const minGap = ladderCount.value > 6 ? 12 : 20;
+  const linesPerSection = 2; // 각 칸 사이 가로선 개수
+
   for (let i = 1; i < ladderCount.value; i++) {
     const x = colWidth * i;
     const nextX = colWidth * (i + 1);
-
-    // 각 섹션당 2줄씩 생성하되 시도 횟수 제한으로 무한 루프 방지
-    let sectionLines = 0;
+    let createdInThisSection = 0;
     let attempts = 0;
-    const maxAttempts = 50;
 
-    while (sectionLines < 2 && attempts < maxAttempts) {
-      // Y축 전체 범위에서 랜덤하게 추출 (상하 여백 40px)
-      const y = Math.floor(Math.random() * (height - 80)) + 40;
+    // 인원수가 많을 때 무한루프 방지를 위해 시도 횟수를 늘리고 조건을 유연하게 가져갑니다.
+    while (createdInThisSection < linesPerSection && attempts < 100) {
+      const y = Math.floor(Math.random() * (height - 60)) + 30;
 
-      // 🎯 [핵심] 기존에 생성된 모든 가로선들과 최소 15px 이상의 높이 차이를 보장
-      // 옆 칸에 있는 선과도 높이가 겹치지 않게 됩니다.
-      const isTooClose = horizontalLines.some(line => Math.abs(line.y - y) < 15);
+      // 같은 칸뿐만 아니라 인접한 칸의 선들과도 간격을 체크하되,
+      // 8명일 때는 기준(minGap)을 완화하여 빈틈을 찾습니다.
+      const isTooClose = horizontalLines.some(
+        (line) => Math.abs(line.y - y) < minGap,
+      );
 
       if (!isTooClose) {
-        horizontalLines.push({ y, from: i, to: i + 1, x1: x, x2: nextX });
+        horizontalLines.push({
+          y: y,
+          from: i,
+          to: i + 1,
+          x1: x,
+          x2: nextX,
+        });
 
         ctx.beginPath();
         ctx.moveTo(x, y);
         ctx.lineTo(nextX, y);
+        ctx.lineWidth = 4;
         ctx.stroke();
 
-        sectionLines++;
+        createdInThisSection++;
       }
       attempts++;
     }
   }
 
-  // Y축 기준 정렬 (결과 추적용 필수)
+  // 3. Y축 기준 정렬 (결과 추적용)
   horizontalLines.sort((a, b) => a.y - b.y);
 };
 

@@ -1313,7 +1313,6 @@ const initLadder = () => {
   const height = canvas.height;
 
   ctx.clearRect(0, 0, width, height);
-  // horizontalLines가 상단에 let으로 선언되어 있어야 합니다.
   horizontalLines = [];
 
   const colWidth = width / (ladderCount.value + 1);
@@ -1329,23 +1328,24 @@ const initLadder = () => {
   }
   ctx.stroke();
 
-  // 2. 가로선 생성 로직 (인원수 맞춤형 간격 조절)
-  // 인원이 많아질수록 최소 간격을 줄여서 공간을 확보합니다.
-  const minGap = ladderCount.value > 6 ? 12 : 20;
-  const linesPerSection = 2; // 각 칸 사이 가로선 개수
+  // 2. 가로선 생성 로직 (개수 랜덤화: 1~3개)
+  // 인원수가 많을 때는 간격을 조금 더 좁게 설정하여 공간 확보
+  const minGap = ladderCount.value > 6 ? 10 : 15;
 
   for (let i = 1; i < ladderCount.value; i++) {
     const x = colWidth * i;
     const nextX = colWidth * (i + 1);
+
+    // 🎯 [수정] 각 섹션마다 가로선 개수를 1~3개 사이로 랜덤하게 결정
+    const linesToCreate = Math.floor(Math.random() * 3) + 1;
+
     let createdInThisSection = 0;
     let attempts = 0;
 
-    // 인원수가 많을 때 무한루프 방지를 위해 시도 횟수를 늘리고 조건을 유연하게 가져갑니다.
-    while (createdInThisSection < linesPerSection && attempts < 100) {
+    while (createdInThisSection < linesToCreate && attempts < 100) {
       const y = Math.floor(Math.random() * (height - 60)) + 30;
 
-      // 같은 칸뿐만 아니라 인접한 칸의 선들과도 간격을 체크하되,
-      // 8명일 때는 기준(minGap)을 완화하여 빈틈을 찾습니다.
+      // 전체 가로선 리스트와 비교하여 겹침 방지
       const isTooClose = horizontalLines.some(
         (line) => Math.abs(line.y - y) < minGap,
       );
@@ -1371,7 +1371,7 @@ const initLadder = () => {
     }
   }
 
-  // 3. Y축 기준 정렬 (결과 추적용)
+  // 3. Y축 기준 정렬 (결과 추적용 필수)
   horizontalLines.sort((a, b) => a.y - b.y);
 };
 

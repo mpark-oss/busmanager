@@ -1306,20 +1306,19 @@ let ladderLines = []; // 가로선 정보 저장
 let horizontalLines = [];
 const initLadder = () => {
   const canvas = ladderCanvas.value;
-  if (!canvas) return;
-  const ctx = canvas.getContext("2d");
+  if (!canvas) return; [cite: 125]
+  const ctx = canvas.getContext('2d');
   const width = canvas.width;
   const height = canvas.height;
 
-  // 초기화
   ctx.clearRect(0, 0, width, height);
   horizontalLines = [];
 
   const colWidth = width / (ladderCount.value + 1);
 
-  // 1. 세로선 그리기
+  // 1. 세로선 그리기 (테마별 색상 적용) [cite: 8, 9]
   ctx.beginPath();
-  ctx.strokeStyle = theme.global.current.value.dark ? "#ffffff" : "#333";
+  ctx.strokeStyle = theme.global.current.value.dark ? '#ffffff' : '#333'; [cite: 8, 9]
   ctx.lineWidth = 4;
   for (let i = 1; i <= ladderCount.value; i++) {
     const x = colWidth * i;
@@ -1328,31 +1327,39 @@ const initLadder = () => {
   }
   ctx.stroke();
 
-  // 2. 가로선 생성 (안전한 for 루프 사용)
+  // 2. 가로선 생성 (중복 높이 방지 로직 강화)
   for (let i = 1; i < ladderCount.value; i++) {
     const x = colWidth * i;
     const nextX = colWidth * (i + 1);
 
-    // 각 칸 사이에 무조건 2~3개의 가로선을 만듭니다.
-    const lineCount = Math.floor(Math.random() * 2) + 2;
+    // 각 섹션당 2줄씩 생성하되 시도 횟수 제한으로 무한 루프 방지
+    let sectionLines = 0;
+    let attempts = 0;
+    const maxAttempts = 50;
 
-    // Y축을 등분하여 선이 겹칠 확률을 원천 차단합니다.
-    for (let j = 0; j < lineCount; j++) {
-      // 구간을 나누어 랜덤하게 배치 (예: 전체 높이를 lineCount만큼 나눠서 그 안에서 랜덤)
-      const sectionHeight = (height - 60) / lineCount;
-      const y = 30 + sectionHeight * j + Math.random() * (sectionHeight - 20);
+    while (sectionLines < 2 && attempts < maxAttempts) {
+      // Y축 전체 범위에서 랜덤하게 추출 (상하 여백 40px)
+      const y = Math.floor(Math.random() * (height - 80)) + 40;
 
-      horizontalLines.push({ y, from: i, to: i + 1, x1: x, x2: nextX });
+      // 🎯 [핵심] 기존에 생성된 모든 가로선들과 최소 15px 이상의 높이 차이를 보장
+      // 옆 칸에 있는 선과도 높이가 겹치지 않게 됩니다.
+      const isTooClose = horizontalLines.some(line => Math.abs(line.y - y) < 15);
 
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-      ctx.lineTo(nextX, y);
-      ctx.lineWidth = 4;
-      ctx.stroke();
+      if (!isTooClose) {
+        horizontalLines.push({ y, from: i, to: i + 1, x1: x, x2: nextX });
+
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(nextX, y);
+        ctx.stroke();
+
+        sectionLines++;
+      }
+      attempts++;
     }
   }
 
-  // Y축 기준 정렬 (결과 추적용)
+  // Y축 기준 정렬 (결과 추적용 필수)
   horizontalLines.sort((a, b) => a.y - b.y);
 };
 

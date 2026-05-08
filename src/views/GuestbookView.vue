@@ -1151,7 +1151,7 @@ const frequencyList = [
   },
   {
     id: "gold",
-    title: "골드 편린 주파수",
+    title: "편린 획득 주파수",
     icon: "mdi-gold",
     freq: 880,
     color: "#FFD700",

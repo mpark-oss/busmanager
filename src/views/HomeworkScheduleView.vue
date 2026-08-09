@@ -85,10 +85,10 @@
               <span class="">{{ getMaxPossibleGold().toLocaleString() }}G</span>
 
               <v-chip size="x-small" :color="getMaxPossibleGold() -
-                  (getPureRaidGold() - getTotalMoreCost()) >
-                  0
-                  ? 'error'
-                  : 'success'
+                (getPureRaidGold() - getTotalMoreCost()) >
+                0
+                ? 'error'
+                : 'success'
                 " variant="flat" class="font-weight-black num-style">
                 <template v-if="
                   getMaxPossibleGold() -
@@ -226,8 +226,8 @@
             <v-hover v-slot="{ isHovering, props }">
               <v-card v-bind="props" border variant="flat"
                 class="character-card rounded-xl overflow-hidden shadow-sm bg-card position-relative" :style="char.isGoldCharacter
-                    ? 'border: 2px solid #FFB300 !important'
-                    : ''
+                  ? 'border: 2px solid #FFB300 !important'
+                  : ''
                   ">
                 <v-list-item class="pa-3 bg-profile-header" :subtitle="`Lv. ${char.level} ${char.className}`">
                   <template v-slot:prepend>
@@ -238,8 +238,8 @@
                   <template v-slot:title>
                     <div class="d-flex align-center">
                       <v-btn icon variant="text" size="x-small" :color="char.isGoldCharacter
-                          ? 'amber-darken-3'
-                          : 'grey-lighten-1'
+                        ? 'amber-darken-3'
+                        : 'grey-lighten-1'
                         " @click.stop="toggleGoldCharacter(char)" class="me-1">
                         <v-icon size="18">{{
                           char.isGoldCharacter
@@ -275,8 +275,8 @@
                     <div class="d-flex align-center">
                       <div class="text-right mr-1">
                         <div class="text-caption font-weight-bold num-style" :class="char.isGoldCharacter
-                            ? 'text-amber-darken-4'
-                            : 'text-light-blue-darken-2'
+                          ? 'text-amber-darken-4'
+                          : 'text-light-blue-darken-2'
                           ">
                           {{ getCharGold(char).toLocaleString() }} G
                         </div>
@@ -359,8 +359,8 @@
                         class="me-2 font-weight-bold">WEEKLY</v-chip>
                       <span class="text-caption font-weight-black text-medium-emphasis">주간 레이드</span>
                       <v-chip size="x-small" :color="getGoldRaidCount(char) >= 3
-                          ? 'success'
-                          : 'grey-darken-1'
+                        ? 'success'
+                        : 'grey-darken-1'
                         " variant="tonal" class="ms-2 font-weight-black">
                         {{ getGoldRaidCount(char) }} / 3
                       </v-chip>
@@ -371,8 +371,8 @@
                         class="raid-group-container border rounded-lg pa-1">
                         <div class="d-flex align-center px-2 mb-1">
                           <span class="text-caption font-weight-black text-primary flex-grow-1" :style="isGoldExcluded(char, groupName)
-                              ? 'text-decoration: line-through; opacity: 0.5'
-                              : ''
+                            ? 'text-decoration: line-through; opacity: 0.5'
+                            : ''
                             ">
                             {{ groupName }}
                             <v-btn icon variant="text" size="x-small" :class="[
@@ -384,9 +384,9 @@
                                 ),
                               },
                             ]" :color="hasBusSetting(char, groupName)
-                                  ? 'light-blue-accent-2'
-                                  : 'grey-lighten-1'
-                                " @click.stop="openBusDialog(char, groupName)">
+                              ? 'light-blue-accent-2'
+                              : 'grey-lighten-1'
+                              " @click.stop="openBusDialog(char, groupName)">
                               <v-icon size="18">mdi-bus-side</v-icon>
                               <v-tooltip activator="parent" location="top">{{ groupName }} 버스 설정</v-tooltip>
                             </v-btn>
@@ -427,9 +427,9 @@
                                           {{
                                             /4막: 아르모체\(노말\)|종막: 카제로스\(노말\)|그림자: 세르카\(노말\)/.test(raid.name)
                                               ? "반귀속"
-                                          : /싱글|1단계|2단계|3단계/.test(raid.name)
-                                          ? "귀속"
-                                          : ""
+                                              : /싱글|1단계|2단계|3단계/.test(raid.name)
+                                                ? "귀속"
+                                                : ""
                                           }})
                                         </span>
                                       </span>
@@ -443,15 +443,15 @@
                                           ),
                                         },
                                       ]" :color="isGoldGateSelected(
-                                          char,
-                                          raid.name,
-                                          gate.g,
-                                        )
-                                            ? 'amber-accent-3'
-                                            : 'grey-lighten-1'
-                                          " @click.stop="
-                                          toggleGoldGate(char, raid, gate.g)
-                                          ">
+                                        char,
+                                        raid.name,
+                                        gate.g,
+                                      )
+                                        ? 'amber-accent-3'
+                                        : 'grey-lighten-1'
+                                        " @click.stop="
+                                            toggleGoldGate(char, raid, gate.g)
+                                            ">
                                         <v-icon size="18">
                                           {{
                                             isGoldGateSelected(
@@ -472,8 +472,8 @@
                                 <v-btn icon variant="text" size="x-small" :color="(char.moreTasks || []).includes(
                                   raid.name + '_G' + gate.g + '_More',
                                 )
-                                    ? 'indigo-accent-2'
-                                    : 'grey-lighten-1'
+                                  ? 'indigo-accent-2'
+                                  : 'grey-lighten-1'
                                   " @click.stop="
                                     toggleMoreReward(char, raid.name, gate.g)
                                     " class="ms-1">
@@ -529,8 +529,8 @@
             <div class="text-caption font-weight-bold mb-2">주간 숙제</div>
             <div class="d-flex flex-wrap gap-2">
               <v-btn v-for="task in specialTasks" :key="task.id" variant="flat" size="x-small" :color="isTaskVisibleInSettings(task.id)
-                  ? 'cyan-darken-2'
-                  : 'grey-darken-2'
+                ? 'cyan-darken-2'
+                : 'grey-darken-2'
                 " class="text-white px-3" @click="toggleTaskVisibility(task.id)">
                 <v-icon start size="14">{{
                   isTaskVisibleInSettings(task.id) ? "mdi-eye" : "mdi-eye-off"
@@ -553,8 +553,8 @@
                     <template v-slot:prepend>
                       <v-icon class="drag-handle me-2 cursor-move" color="grey-darken-2">mdi-drag-vertical</v-icon>
                       <v-btn icon size="small" variant="flat" class="eye-btn shadow-sm" :color="tempSettings.visibleGroups.includes(group)
-                          ? 'primary'
-                          : 'grey-darken-3'
+                        ? 'primary'
+                        : 'grey-darken-3'
                         " @click.stop="toggleGroupSelection(group)">
                         <v-icon size="18">{{
                           tempSettings.visibleGroups.includes(group)
@@ -565,7 +565,7 @@
                     </template>
                     <v-list-item-title class="font-weight-black ms-2 cursor-pointer" @click="toggleExpand(group)">{{
                       group
-                      }}</v-list-item-title>
+                    }}</v-list-item-title>
                     <template v-slot:append>
                       <v-icon @click="toggleExpand(group)">{{
                         expandedGroup === group
@@ -586,8 +586,8 @@
                             class="font-weight-black px-3 eye-gate-btn" :color="(tempSettings.selectedGateIds || []).includes(
                               raid.name + '_G' + gate.g,
                             )
-                                ? 'primary'
-                                : 'grey-darken-2'
+                              ? 'primary'
+                              : 'grey-darken-2'
                               " @click="toggleGateVisibility(raid.name, gate.g)">
                             <v-icon start size="14">{{
                               (tempSettings.selectedGateIds || []).includes(
@@ -736,8 +736,8 @@
                     </div>
 
                     <div class="text-h6 font-weight-black d-flex align-center pb-4" :class="party.isCleared
-                        ? 'text-grey opacity-60'
-                        : 'text-high-emphasis'
+                      ? 'text-grey opacity-60'
+                      : 'text-high-emphasis'
                       ">
                       <v-icon class="me-2" size="small" :color="party.isCleared ? 'grey' : 'primary'">
                         mdi-clock-outline
@@ -775,8 +775,8 @@
                       </div>
 
                       <div class="text-overline opacity-60 text-truncate" :class="theme === 'dark'
-                          ? 'text-grey-lighten-1'
-                          : 'text-grey-darken-1'
+                        ? 'text-grey-lighten-1'
+                        : 'text-grey-darken-1'
                         " style="
                           font-size: 0.6rem !important;
                           line-height: 1;
@@ -1188,6 +1188,36 @@ const isToday = (dateInput) => {
 };
 
 const raidList = [
+  {
+    group: "벨가르딘",
+    name: "그림자: 벨가르딘(나이트메어)",
+    level: 1780,
+    gold: 75000,
+    gates: [
+      { g: 1, gold: 30000, moreGold: 9600 },
+      { g: 2, gold: 45000, moreGold: 14400 },
+    ],
+  },
+  {
+    group: "벨가르딘",
+    name: "그림자: 벨가르딘(하드)",
+    level: 1770,
+    gold: 62000,
+    gates: [
+      { g: 1, gold: 25000, moreGold: 8000 },
+      { g: 2, gold: 37000, moreGold: 11840 },
+    ],
+  },
+  {
+    group: "벨가르딘",
+    name: "그림자: 벨가르딘(노말)",
+    level: 1750,
+    gold: 50000,
+    gates: [
+      { g: 1, gold: 20000, moreGold: 6400 },
+      { g: 2, gold: 30000, moreGold: 9600 },
+    ],
+  },
   {
     group: "지평의 성당",
     name: "어비스: 지평의 성당(3단계)",
